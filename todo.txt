@@ -1,0 +1,43 @@
+todo
+----
+* base
+  * tuples
+    * special handling, 'implicit' row extractor based on ptm
+    * queries
+    * for insert?
+
+
+* SQL snippets
+  * concat
+  * arithmetic: and, or, in, ...
+  * "query by example": fields -> optional -> and
+
+* optimistic locking
+* paging
+* db error classification
+
+* statement check against live database ("yolo mode")
+
+* events: pre-query, post-query, pre-insert, post-insert, pre-update, post-update
+  * statistics (optional)
+
+* mapping layer
+  * CRUD from bean
+    * register "default" table name for bean, overridable per operation
+    * annotation "@Table"?
+    * concept / solution for "PK absent before insert, present after insert"?
+  * mapping from / to bean (generated) --> JSON annotations
+
+  * "semi-active" record --> generic 'model' class that keeps track of changes?
+
+  * annotation processor for JOINs / type safe query building?
+
+done
+----
+* insert, update, queries (raw)
+  * query results as java.util.Stream
+* primitive type mapping / coercion
+* SqlRow --> detached wrapper around a result row
+* ASqlEngine
+  * immutable, 'canHandle' (2x), mutable cache, 'live' registration of handlers (copy on write)
+  * factory methods for queries, inserts, updates
