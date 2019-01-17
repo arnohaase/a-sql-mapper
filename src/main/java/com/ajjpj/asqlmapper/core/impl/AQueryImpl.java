@@ -23,9 +23,9 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 
 public class AQueryImpl<T> implements AQuery<T> {
-    private final Class<T> cls;
-    private final SqlSnippet sql;
-    private final PrimitiveTypeRegistry primTypes;
+    protected final Class<T> cls;
+    protected final SqlSnippet sql;
+    protected final PrimitiveTypeRegistry primTypes;
     private final RowExtractor rowExtractor;
 
     public AQueryImpl (Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, RowExtractor rowExtractor) {
@@ -38,7 +38,8 @@ public class AQueryImpl<T> implements AQuery<T> {
     @Override public T single (Connection conn) throws SQLException {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             if (!rs.next()) throw new IllegalStateException("no result");
-            final T result = rowExtractor.fromSql(cls, primTypes, rs, rowExtractor.mementoPerQuery(cls, primTypes, rs));
+            final Object memento = rowExtractor.mementoPerQuery(cls, primTypes, rs);
+            final T result = doExtract(rs, memento);
             if (rs.next()) throw new IllegalStateException("more than one result row");
             return result;
         }));
@@ -55,7 +56,8 @@ public class AQueryImpl<T> implements AQuery<T> {
     @Override public AOption<T> optional (Connection conn) throws SQLException {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             if (!rs.next()) return AOption.empty();
-            final T result = rowExtractor.fromSql(cls, primTypes, rs, rowExtractor.mementoPerQuery(cls, primTypes, rs));
+            final Object memento = rowExtractor.mementoPerQuery(cls, primTypes, rs);
+            final T result = doExtract(rs, memento);
             if (rs.next()) throw new IllegalStateException("more than one result row");
             return AOption.some(result);
         }));
@@ -65,9 +67,13 @@ public class AQueryImpl<T> implements AQuery<T> {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             final AVector.Builder<T> result = AVector.builder();
             final Object memento = rowExtractor.mementoPerQuery(cls, primTypes, rs);
-            while (rs.next()) result.add(rowExtractor.fromSql(cls, primTypes, rs, memento));
+            while (rs.next()) result.add(doExtract(rs, memento));
             return result.build();
         }));
+    }
+
+    protected T doExtract(ResultSet rs, Object memento) throws SQLException {
+        return rowExtractor.fromSql(cls, primTypes, rs, memento);
     }
 
     @Override public Stream<T> stream (Connection conn) {
@@ -102,7 +108,7 @@ public class AQueryImpl<T> implements AQuery<T> {
         @Override public boolean tryAdvance (Consumer<? super T> action) {
             try {
                 if (!rs.next()) return false;
-                action.accept(rowExtractor.fromSql(cls, primTypes, rs, memento));
+                action.accept(doExtract(rs, memento));
                 return true;
             }
             catch(Throwable th) {

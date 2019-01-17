@@ -2,7 +2,6 @@ package com.ajjpj.asqlmapper.mapper.beans.javatypes;
 
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.mapper.annotations.Column;
 import com.ajjpj.asqlmapper.mapper.annotations.Ignore;
 import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
@@ -17,15 +16,15 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.ajjpj.acollections.mutable.AMutableArrayWrapper.wrap;
-import static com.ajjpj.acollections.util.AUnchecker.*;
+import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 
 public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtractor {
-    @Override public List<BeanProperty> beanProperties (Connection conn, Class<?> beanType, TableMetaData tableMetaData, PrimitiveTypeRegistry primTypes) {
+    @Override public List<BeanProperty> beanProperties (Connection conn, Class<?> beanType, TableMetaData tableMetaData) {
         return executeUnchecked(() -> {
             final AVector<Method> getters = wrap(beanType.getMethods())
                     .filterNot(m -> m.getName().equals("hashCode") || m.getName().equals("toString"))
-                    .filter(m -> m.getParameterCount() == 0 && (m.getModifiers() & Modifier.STATIC) == 0 && primTypes.isPrimitiveType(m.getReturnType()))
+                    .filter(m -> m.getParameterCount() == 0 && (m.getModifiers() & Modifier.STATIC) == 0)
                     .toVector();
 
             final Class<?> builderClass = builderFactoryFor(beanType).get().getClass();
@@ -44,7 +43,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
                 final ColumnMetaData columnMetaData = tableMetaData.findColByName(columnName)
                         .orElseThrow(() -> new IllegalArgumentException("no database column " + tableMetaData.tableName + "." + columnName + " for property " + getter.getName() + " of bean " + beanType.getName()));
 
-                return AOption.some(new BeanProperty(getter.getReturnType(), columnMetaData, getter, setter, true, builderSetter));
+                return AOption.some(new BeanProperty(getter.getReturnType(), getter.getName(), columnMetaData, getter, setter, true, builderSetter));
             }));
 
 

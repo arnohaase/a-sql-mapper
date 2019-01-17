@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 
 public interface BeanMetaDataExtractor {
-    List<BeanProperty> beanProperties(Connection conn, Class<?> beanType, TableMetaData tableMetaData, PrimitiveTypeRegistry primTypes);
+    List<BeanProperty> beanProperties(Connection conn, Class<?> beanType, TableMetaData tableMetaData);
 
     Supplier<Object> builderFactoryFor(Class<?> beanType);
     Function<Object,Object> builderFinalizerFor(Class<?> beanType);

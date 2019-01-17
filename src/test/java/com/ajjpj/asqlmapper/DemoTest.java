@@ -20,14 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 class DemoTest extends AbstractDatabaseTest {
-    ASqlEngine engine;
+    private ASqlEngine engine;
 
     @BeforeEach void setUp() throws SQLException {
         conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
         engine = ASqlEngine
                 .create()
                 .withDefaultPkName("id")
-                .withRowExtractor(new BuilderBasedRowExtractor())
+                .withRowExtractor(new BuilderBasedRowExtractor()) //TODO provide this from the mapper
                 ;
     }
 
@@ -57,9 +57,8 @@ class DemoTest extends AbstractDatabaseTest {
         final SqlMapper mapper = new SqlMapper(engine, new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
                 new DefaultTableNameExtractor(),
                 new GuessingPkStrategyDecider(),
-                new ImmutableWithBuilderMetaDataExtractor(),
-                engine.primitiveTypeRegistry()
-                ));
+                new ImmutableWithBuilderMetaDataExtractor()
+                ), ds);
 
         final Person inserted1 = mapper.insert(conn, Person.of(0L, "Arno"));
         final Person inserted2 = mapper.insert(conn, Person.of(0L, "Arno"));

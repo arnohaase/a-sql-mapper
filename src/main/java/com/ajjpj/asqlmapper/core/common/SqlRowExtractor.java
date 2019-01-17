@@ -1,8 +1,8 @@
 package com.ajjpj.asqlmapper.core.common;
 
 import com.ajjpj.acollections.immutable.AVector;
-import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
+import com.ajjpj.asqlmapper.core.RowExtractor;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;

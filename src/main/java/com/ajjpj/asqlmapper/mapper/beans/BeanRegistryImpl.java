@@ -22,16 +22,14 @@ public class BeanRegistryImpl implements BeanRegistry {
     private final TableNameExtractor tableNameExtractor;
     private final PkStrategyDecider pkStrategyDecider;
     private final BeanMetaDataExtractor beanMetaDataExtractor;
-    private final PrimitiveTypeRegistry primTypes;
 
     private final Map<Class<?>, BeanMetaData> cache = new ConcurrentHashMap<>();
 
-    public BeanRegistryImpl (SchemaRegistry schemaRegistry, TableNameExtractor tableNameExtractor, PkStrategyDecider pkStrategyDecider, BeanMetaDataExtractor beanMetaDataExtractor, PrimitiveTypeRegistry primTypes) {
+    public BeanRegistryImpl (SchemaRegistry schemaRegistry, TableNameExtractor tableNameExtractor, PkStrategyDecider pkStrategyDecider, BeanMetaDataExtractor beanMetaDataExtractor) {
         this.schemaRegistry = schemaRegistry;
         this.tableNameExtractor = tableNameExtractor;
         this.pkStrategyDecider = pkStrategyDecider;
         this.beanMetaDataExtractor = beanMetaDataExtractor;
-        this.primTypes = primTypes;
     }
 
     public void clearCache() {
@@ -43,7 +41,7 @@ public class BeanRegistryImpl implements BeanRegistry {
         return cache.computeIfAbsent(beanType, bt -> executeUnchecked(() -> {
             final TableMetaData tableMetaData = schemaRegistry.getTableMetaData(conn, tableNameExtractor.tableNameForBean(conn, beanType, schemaRegistry));
             final PkStrategy pkStrategy =  pkStrategyDecider.pkStrategy(conn, beanType, tableMetaData);
-            final List<BeanProperty> beanProperties = beanMetaDataExtractor.beanProperties(conn, beanType, tableMetaData, primTypes);
+            final List<BeanProperty> beanProperties = beanMetaDataExtractor.beanProperties(conn, beanType, tableMetaData);
 
             return new BeanMetaData(beanType,
                     AVector.from(beanProperties),

@@ -9,6 +9,7 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 public class BeanProperty {
     private final Class<?> propType;
+    private final String name;
     private final ColumnMetaData columnMetaData;
 
     private final Method getterMethod;
@@ -17,8 +18,9 @@ public class BeanProperty {
 
     private final Method builderSetterMethod;
 
-    public BeanProperty (Class<?> propType, ColumnMetaData columnMetaData, Method getterMethod, Method setterMethod, boolean setterReturnsBean, Method builderSetterMethod) {
+    public BeanProperty (Class<?> propType, String name, ColumnMetaData columnMetaData, Method getterMethod, Method setterMethod, boolean setterReturnsBean, Method builderSetterMethod) {
         this.propType = propType;
+        this.name = name;
         this.columnMetaData = columnMetaData;
         this.getterMethod = getterMethod;
         this.setterMethod = setterMethod;
@@ -62,5 +64,9 @@ public class BeanProperty {
 
     public Object setOnBuilder(Object builder, Object value) {
         return executeUnchecked(() -> builderSetterMethod.invoke(builder, value));
+    }
+
+    public String name() {
+        return name;
     }
 }

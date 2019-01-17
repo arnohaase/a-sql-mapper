@@ -1,5 +1,6 @@
 package com.ajjpj.asqlmapper.mapper;
 
+import com.ajjpj.acollections.AMap;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.ASqlEngine;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
@@ -7,6 +8,7 @@ import com.ajjpj.asqlmapper.mapper.beans.BeanMetaData;
 import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanRegistry;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
@@ -16,10 +18,24 @@ import static com.ajjpj.asqlmapper.core.SqlSnippet.*;
 public class SqlMapper {
     private final ASqlEngine sqlEngine;
     private final BeanRegistry beanRegistry;
+    private final BeanRegistryBasedRowExtractor beanRowExtractor;
 
-    public SqlMapper (ASqlEngine sqlEngine, BeanRegistry beanRegistry) {
-        this.sqlEngine = sqlEngine;
+    public SqlMapper (ASqlEngine sqlEngine, BeanRegistry beanRegistry, DataSource ds) {
+        this.beanRowExtractor = new BeanRegistryBasedRowExtractor(ds, beanRegistry);
+        this.sqlEngine = sqlEngine.withRowExtractor(beanRowExtractor);
         this.beanRegistry = beanRegistry;
+    }
+
+    public ASqlEngine engine() {
+        return sqlEngine;
+    }
+
+    public <T> AMapperQuery<T> query(Class<T> beanType, String sqlString, Object... params) {
+        return query(beanType, sql(sqlString, params));
+    }
+    public <T> AMapperQuery<T> query(Class<T> beanType, SqlSnippet sql) {
+        if (!beanRowExtractor.canHandle(beanType)) throw new IllegalArgumentException(beanType + " is not a mapped bean");
+        return new AMapperQueryImpl<>(beanType,sql, sqlEngine.primitiveTypeRegistry(), beanRowExtractor, AMap.empty());
     }
 
     //TODO insert a list of objects

@@ -159,8 +159,6 @@ public class ASqlEngine {
 
     //TODO tuples as query results
 
-    //TODO registered row extractors
-
 
     //--------------------------- configuration
 
