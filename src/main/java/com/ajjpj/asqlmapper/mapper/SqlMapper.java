@@ -10,6 +10,7 @@ import com.ajjpj.asqlmapper.mapper.beans.BeanRegistry;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.Map;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 import static com.ajjpj.asqlmapper.core.SqlSnippet.*;
@@ -37,6 +38,15 @@ public class SqlMapper {
         if (!beanRowExtractor.canHandle(beanType)) throw new IllegalArgumentException(beanType + " is not a mapped bean");
         return new AMapperQueryImpl<>(beanType,sql, sqlEngine.primitiveTypeRegistry(), beanRowExtractor, AMap.empty());
     }
+
+
+    //TODO convenience: queryForOneToMany, queryForManyToMany
+
+    //TODO ToManyQuery
+    public <T> Map<Object, T> queryForToMany(Class<T> beanType, String fkName, Class<?> fkType, SqlSnippet sql) {
+        return null; //TODO
+    }
+
 
     //TODO insert a list of objects
 

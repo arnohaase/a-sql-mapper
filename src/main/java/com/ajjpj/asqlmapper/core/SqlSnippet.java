@@ -90,6 +90,8 @@ public class SqlSnippet {
         return result.build();
     }
 
+    //TODO in, and, or
+
     @Override public boolean equals (Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

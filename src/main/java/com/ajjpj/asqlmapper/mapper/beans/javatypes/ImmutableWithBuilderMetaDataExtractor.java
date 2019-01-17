@@ -23,7 +23,8 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
     @Override public List<BeanProperty> beanProperties (Connection conn, Class<?> beanType, TableMetaData tableMetaData) {
         return executeUnchecked(() -> {
             final AVector<Method> getters = wrap(beanType.getMethods())
-                    .filterNot(m -> m.getName().equals("hashCode") || m.getName().equals("toString"))
+                    .filterNot(m -> m.getName().equals("hashCode") || m.getName().equals("toString") || m.getName().equals("getClass"))
+                    .filterNot(m -> m.getReturnType() == void.class)
                     .filter(m -> m.getParameterCount() == 0 && (m.getModifiers() & Modifier.STATIC) == 0)
                     .toVector();
 
@@ -45,8 +46,6 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
 
                 return AOption.some(new BeanProperty(getter.getReturnType(), getter.getName(), columnMetaData, getter, setter, true, builderSetter));
             }));
-
-
         });
     }
 
