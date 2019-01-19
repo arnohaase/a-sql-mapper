@@ -1,6 +1,7 @@
 package com.ajjpj.asqlmapper.mapper.beans;
 
 import com.ajjpj.acollections.immutable.AVector;
+import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.PkStrategy;
 import com.ajjpj.asqlmapper.mapper.schema.TableMetaData;
 
@@ -17,7 +18,8 @@ public class BeanMetaData {
     private final Supplier<Object> builderFactory;
     private final Function<Object,Object> builderFinalizer;
 
-    private BeanProperty pkProperty;
+    private AOption<BeanProperty> pkProperty;
+    private AVector<BeanProperty> insertedProperties;
 
     public BeanMetaData (Class<?> beanType, AVector<BeanProperty> beanProperties, TableMetaData tableMetaData, PkStrategy pkStrategy, Supplier<Object> builderFactory, Function<Object, Object> builderFinalizer) {
         this.beanType = beanType;
@@ -43,6 +45,14 @@ public class BeanMetaData {
         return this.beanProperties;
     }
 
+    public AVector<BeanProperty> insertedBeanProperties() {
+        if (insertedProperties == null) {
+            insertedProperties = beanProperties
+                    .filter(p -> p.columnMetaData() != null && (!p.columnMetaData().isPrimaryKey || !pkStrategy.isAutoIncrement()));
+        }
+        return insertedProperties;
+    }
+
     public TableMetaData tableMetaData() {
         return this.tableMetaData;
     }
@@ -51,11 +61,14 @@ public class BeanMetaData {
         return this.pkStrategy;
     }
 
-    public BeanProperty pkProperty() {
+    public AOption<BeanProperty> pkProperty() {
         if (pkProperty == null) {
             final AVector<BeanProperty> pks = beanProperties().filter(BeanProperty::isPrimaryKey);
-            if (pks.size() != 1) throw new IllegalStateException("exactly one PK column expected, was " + pks);
-            pkProperty = pks.head();
+            switch(pks.size()) {
+                case 0: pkProperty = AOption.empty(); break;
+                case 1: pkProperty = AOption.of(pks.head()); break;
+                default: throw new IllegalStateException("more than one PK column for bean " + beanType.getName() + ": " + pks);
+            }
         }
         return pkProperty;
     }

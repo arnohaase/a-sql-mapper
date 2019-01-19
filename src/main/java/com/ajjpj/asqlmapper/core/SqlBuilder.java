@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class SqlBuilder {
+
+public class SqlBuilder {
     private final StringBuilder sb = new StringBuilder();
     private final List<Object> params = new ArrayList<>();
 

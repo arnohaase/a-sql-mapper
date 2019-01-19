@@ -48,19 +48,24 @@ class BeanRegistryBasedRowExtractor implements RowExtractor {
     }
 
     @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) throws SQLException {
-        return fromSql(cls, primTypes, rs, mementoPerQuery, AMap.empty());
+        return fromSql(cls, primTypes, rs, mementoPerQuery, ProvidedValues.empty());
     }
 
-    public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, AMap<String, Map<?,?>> providedValues) throws SQLException {
+    public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedValues providedValues) throws SQLException {
         final BeanMetaData beanMetaData = getMetaData(cls);
+        if (beanMetaData.tableMetaData().pkColumns().size() != 1)
+            throw new IllegalArgumentException("bean must have exactly one PK column for provided values to work - table " + beanMetaData.tableMetaData() + " has PK columns " + beanMetaData.tableMetaData());
+        final String pkColumnName = beanMetaData.tableMetaData().pkColumns().head().colName;
 
         Object builder = beanMetaData.newBuilder();
         for(BeanProperty prop: beanMetaData.beanProperties()) {
-            final AOption<Map<?,?>> provided = providedValues.getOptional(prop.name().toLowerCase());
-            if(provided.isDefined()) {
-                final BeanProperty pkProperty = beanMetaData.pkProperty();
-                final Object pk = primTypes.fromSql(pkProperty.propType(), rs.getObject(beanMetaData.pkProperty().columnMetaData().colName));
-                final Object value = provided.get().get(pk);
+            final AOption<Map<?,?>> optProvided = providedValues.getOptional(prop.name().toLowerCase());
+            if(optProvided.isDefined() && optProvided.get().size() > 0) {
+                final Map<?,?> provided = optProvided.get();
+                final Class<?> keyClass = provided.keySet().iterator().next().getClass();
+
+                final Object pk = primTypes.fromSql(keyClass, rs.getObject(pkColumnName));
+                final Object value = provided.get(pk);
                 builder = prop.setOnBuilder(builder, value);
             }
             else {
@@ -71,6 +76,4 @@ class BeanRegistryBasedRowExtractor implements RowExtractor {
         //noinspection unchecked
         return (T) beanMetaData.finalizeBuilding(builder);
     }
-
-    
 }

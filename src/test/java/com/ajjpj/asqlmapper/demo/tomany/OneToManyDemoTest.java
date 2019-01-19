@@ -1,8 +1,10 @@
 package com.ajjpj.asqlmapper.demo.tomany;
 
 import com.ajjpj.acollections.AList;
+import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.asqlmapper.ASqlEngine;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
+import com.ajjpj.asqlmapper.demo.simple.Person;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
 import com.ajjpj.asqlmapper.mapper.beans.BeanRegistryImpl;
@@ -44,10 +46,18 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
     }
 
     @Test
-    public void testOneToMany() throws SQLException {
-        final long personId1 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno1").executeSingle(conn);
-        final long personId2 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno2").executeSingle(conn);
-        final long personId3 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno3").executeSingle(conn);
+    void testOneToMany() throws SQLException {
+        final AList<Long> personIds = mapper
+                .insertMany(conn, AList.of(Person.of(0L, "Arno1"), Person.of(0L, "Arno2"), Person.of(0L, "Arno3")))
+                .map(Person::id);
+
+        final long personId1 = personIds.get(0);
+        final long personId2 = personIds.get(1);
+        final long personId3 = personIds.get(2);
+
+        //TODO mapper.insertWithExplicitFields(conn, address, AMap.of("person_id", person.id()));
+        //TODO mapper.insertMultiWithExplicitFields(conn, person.addresses(), AMap.of("person_id", person.id()));
+        // -> ignore 'missing' primary key columns - check that all PK columns missing from bean are autoincrement(?)
 
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId1, "street11", "city11").execute(conn);
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId1, "street12", "city12").execute(conn);
@@ -59,6 +69,8 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId3, "street32", "city32").execute(conn);
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId3, "street33", "city33").execute(conn);
 
+        //TODO ProvidedProperty instead of Map
+        //TODO subselect using master query instead of copy&paste
         final Map<Long, AList<Address>> addresses = mapper
                 .queryForToManyAList(Address.class, "person_id", Long.class, sql("select * from address where person_id in (?,?) order by id desc", 1, 2))
                 .execute(conn);
