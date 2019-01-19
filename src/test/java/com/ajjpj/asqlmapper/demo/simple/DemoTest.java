@@ -1,12 +1,13 @@
-package com.ajjpj.asqlmapper;
+package com.ajjpj.asqlmapper.demo.simple;
 
+import com.ajjpj.asqlmapper.ASqlEngine;
+import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.core.AInsert;
 import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.mapper.BuilderBasedRowExtractor;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
-import com.ajjpj.asqlmapper.mapper.Person;
 import com.ajjpj.asqlmapper.mapper.beans.BeanRegistryImpl;
 import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;

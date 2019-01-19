@@ -29,13 +29,15 @@ public class BeanProperty {
     }
 
     public boolean isPrimaryKey() {
-        return columnMetaData().isPrimaryKey;
+        return columnMetaData != null && columnMetaData().isPrimaryKey;
     }
 
     public Class<?> propType() {
         return propType;
     }
     public ColumnMetaData columnMetaData() {
+        if (columnMetaData == null)
+            throw new IllegalArgumentException("no column meta data for property " + name + " of class " + getterMethod.getDeclaringClass());
         return columnMetaData;
     }
 

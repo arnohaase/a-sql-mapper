@@ -1,8 +1,13 @@
 package com.ajjpj.asqlmapper.mapper;
 
+import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.AMap;
+import com.ajjpj.acollections.ASet;
+import com.ajjpj.acollections.immutable.AHashSet;
+import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.ASqlEngine;
+import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMetaData;
 import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
@@ -10,7 +15,10 @@ import com.ajjpj.asqlmapper.mapper.beans.BeanRegistry;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.util.Map;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 import static com.ajjpj.asqlmapper.core.SqlSnippet.*;
@@ -37,14 +45,27 @@ public class SqlMapper {
     public <T> AMapperQuery<T> query(Class<T> beanType, SqlSnippet sql) {
         if (!beanRowExtractor.canHandle(beanType)) throw new IllegalArgumentException(beanType + " is not a mapped bean");
         return new AMapperQueryImpl<>(beanType,sql, sqlEngine.primitiveTypeRegistry(), beanRowExtractor, AMap.empty());
-    }
+    }                                                                                                         
 
+    //TODO query convenience (factory for SqlSnippet?): by pk, "select * from <tablename>", ...;-)
 
     //TODO convenience: queryForOneToMany, queryForManyToMany
 
-    //TODO ToManyQuery
-    public <T> Map<Object, T> queryForToMany(Class<T> beanType, String fkName, Class<?> fkType, SqlSnippet sql) {
-        return null; //TODO
+    public <K,T> ToManyQuery<K, ASet<T>> queryForToManyASet(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql) {
+        return queryForToMany(beanType, fkName, fkType, sql, AHashSet.streamCollector());
+    }
+    public <K,T> ToManyQuery<K, AList<T>> queryForToManyAList(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql) {
+        return queryForToMany(beanType, fkName, fkType, sql, AVector.streamCollector());
+    }
+    public <K,T> ToManyQuery<K, Set<T>> queryForToManySet(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql) {
+        return queryForToMany(beanType, fkName, fkType, sql, Collectors.toSet());
+    }
+    public <K,T> ToManyQuery<K, List<T>> queryForToManyList(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql) {
+        return queryForToMany(beanType, fkName, fkType, sql, Collectors.toList());
+    }
+    public <K,T,R> ToManyQuery<K, R> queryForToMany(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql, Collector<T,?,? extends R> collectorPerPk) {
+        final RowExtractor rowExtractor = engine().rowExtractorFor(beanType);
+        return new ToManyQueryImpl<>(rowExtractor, AMap.empty(), fkType, fkName, beanType, sql, engine().primitiveTypeRegistry(), collectorPerPk);
     }
 
 

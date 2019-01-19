@@ -12,9 +12,9 @@ import java.util.Map;
 
 class AMapperQueryImpl<T> extends AQueryImpl<T> implements AMapperQuery<T> {
     private final BeanRegistryBasedRowExtractor beanExtractor;
-    private final AMap<String, Map<Object,Object>> providedProperties;
+    private final AMap<String, Map<?,?>> providedProperties;
 
-    AMapperQueryImpl (Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, BeanRegistryBasedRowExtractor beanExtractor, AMap<String, Map<Object, Object>> providedProperties) {
+    AMapperQueryImpl (Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, BeanRegistryBasedRowExtractor beanExtractor, AMap<String, Map<?,?>> providedProperties) {
         super(cls, sql, primTypes, beanExtractor);
         this.beanExtractor = beanExtractor;
         this.providedProperties = providedProperties;
@@ -24,7 +24,7 @@ class AMapperQueryImpl<T> extends AQueryImpl<T> implements AMapperQuery<T> {
         return beanExtractor.fromSql(cls, primTypes, rs, memento, providedProperties);
     }
 
-    @Override public AMapperQuery<T> withPropertyValues(String propName, Map<Object,Object> providedValues) {
+    @Override public AMapperQuery<T> withPropertyValues(String propName, Map<?,?> providedValues) {
         return new AMapperQueryImpl<>(cls, sql, primTypes, beanExtractor, providedProperties.plus(propName.toLowerCase(), providedValues));
     }
 }

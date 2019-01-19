@@ -39,6 +39,12 @@ public class ASqlEngine {
         return primTypes;
     }
 
+    public RowExtractor rowExtractorFor (Class<?> cls) {
+        return rowExtractorRegistry
+                .handlerFor(cls)
+                .orElseThrow(() -> new IllegalArgumentException("no row extractor registered for " + cls + " - pass in a RowExtractor instance explicitly or register it"));
+    }
+
     //--------------------------- generic update statements, i.e. statements not returning a result set
 
     public AUpdate update(SqlSnippet sql) {
@@ -143,10 +149,7 @@ public class ASqlEngine {
     }
 
     public <T> AQuery<T> query(Class<T> targetType, SqlSnippet sql) {
-        final RowExtractor rowExtractor = rowExtractorRegistry
-                .handlerFor(targetType)
-                .orElseThrow(() -> new IllegalArgumentException("no row extractor registered for " + targetType + " - pass in a RowExtractor instance explicitly or register it"));
-        return query(targetType, rowExtractor, sql);
+        return query(targetType, rowExtractorFor(targetType), sql);
     }
 
     public <T> AQuery<T> query(Class<T> targetType, String sql, Object... params) {

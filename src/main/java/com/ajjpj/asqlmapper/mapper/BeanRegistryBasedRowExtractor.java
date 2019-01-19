@@ -38,6 +38,7 @@ class BeanRegistryBasedRowExtractor implements RowExtractor {
                 return beanRegistry.getMetaData(conn, beanType);
             }
             catch (Exception exc) {
+                //TODO better error logging (e.g. 'table ... not found')
                 return null;
             }
             finally {
@@ -50,12 +51,12 @@ class BeanRegistryBasedRowExtractor implements RowExtractor {
         return fromSql(cls, primTypes, rs, mementoPerQuery, AMap.empty());
     }
 
-    public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, AMap<String, Map<Object,Object>> providedValues) throws SQLException {
+    public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, AMap<String, Map<?,?>> providedValues) throws SQLException {
         final BeanMetaData beanMetaData = getMetaData(cls);
 
         Object builder = beanMetaData.newBuilder();
         for(BeanProperty prop: beanMetaData.beanProperties()) {
-            final AOption<Map<Object,Object>> provided = providedValues.getOptional(prop.name().toLowerCase());
+            final AOption<Map<?,?>> provided = providedValues.getOptional(prop.name().toLowerCase());
             if(provided.isDefined()) {
                 final BeanProperty pkProperty = beanMetaData.pkProperty();
                 final Object pk = primTypes.fromSql(pkProperty.propType(), rs.getObject(beanMetaData.pkProperty().columnMetaData().colName));

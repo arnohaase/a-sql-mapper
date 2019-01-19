@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.mapper;
+package com.ajjpj.asqlmapper.demo.simple;
 
 public interface AbstractPerson {
     Long id ();
