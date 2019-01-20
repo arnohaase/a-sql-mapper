@@ -1,18 +1,17 @@
 package com.ajjpj.asqlmapper.mapper;
 
-import com.ajjpj.acollections.AMap;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMetaData;
 import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanRegistry;
+import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
@@ -48,25 +47,25 @@ class BeanRegistryBasedRowExtractor implements RowExtractor {
     }
 
     @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) throws SQLException {
-        return fromSql(cls, primTypes, rs, mementoPerQuery, ProvidedValues.empty());
+        return fromSql(cls, primTypes, rs, mementoPerQuery, ProvidedProperties.empty());
     }
 
-    public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedValues providedValues) throws SQLException {
+    public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedProperties providedProperties) throws SQLException {
         final BeanMetaData beanMetaData = getMetaData(cls);
         if (beanMetaData.tableMetaData().pkColumns().size() != 1)
             throw new IllegalArgumentException("bean must have exactly one PK column for provided values to work - table " + beanMetaData.tableMetaData() + " has PK columns " + beanMetaData.tableMetaData());
-        final String pkColumnName = beanMetaData.tableMetaData().pkColumns().head().colName;
+        final String pkColumnName = beanMetaData.tableMetaData().pkColumns().head().colName; //TODO pass this in as an optional value? any column 'referenced' by a many side would suffice...
 
         Object builder = beanMetaData.newBuilder();
         for(BeanProperty prop: beanMetaData.beanProperties()) {
-            final AOption<Map<?,?>> optProvided = providedValues.getOptional(prop.name().toLowerCase());
-            if(optProvided.isDefined() && optProvided.get().size() > 0) {
-                final Map<?,?> provided = optProvided.get();
-                final Class<?> keyClass = provided.keySet().iterator().next().getClass();
+            if (providedProperties.hasValuesFor(prop.name())) {
+                final Class<?> keyClass = providedProperties.pkType(prop.name());
 
                 final Object pk = primTypes.fromSql(keyClass, rs.getObject(pkColumnName));
-                final Object value = provided.get(pk);
-                builder = prop.setOnBuilder(builder, value);
+                final AOption<Object> optValue = providedProperties.get(prop.name(), pk);
+                if (optValue.isDefined()) {
+                    builder = prop.setOnBuilder(builder, optValue.get());
+               }
             }
             else {
                 final Object value = primTypes.fromSql(prop.propType(), rs.getObject(prop.columnMetaData().colName));

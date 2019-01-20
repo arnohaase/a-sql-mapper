@@ -1,10 +1,10 @@
 package com.ajjpj.asqlmapper.mapper;
 
 import com.ajjpj.asqlmapper.core.AQuery;
-
-import java.util.Map;
+import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
+import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
 
 
 public interface AMapperQuery<T> extends AQuery<T> {
-    AMapperQuery<T> withPropertyValues (String propName, Map<?,?> providedValues);
+    AMapperQuery<T> withPropertyValues (String propName, ProvidedValues providedValues);
 }

@@ -11,6 +11,7 @@ import com.ajjpj.asqlmapper.mapper.beans.BeanRegistryImpl;
 import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
+import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,9 +70,8 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId3, "street32", "city32").execute(conn);
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId3, "street33", "city33").execute(conn);
 
-        //TODO ProvidedProperty instead of Map
         //TODO subselect using master query instead of copy&paste
-        final Map<Long, AList<Address>> addresses = mapper
+        final ProvidedValues addresses = mapper
                 .queryForToManyAList(Address.class, "person_id", Long.class, sql("select * from address where person_id in (?,?) order by id desc", 1, 2))
                 .execute(conn);
         final AList<PersonWithAddresses> persons =  mapper

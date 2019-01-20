@@ -9,13 +9,13 @@ import com.ajjpj.asqlmapper.mapper.beans.BeanRegistryImpl;
 import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
+import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
-import java.util.Map;
 
 import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -71,7 +71,7 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest  {
         mapper.engine().update("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId32).execute(conn);
         mapper.engine().update("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId33).execute(conn);
 
-        final Map<Long, AList<Address>> addresses = mapper
+        final ProvidedValues addresses = mapper
                 .queryForToManyAList(Address.class, "person_id", Long.class, sql("select pa.person_id, a.* from address a inner join person_address pa on a.id=pa.address_id where pa.person_id in (?,?) order by id desc", 1, 2))
                 .execute(conn);
         final AList<PersonWithAddresses> persons =  mapper

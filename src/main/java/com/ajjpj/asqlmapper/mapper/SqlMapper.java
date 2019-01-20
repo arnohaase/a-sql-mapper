@@ -1,7 +1,6 @@
 package com.ajjpj.asqlmapper.mapper;
 
 import com.ajjpj.acollections.AList;
-import com.ajjpj.acollections.AMap;
 import com.ajjpj.acollections.ASet;
 import com.ajjpj.acollections.immutable.AHashSet;
 import com.ajjpj.acollections.immutable.AVector;
@@ -13,6 +12,7 @@ import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMetaData;
 import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanRegistry;
+import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -45,7 +45,7 @@ public class SqlMapper {
     }
     public <T> AMapperQuery<T> query(Class<T> beanType, SqlSnippet sql) {
         if (!beanRowExtractor.canHandle(beanType)) throw new IllegalArgumentException(beanType + " is not a mapped bean");
-        return new AMapperQueryImpl<>(beanType,sql, sqlEngine.primitiveTypeRegistry(), beanRowExtractor, AMap.empty());
+        return new AMapperQueryImpl<>(beanType,sql, sqlEngine.primitiveTypeRegistry(), beanRowExtractor, ProvidedProperties.empty());
     }                                                                                                         
 
     //TODO query convenience (factory for SqlSnippet?): by pk, "select * from <tablename>", ...;-)
@@ -66,7 +66,7 @@ public class SqlMapper {
     }
     public <K,T,R> ToManyQuery<K, R> queryForToMany(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql, Collector<T,?,? extends R> collectorPerPk) {
         final RowExtractor rowExtractor = engine().rowExtractorFor(beanType);
-        return new ToManyQueryImpl<>(rowExtractor, AMap.empty(), fkType, fkName, beanType, sql, engine().primitiveTypeRegistry(), collectorPerPk);
+        return new ToManyQueryImpl<>(rowExtractor, ProvidedProperties.empty(), fkType, fkName, beanType, sql, engine().primitiveTypeRegistry(), collectorPerPk);
     }
 
     public <T> AList<T> insertMany(Connection conn, List<T> os) {

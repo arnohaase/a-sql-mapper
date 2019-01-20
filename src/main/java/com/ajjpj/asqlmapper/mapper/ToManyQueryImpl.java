@@ -1,10 +1,11 @@
 package com.ajjpj.asqlmapper.mapper;
 
-import com.ajjpj.acollections.AMap;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.impl.SqlHelper;
+import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
+import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,7 +21,7 @@ import java.util.stream.Collector;
 //TODO demo / test: bean (with nested to-many), scalar
 class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
     private final RowExtractor beanExtractor;
-    private final AMap<String, Map<?,?>> providedValues;
+    private final ProvidedProperties providedProperties;
 
     private final Class<K> keyType;
     private final String keyColumn;
@@ -29,10 +30,10 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
     private final PrimitiveTypeRegistry primTypes;
     private final Collector<T,?,? extends R> collectorPerPk;
 
-    ToManyQueryImpl (RowExtractor beanExtractor, AMap<String, Map<?,?>> providedValues, Class<K> keyType,
+    ToManyQueryImpl (RowExtractor beanExtractor, ProvidedProperties providedProperties, Class<K> keyType,
                      String keyColumn, Class<T> manyType, SqlSnippet sql, PrimitiveTypeRegistry primTypes, Collector<T, ?, ? extends R> collectorPerPk) {
         this.beanExtractor = beanExtractor;
-        this.providedValues = providedValues;
+        this.providedProperties = providedProperties;
         this.keyType = keyType;
         this.keyColumn = keyColumn;
         this.manyType = manyType;
@@ -40,12 +41,12 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
         this.primTypes = primTypes;
         this.collectorPerPk = collectorPerPk;
 
-        if (providedValues.nonEmpty() && ! (beanExtractor instanceof BeanRegistryBasedRowExtractor)) {
+        if (providedProperties.nonEmpty() && ! (beanExtractor instanceof BeanRegistryBasedRowExtractor)) {
             throw new IllegalArgumentException("provided values are only supported for bean mappings");
         }
     }
 
-    @Override public Map<K,R> execute (Connection conn) throws SQLException {
+    @Override public ProvidedValues execute (Connection conn) throws SQLException {
         final Map<K, List<T>> raw = new HashMap<>();
 
         try (final PreparedStatement ps = conn.prepareStatement(sql.getSql())) {
@@ -57,7 +58,7 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
                 final K key = primTypes.fromSql(keyType, rs.getObject(keyColumn));
                 final T value;
                 if (beanExtractor instanceof BeanRegistryBasedRowExtractor) {
-                    value = ((BeanRegistryBasedRowExtractor) beanExtractor).fromSql(manyType, primTypes, rs, memento, providedValues);
+                    value = ((BeanRegistryBasedRowExtractor) beanExtractor).fromSql(manyType, primTypes, rs, memento, providedProperties);
                 }
                 else {
                     value = beanExtractor.fromSql(manyType, primTypes, rs, memento);
@@ -71,10 +72,15 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
             final R r = e.getValue().stream().collect(collectorPerPk);
             result.put(e.getKey(), r);
         }
-        return result;
+        return ProvidedValues.of(result);
     }
 
-    @Override public ToManyQuery<K,R> withPropertyValues(String propName, Map<Object,Object> providedValues) {
-        return new ToManyQueryImpl<>(beanExtractor, this.providedValues.plus(propName, providedValues), keyType, keyColumn, manyType, sql, primTypes, collectorPerPk);
+    @Override public ToManyQuery withPropertyValues (String propertyName, ProvidedValues propertyValues) {
+        return new ToManyQueryImpl<>(beanExtractor, providedProperties.with(propertyName, propertyValues), keyType, keyColumn, manyType, sql, primTypes, collectorPerPk);
+    }
+
+    @Override public ToManyQuery withPropertyValues (ProvidedProperties providedProperties) {
+        if (this.providedProperties.nonEmpty()) throw new IllegalArgumentException("non-empty provided properties would be overwritten"); //TODO
+        return new ToManyQueryImpl<>(beanExtractor, providedProperties, keyType, keyColumn, manyType, sql, primTypes, collectorPerPk);
     }
 }
