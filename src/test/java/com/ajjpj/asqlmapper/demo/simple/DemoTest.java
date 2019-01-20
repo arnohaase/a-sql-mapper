@@ -1,5 +1,6 @@
 package com.ajjpj.asqlmapper.demo.simple;
 
+import com.ajjpj.acollections.AMap;
 import com.ajjpj.asqlmapper.ASqlEngine;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.core.AInsert;
@@ -66,9 +67,13 @@ class DemoTest extends AbstractDatabaseTest {
         assertEquals(Person.of(1L, "Arno"), inserted1);
         assertEquals(Person.of(2L, "Arno"), inserted2);
 
-        assertEquals(1, mapper.update(conn, inserted1.withName("Arno Haase")));
-
+        assertTrue(mapper.update(conn, inserted1.withName("Arno Haase")));
         assertEquals("Arno Haase", engine.query(Person.class, "select * from person where id=?", 1).single(conn).name());
+        assertEquals("Arno", engine.query(Person.class, "select * from person where id=?", 2).single(conn).name());
+
+        assertTrue(mapper.patch(conn, Person.class, 1L, AMap.of("name", "whoever")));
+        assertEquals("whoever", engine.query(Person.class, "select * from person where id=?", 1).single(conn).name());
+        assertEquals("Arno", engine.query(Person.class, "select * from person where id=?", 2).single(conn).name());
 
         assertTrue(mapper.delete(conn, inserted1));
         assertEquals(0L, engine.longQuery("select count(*) from person where id=?", 1).single(conn).longValue());

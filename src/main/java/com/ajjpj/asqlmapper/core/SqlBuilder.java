@@ -16,7 +16,8 @@ public class SqlBuilder {
     }
 
     public SqlBuilder append(String sql, Object... params) {
-        sb.append(sql);
+        sb.append(" ")
+                .append(sql);
         this.params.addAll(Arrays.asList(params));
         return this;
     }

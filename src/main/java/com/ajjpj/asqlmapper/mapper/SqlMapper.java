@@ -17,6 +17,7 @@ import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -214,7 +215,7 @@ public class SqlMapper {
         });
     }
 
-    public int update(Connection conn, Object bean) {
+    public boolean update(Connection conn, Object bean) {
         return executeUnchecked(() -> {
             final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, bean.getClass());
             if (beanMetaData.pkProperty().isEmpty()) throw new IllegalArgumentException("update requires a bean to contain the table's primary key");
@@ -232,7 +233,7 @@ public class SqlMapper {
                     sql("WHERE " + beanMetaData.pkProperty().get().columnMetaData().colName + "=?", beanMetaData.pkProperty().get().get(bean))
             );
 
-            return sqlEngine.update(stmt).execute(conn);
+            return sqlEngine.update(stmt).execute(conn) == 1;
         });
     }
 
@@ -253,5 +254,37 @@ public class SqlMapper {
         );
     }
 
-    //TODO patch
+    public boolean patch(Connection conn, Class<?> beanType, Object pk, Map<String,Object> newValues) {
+        final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, beanType);
+        final BeanProperty pkProperty = beanMetaData.pkProperty().orElseThrow(() -> new IllegalArgumentException("bean type " + beanType + " has no defined primary key"));
+
+        //TODO to-one / foreign keys
+
+        final SqlBuilder builder = new SqlBuilder();
+        boolean first = true;
+
+        builder.append("UPDATE " + beanMetaData.tableMetaData().tableName + " SET");
+
+        for (String propName: newValues.keySet()) {
+            final AOption<BeanProperty> optProp = beanMetaData.beanProperties().find(p -> p.name().equals(propName));
+            if (optProp.isEmpty()) continue;
+
+            final BeanProperty prop = optProp.get();
+            if (prop.columnMetaData() == null) continue;
+
+            if (first) {
+                first = false;
+            }
+            else {
+                builder.append(",");
+            }
+            builder.append(prop.columnMetaData().colName + "=?", newValues.get(propName));
+        }
+
+        builder.append("WHERE " + pkProperty.columnMetaData().colName + "=?", pk);
+
+        return executeUnchecked(() ->
+            sqlEngine.update(builder.build()).execute(conn) == 1
+        );
+    }
 }
