@@ -17,7 +17,7 @@ import org.junit.jupiter.api.*;
 
 import java.sql.SQLException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class DemoTest extends AbstractDatabaseTest {
@@ -69,5 +69,13 @@ class DemoTest extends AbstractDatabaseTest {
         assertEquals(1, mapper.update(conn, inserted1.withName("Arno Haase")));
 
         assertEquals("Arno Haase", engine.query(Person.class, "select * from person where id=?", 1).single(conn).name());
+
+        assertTrue(mapper.delete(conn, inserted1));
+        assertEquals(0L, engine.longQuery("select count(*) from person where id=?", 1).single(conn).longValue());
+        assertFalse(mapper.delete(conn, inserted1));
+
+        assertTrue(mapper.delete(conn, Person.class, 2L));
+        assertEquals(0L, engine.longQuery("select count(*) from person where id=?", 2).single(conn).longValue());
+        assertFalse(mapper.delete(conn, Person.class, 2L));
     }
 }

@@ -236,7 +236,22 @@ public class SqlMapper {
         });
     }
 
-    //TODO delete
+    public boolean delete(Connection conn, Object bean) {
+        final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, bean.getClass());
+        final BeanProperty pkProperty = beanMetaData.pkProperty().orElseThrow(() -> new IllegalArgumentException("bean type " + bean.getClass() + " has no defined primary key"));
+
+        return executeUnchecked(() ->
+            sqlEngine.update("DELETE FROM " + beanMetaData.tableMetaData().tableName + " WHERE " + pkProperty.columnMetaData().colName + "=?", pkProperty.get(bean)).execute(conn) == 1
+        );
+    }
+    public boolean delete(Connection conn, Class<?> beanType, Object pk) {
+        final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, beanType);
+        final BeanProperty pkProperty = beanMetaData.pkProperty().orElseThrow(() -> new IllegalArgumentException("bean type " + beanType + " has no defined primary key"));
+
+        return executeUnchecked(() ->
+                sqlEngine.update("DELETE FROM " + beanMetaData.tableMetaData().tableName + " WHERE " + pkProperty.columnMetaData().colName + "=?", pk).execute(conn) == 1
+        );
+    }
 
     //TODO patch
 }
