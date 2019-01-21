@@ -52,7 +52,7 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
 
         final Snippets snippets = new Snippets();
 
-        // we mix in pagination as a snippet
+        // we mix in pagination as an appended snippet
         final SqlSnippet page3Query = concat (
                 sql("select * from person where name<? order by name", "zzz"),
                 snippets.pagination(3, 20)
@@ -62,6 +62,11 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
         for (int i=0; i<20; i++) {
             assertEquals(String.format("%04d", i+60), page3.get(i).name());
         }
+
+        // pagination using the 'wrapping' method
+        final SqlSnippet page3Query_2 = snippets.withPagination(3, 20, sql("select * from person where name<? order by name", "zzz"));
+        final List<Person> page3_2 = mapper.query(Person.class, page3Query_2).list(conn);
+        assertEquals(page3, page3_2);
 
         // now we add permission filtering to the mix
         final SqlSnippet withPermissionQuery = concat (
@@ -86,10 +91,25 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
  *  are grouped together here.
  */
 class Snippets {
+    /**
+     * pagination as a snippet to append...
+     */
     SqlSnippet pagination(int pageNo, int pageSize) {
         return sql("LIMIT ? OFFSET ?", pageSize, pageNo*pageSize);
     }
 
+    /**
+     * ... or as a method that wraps an existing snippet
+     */
+    SqlSnippet withPagination(int pageNo, int pageSize, SqlSnippet query) {
+        return concat(query, pagination(pageNo, pageSize));
+    }
+
+    /**
+     * returns a snippet with a condition checking if a given user may read a person. Note how
+     *  the person is passed in as a SqlSnippet: This allows flexible use, e.g. passing in a
+     *  subselect query.
+     */
     SqlSnippet hasPersonPermission(SqlSnippet personId, long userId) {
         return concat(
                 sql("EXISTS (SELECT * FROM person_permissions WHERE person_id="),
