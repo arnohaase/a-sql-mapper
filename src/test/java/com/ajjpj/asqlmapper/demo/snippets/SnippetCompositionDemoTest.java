@@ -10,6 +10,7 @@ import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataE
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +40,12 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
                         new GuessingPkStrategyDecider(),
                         new ImmutableWithBuilderMetaDataExtractor()
                 ), ds);
+    }
+
+    @AfterEach
+    void tearDown() throws SQLException {
+        conn.prepareStatement("drop table person_permissions").executeUpdate();
+        conn.prepareStatement("drop table person").executeUpdate();
     }
 
     @Test void testSnippetBuildingBlocks() throws Exception {
