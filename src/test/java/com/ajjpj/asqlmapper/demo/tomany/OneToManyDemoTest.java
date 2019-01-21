@@ -1,8 +1,7 @@
 package com.ajjpj.asqlmapper.demo.tomany;
 
 import com.ajjpj.acollections.AList;
-import com.ajjpj.acollections.immutable.AVector;
-import com.ajjpj.asqlmapper.ASqlEngine;
+import com.ajjpj.asqlmapper.SqlEngine;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.demo.simple.Person;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
-import java.util.Map;
 
 import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +30,7 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
         conn.prepareStatement("create table address(id bigserial primary key, person_id bigint references person, street varchar(200), city varchar(200))").executeUpdate();
 
         //TODO simplify setup: convenience factory, defaults, ...
-        mapper = new SqlMapper(ASqlEngine.create().withDefaultPkName("id"),
+        mapper = new SqlMapper(SqlEngine.create().withDefaultPkName("id"),
                 new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
                         new DefaultTableNameExtractor(),
                         new GuessingPkStrategyDecider(),

@@ -1,7 +1,7 @@
 package com.ajjpj.asqlmapper.demo.tomany;
 
 import com.ajjpj.acollections.AList;
-import com.ajjpj.asqlmapper.ASqlEngine;
+import com.ajjpj.asqlmapper.SqlEngine;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
@@ -30,7 +30,7 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest  {
         conn.prepareStatement("create table person_address(person_id bigint, address_id bigint, primary key(person_id, address_id))").executeUpdate();
 
         //TODO simplify setup: convenience factory, defaults, ...
-        mapper = new SqlMapper(ASqlEngine.create().withDefaultPkName("id"),
+        mapper = new SqlMapper(SqlEngine.create().withDefaultPkName("id"),
                 new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
                         new DefaultTableNameExtractor(),
                         new GuessingPkStrategyDecider(),

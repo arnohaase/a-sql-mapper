@@ -7,6 +7,7 @@ import com.ajjpj.asqlmapper.core.common.ScalarRowExtractor;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
 import com.ajjpj.asqlmapper.core.common.SqlRowExtractor;
 import com.ajjpj.asqlmapper.core.impl.*;
+import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -16,23 +17,26 @@ import java.util.function.Function;
  * not necessary but convenient
  * immutable, mutators return modified copy
  */
-public class ASqlEngine {
+public class SqlEngine {
     private final PrimitiveTypeRegistry primTypes;
     private final AOption<String> optDefaultPkName;
     private final CanHandleRegistry<RowExtractor> rowExtractorRegistry;
+    private final AVector<SqlEngineEventListener> listeners;
 
-    public static ASqlEngine create() {
+    public static SqlEngine create() {
         return create (PrimitiveTypeRegistry.defaults());
     }
 
-    public static ASqlEngine create(PrimitiveTypeRegistry primTypes) {
-        return new ASqlEngine(primTypes, AOption.none(), CanHandleRegistry.empty());
+    public static SqlEngine create(PrimitiveTypeRegistry primTypes) {
+        return new SqlEngine(primTypes, AOption.none(), CanHandleRegistry.empty(), AVector.empty());
     }
 
-    private ASqlEngine (PrimitiveTypeRegistry primTypes, AOption<String> optDefaultPkName, CanHandleRegistry<RowExtractor> rowExtractorRegistry) {
+    private SqlEngine (PrimitiveTypeRegistry primTypes, AOption<String> optDefaultPkName, CanHandleRegistry<RowExtractor> rowExtractorRegistry,
+                       AVector<SqlEngineEventListener> listeners) {
         this.primTypes = primTypes;
         this.optDefaultPkName = optDefaultPkName;
         this.rowExtractorRegistry = rowExtractorRegistry;
+        this.listeners = listeners;
     }
 
     public PrimitiveTypeRegistry primitiveTypeRegistry() {
@@ -48,11 +52,11 @@ public class ASqlEngine {
     //--------------------------- generic update statements, i.e. statements not returning a result set
 
     public AUpdate update(SqlSnippet sql) {
-        return new AUpdateImpl(sql, primTypes);
+        return new AUpdateImpl(sql, primTypes, listeners);
     }
 
     public AUpdate update(String sql, Object... params) {
-        return new AUpdateImpl(SqlSnippet.sql(sql, params), primTypes);
+        return new AUpdateImpl(SqlSnippet.sql(sql, params), primTypes, listeners);
     }
 
     //--------------------------- insert statements, i.e. statements returning a generated primary key
@@ -97,44 +101,44 @@ public class ASqlEngine {
         return insert(pkType, rowExtractor, sql, AVector.<String>builder().add(colName1).addAll(colNames).build());
     }
     public <T> AInsert<T> insert(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, AVector<String> colNames) { //TODO colNames varargs? works without?
-        return new AInsertImpl<>(pkType, sql, primTypes, rowExtractor, colNames);
+        return new AInsertImpl<>(pkType, sql, primTypes, rowExtractor, colNames, listeners);
     }
 
     // -------------------------- select statements
 
     public <T> AQuery<T> scalarQuery(Class<T> columnType, SqlSnippet sql) {
-        return new AQueryImpl<>(columnType, sql, primTypes, new ScalarRowExtractor<>(columnType));
+        return new AQueryImpl<>(columnType, sql, primTypes, new ScalarRowExtractor<>(columnType), listeners);
     }
     public <T> AQuery<T> scalarQuery(Class<T> columnType, String sql, Object... params) {
         return scalarQuery(columnType, SqlSnippet.sql(sql, params));
     }
 
     public AQuery<Long> longQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(Long.class, sql, primTypes, ScalarRowExtractor.LONG_EXTRACTOR);
+        return new AQueryImpl<>(Long.class, sql, primTypes, ScalarRowExtractor.LONG_EXTRACTOR, listeners);
     }
     public AQuery<Long> longQuery(String sql, Object... params) {
         return longQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<Integer> intQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(Integer.class, sql, primTypes, ScalarRowExtractor.INT_EXTRACTOR);
+        return new AQueryImpl<>(Integer.class, sql, primTypes, ScalarRowExtractor.INT_EXTRACTOR, listeners);
     }
     public AQuery<Integer> intQuery(String sql, Object... params) {
         return intQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<String> stringQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(String.class, sql, primTypes, ScalarRowExtractor.STRING_EXTRACTOR);
+        return new AQueryImpl<>(String.class, sql, primTypes, ScalarRowExtractor.STRING_EXTRACTOR, listeners);
     }
     public AQuery<String> stringQuery(String sql, Object... params) {
         return stringQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<Double> doubleQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(Double.class, sql, primTypes, ScalarRowExtractor.DOUBLE_EXTRACTOR);
+        return new AQueryImpl<>(Double.class, sql, primTypes, ScalarRowExtractor.DOUBLE_EXTRACTOR, listeners);
     }
     public AQuery<Double> doubleQuery(String sql, Object... params) {
         return doubleQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<BigDecimal> bigDecimalQuery (SqlSnippet sql) {
-        return new AQueryImpl<>(BigDecimal.class, sql, primTypes, ScalarRowExtractor.BIG_DECIMAL_EXTRACTOR);
+        return new AQueryImpl<>(BigDecimal.class, sql, primTypes, ScalarRowExtractor.BIG_DECIMAL_EXTRACTOR, listeners);
     }
     public AQuery<BigDecimal> bigDecimalQuery (String sql, Object... params) {
         return bigDecimalQuery(SqlSnippet.sql(sql, params));
@@ -142,10 +146,10 @@ public class ASqlEngine {
 
 
     public AQuery<SqlRow> rawQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(SqlRow.class, sql, primTypes, SqlRowExtractor.INSTANCE);
+        return new AQueryImpl<>(SqlRow.class, sql, primTypes, SqlRowExtractor.INSTANCE, listeners);
     }
     public AQuery<SqlRow> rawQuery(String sql, Object... params) {
-        return new AQueryImpl<>(SqlRow.class, SqlSnippet.sql(sql, params), primTypes, SqlRowExtractor.INSTANCE);
+        return new AQueryImpl<>(SqlRow.class, SqlSnippet.sql(sql, params), primTypes, SqlRowExtractor.INSTANCE, listeners);
     }
 
     public <T> AQuery<T> query(Class<T> targetType, SqlSnippet sql) {
@@ -157,7 +161,7 @@ public class ASqlEngine {
     }
 
     public <T> AQuery<T> query(Class<T> cls, RowExtractor rowExtractor, SqlSnippet sql) { //TODO consistent ordering of parameters
-        return new AQueryImpl<>(cls, sql, primTypes, rowExtractor);
+        return new AQueryImpl<>(cls, sql, primTypes, rowExtractor, listeners);
     }
 
     //TODO tuples as query results
@@ -165,18 +169,26 @@ public class ASqlEngine {
 
     //--------------------------- configuration
 
-    public <T> ASqlEngine withRawTypeMapping(Class<T> jdbcType, Function<T, Object> rawMapping) {
-        return new ASqlEngine(primTypes.withRawTypeMapping(jdbcType, rawMapping), optDefaultPkName, rowExtractorRegistry);
-    }
-    public ASqlEngine withPrimitiveHandler(PrimitiveTypeHandler handler) {
-        return new ASqlEngine(primTypes.withHandler(handler), optDefaultPkName, rowExtractorRegistry);
+    public AVector<SqlEngineEventListener> listeners() {
+        return listeners;
     }
 
-    public ASqlEngine withDefaultPkName(String pkName) {
-        return new ASqlEngine(primTypes, AOption.of(pkName), rowExtractorRegistry);
+    public <T> SqlEngine withRawTypeMapping(Class<T> jdbcType, Function<T, Object> rawMapping) {
+        return new SqlEngine(primTypes.withRawTypeMapping(jdbcType, rawMapping), optDefaultPkName, rowExtractorRegistry, listeners);
+    }
+    public SqlEngine withPrimitiveHandler(PrimitiveTypeHandler handler) {
+        return new SqlEngine(primTypes.withHandler(handler), optDefaultPkName, rowExtractorRegistry, listeners);
     }
 
-    public ASqlEngine withRowExtractor(RowExtractor rowExtractor) {
-        return new ASqlEngine(primTypes, optDefaultPkName, rowExtractorRegistry.withHandler(rowExtractor));
+    public SqlEngine withDefaultPkName(String pkName) {
+        return new SqlEngine(primTypes, AOption.of(pkName), rowExtractorRegistry, listeners);
+    }
+
+    public SqlEngine withRowExtractor(RowExtractor rowExtractor) {
+        return new SqlEngine(primTypes, optDefaultPkName, rowExtractorRegistry.withHandler(rowExtractor), listeners);
+    }
+
+    public SqlEngine withListener(SqlEngineEventListener listener) {
+        return new SqlEngine(primTypes, optDefaultPkName, rowExtractorRegistry, listeners.append(listener));
     }
 }

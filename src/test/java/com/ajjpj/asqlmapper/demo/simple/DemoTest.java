@@ -1,7 +1,7 @@
 package com.ajjpj.asqlmapper.demo.simple;
 
 import com.ajjpj.acollections.AMap;
-import com.ajjpj.asqlmapper.ASqlEngine;
+import com.ajjpj.asqlmapper.SqlEngine;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.core.AInsert;
 import com.ajjpj.asqlmapper.core.AQuery;
@@ -22,11 +22,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 class DemoTest extends AbstractDatabaseTest {
-    private ASqlEngine engine;
+    private SqlEngine engine;
 
     @BeforeEach void setUp() throws SQLException {
         conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
-        engine = ASqlEngine
+        engine = SqlEngine
                 .create()
                 .withDefaultPkName("id")
                 .withRowExtractor(new BuilderBasedRowExtractor()) //TODO provide this from the mapper

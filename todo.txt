@@ -6,6 +6,10 @@ todo
     * queries
     * for insert?
 
+* javadoc
+* logging
+* events: pre-query, post-query, pre-insert, post-insert, pre-update, post-update
+  * statistics (optional)
 
 * SQL snippets
   * concat
@@ -13,19 +17,13 @@ todo
   * "query by example": fields -> optional -> and
 
 * optimistic locking
-* paging
 * db error classification
 
 * statement check against live database ("yolo mode")
 
-* events: pre-query, post-query, pre-insert, post-insert, pre-update, post-update
-  * statistics (optional)
-
 * mapping layer
   * CRUD from bean
     * register "default" table name for bean, overridable per operation
-    * annotation "@Table"?
-    * concept / solution for "PK absent before insert, present after insert"?
   * mapping from / to bean (generated) --> JSON annotations
 
   * "semi-active" record --> generic 'model' class that keeps track of changes?
