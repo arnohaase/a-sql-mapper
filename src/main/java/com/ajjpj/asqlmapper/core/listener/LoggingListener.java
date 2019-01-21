@@ -26,7 +26,7 @@ public class LoggingListener implements SqlEngineEventListener {
     @Override public void onAfterQueryExecution () {
         final Instant now = Instant.now();
         afterExecution.set(now);
-        log.debug("executed query, took {}ms", start.get().until(now, ChronoUnit.MILLIS));
+//        log.debug("executed query (ResultSet not yet processed), took {}ms", start.get().until(now, ChronoUnit.MILLIS));
     }
 
     @Override public void onAfterQueryIteration (int numRows) {
