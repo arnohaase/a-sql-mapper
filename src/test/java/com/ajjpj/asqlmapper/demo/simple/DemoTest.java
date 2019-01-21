@@ -6,6 +6,7 @@ import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.core.AInsert;
 import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
+import com.ajjpj.asqlmapper.core.listener.LoggingListener;
 import com.ajjpj.asqlmapper.mapper.BuilderBasedRowExtractor;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
@@ -30,6 +31,7 @@ class DemoTest extends AbstractDatabaseTest {
                 .create()
                 .withDefaultPkName("id")
                 .withRowExtractor(new BuilderBasedRowExtractor()) //TODO provide this from the mapper
+                .withListener(new LoggingListener())
                 ;
     }
 

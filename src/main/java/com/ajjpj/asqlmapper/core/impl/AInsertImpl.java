@@ -58,18 +58,27 @@ public class AInsertImpl<T> implements AInsert<T> {
     }
 
     @Override public AList<T> executeMulti (Connection conn) throws SQLException {
-        final PreparedStatement ps = conn.prepareStatement(sql.getSql(), columnNames.toArray(new String[0]));
+        listeners.forEach(l -> l.onBeforeInsert(sql, pkCls, columnNames));
         try {
-            SqlHelper.bindParameters(ps, sql.getParams(), primTypes);
-            ps.executeUpdate();
-            final AVector.Builder<T> result = AVector.builder();
-            final ResultSet rs = ps.getGeneratedKeys();
-            final Object memento = rowExtractor.mementoPerQuery(pkCls, primTypes, rs);
-            while(rs.next()) result.add(rowExtractor.fromSql(pkCls, primTypes, rs, memento));
-            return result.build();
+            final PreparedStatement ps = conn.prepareStatement(sql.getSql(), columnNames.toArray(new String[0]));
+            try {
+                SqlHelper.bindParameters(ps, sql.getParams(), primTypes);
+                ps.executeUpdate();
+                final AVector.Builder<T> builder = AVector.builder();
+                final ResultSet rs = ps.getGeneratedKeys();
+                final Object memento = rowExtractor.mementoPerQuery(pkCls, primTypes, rs);
+                while (rs.next()) builder.add(rowExtractor.fromSql(pkCls, primTypes, rs, memento));
+                final AList<T> result = builder.build();
+                listeners.reverseIterator().forEachRemaining(l -> l.onAfterInsert(result));
+                return result;
+            }
+            finally {
+                SqlHelper.closeQuietly(ps);
+            }
         }
-        finally {
-            SqlHelper.closeQuietly(ps);
+        catch(Throwable th) {
+            listeners.reverseIterator().forEachRemaining(l -> l.onFailed(th));
+            throw th;
         }
     }
 }
