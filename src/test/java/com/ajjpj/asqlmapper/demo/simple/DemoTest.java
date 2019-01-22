@@ -24,20 +24,24 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DemoTest extends AbstractDatabaseTest {
     private SqlEngine engine;
+    private LoggingListener loggingListener;
 
     @BeforeEach void setUp() throws SQLException {
         conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
+        loggingListener = LoggingListener.createWithStatistics(1000);
         engine = SqlEngine
                 .create()
                 .withDefaultPkName("id")
                 .withRowExtractor(new BuilderBasedRowExtractor()) //TODO provide this from the mapper
-                .withListener(new LoggingListener())
+                .withListener(loggingListener)
                 ;
     }
 
     @AfterEach
     void tearDown() throws SQLException {
         conn.prepareStatement("drop table person").executeUpdate();
+        System.out.println(loggingListener.getStatistics());
+        System.out.println(loggingListener.getStatistics().getStatementStatistics().mkString("\n"));
     }
 
 

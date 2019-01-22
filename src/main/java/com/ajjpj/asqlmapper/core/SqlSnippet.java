@@ -50,9 +50,13 @@ public class SqlSnippet {
         final StringBuilder sql = new StringBuilder();
         final AVector.Builder<Object> params = AVector.builder();
 
+        boolean first = true;
         while (snippets.hasNext()) {
+            if(first) first = false;
+            else sql.append(" ");
+
             final SqlSnippet s = snippets.next();
-            sql.append(" ").append(s.getSql());
+            sql.append(s.getSql());
             params.addAll(s.getParams());
         }
 
