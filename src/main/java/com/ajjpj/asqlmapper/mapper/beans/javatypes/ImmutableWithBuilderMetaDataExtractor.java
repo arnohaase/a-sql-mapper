@@ -7,6 +7,8 @@ import com.ajjpj.asqlmapper.mapper.annotations.Ignore;
 import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 import com.ajjpj.asqlmapper.mapper.schema.TableMetaData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -20,6 +22,8 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 
 public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtractor {
+    private static final Logger log = LoggerFactory.getLogger(ImmutableWithBuilderMetaDataExtractor.class);
+
     @Override public List<BeanProperty> beanProperties (Connection conn, Class<?> beanType, TableMetaData tableMetaData) {
         return executeUnchecked(() -> {
             final AVector<Method> getters = wrap(beanType.getMethods())
@@ -43,7 +47,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
                 final String columnName = AOption.of(columnAnnot).map(Column::value).orElse(getter.getName());
                 final AOption<ColumnMetaData> optColumnMetaData = tableMetaData.findColByName(columnName);
                 if (optColumnMetaData.isEmpty()) {
-                    System.out.println("no database column " + tableMetaData.tableName + "." + columnName + " for property " + getter.getName() + " of bean " + beanType.getName());
+                    log.warn("no database column {}.{} for property {} of bean {}", tableMetaData.tableName, columnName, getter.getName(), beanType.getName());
                 }
 
                 final ColumnMetaData columnMetaData = optColumnMetaData.orNull();
