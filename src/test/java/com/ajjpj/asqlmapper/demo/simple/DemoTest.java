@@ -1,8 +1,8 @@
 package com.ajjpj.asqlmapper.demo.simple;
 
 import com.ajjpj.acollections.AMap;
-import com.ajjpj.asqlmapper.SqlEngine;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
+import com.ajjpj.asqlmapper.SqlEngine;
 import com.ajjpj.asqlmapper.core.AInsert;
 import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
@@ -15,7 +15,9 @@ import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataE
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 
@@ -43,6 +45,7 @@ class DemoTest extends AbstractDatabaseTest {
         conn.prepareStatement("drop table person").executeUpdate();
         System.out.println(loggingListener.getStatistics());
         System.out.println(loggingListener.getStatistics().getStatementStatistics().mkString("\n"));
+        System.out.println(LoggingListener.getAllStatistics().mkString("\n"));
     }
 
 

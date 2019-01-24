@@ -1,5 +1,6 @@
 package com.ajjpj.asqlmapper.core.listener;
 
+import com.ajjpj.acollections.ASet;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import org.slf4j.Logger;
@@ -7,6 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 
 /**
@@ -20,6 +24,8 @@ public class LoggingListener implements SqlEngineEventListener {
 
     private final SqlStatisticsTracker statisticsTracker;
 
+    private static final Map<LoggingListener, Boolean> all = Collections.synchronizedMap(new WeakHashMap<>());
+
     public static LoggingListener createWithoutStatistics() {
         return new LoggingListener(false, 0);
     }
@@ -29,6 +35,7 @@ public class LoggingListener implements SqlEngineEventListener {
 
     private LoggingListener (boolean keepStatistics, int firstNLimit) {
         statisticsTracker = keepStatistics ? new SqlStatisticsTracker(firstNLimit) : null;
+        all.put(this, true);
     }
 
     @Override public void onBeforeQuery (SqlSnippet sql, Class<?> rowClass) {
@@ -88,5 +95,9 @@ public class LoggingListener implements SqlEngineEventListener {
 
     public SqlStatistics getStatistics () {
         return statisticsTracker != null ? statisticsTracker.snapshot() : null;
+    }
+
+    public static ASet<SqlStatistics> getAllStatistics() {
+        return ASet.from(all.keySet()).map(LoggingListener::getStatistics);
     }
 }
