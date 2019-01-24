@@ -4,6 +4,7 @@ import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.core.RowExtractor;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -28,7 +29,7 @@ public class SqlRowExtractor implements RowExtractor {
         return builder.build();
     }
 
-    @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) {
+    @Override public <T> T fromSql (Connection conn, Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) {
         //noinspection unchecked
         return (T) new SqlRow(rs, (AVector<String>) mementoPerQuery, primTypes);
     }

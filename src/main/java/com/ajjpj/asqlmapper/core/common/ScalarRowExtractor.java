@@ -4,6 +4,7 @@ import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.core.RowExtractor;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -27,7 +28,7 @@ public class ScalarRowExtractor<T> implements RowExtractor {
         return this.cls.isAssignableFrom(cls);
     }
 
-    @Override public <U> U fromSql (Class<U> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) throws SQLException {
+    @Override public <U> U fromSql (Connection conn, Class<U> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) throws SQLException {
         return primTypes.fromSql(cls, rs.getObject(1));
     }
 }

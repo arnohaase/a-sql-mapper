@@ -50,7 +50,7 @@ public class AInsertImpl<T> implements AInsert<T> {
                 ps.executeUpdate();
                 final ResultSet rs = ps.getGeneratedKeys();
                 if (!rs.next()) throw new IllegalStateException("no result");
-                final T result = rowExtractor.fromSql(pkCls, primTypes, rs, rowExtractor.mementoPerQuery(pkCls, primTypes, rs));
+                final T result = rowExtractor.fromSql(conn, pkCls, primTypes, rs, rowExtractor.mementoPerQuery(pkCls, primTypes, rs));
                 if (rs.next()) throw new IllegalStateException("more than one result row");
 
                 listeners.reverseIterator().forEachRemaining(l -> l.onAfterInsert(result));
@@ -84,7 +84,7 @@ public class AInsertImpl<T> implements AInsert<T> {
                 final AVector.Builder<T> builder = AVector.builder();
                 final ResultSet rs = ps.getGeneratedKeys();
                 final Object memento = rowExtractor.mementoPerQuery(pkCls, primTypes, rs);
-                while (rs.next()) builder.add(rowExtractor.fromSql(pkCls, primTypes, rs, memento));
+                while (rs.next()) builder.add(rowExtractor.fromSql(conn, pkCls, primTypes, rs, memento));
                 final AList<T> result = builder.build();
                 listeners.reverseIterator().forEachRemaining(l -> l.onAfterInsert(result));
                 return result;

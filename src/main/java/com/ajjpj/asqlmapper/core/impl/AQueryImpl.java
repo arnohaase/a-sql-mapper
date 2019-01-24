@@ -52,7 +52,7 @@ public class AQueryImpl<T> implements AQuery<T> {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             if (!rs.next()) throw new IllegalStateException("no result");
             final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs);
-            final T result = doExtract(rs, memento);
+            final T result = doExtract(conn, rs, memento);
             if (rs.next()) throw new IllegalStateException("more than one result row");
             afterIteration(1);
             return result;
@@ -97,7 +97,7 @@ public class AQueryImpl<T> implements AQuery<T> {
                 return AOption.empty();
             }
             final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs);
-            final T result = doExtract(rs, memento);
+            final T result = doExtract(conn, rs, memento);
             if (rs.next()) throw new IllegalStateException("more than one result row");
             afterIteration(1);
             return AOption.some(result);
@@ -114,15 +114,15 @@ public class AQueryImpl<T> implements AQuery<T> {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             final AVector.Builder<T> builder = AVector.builder();
             final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs);
-            while (rs.next()) builder.add(doExtract(rs, memento));
+            while (rs.next()) builder.add(doExtract(conn, rs, memento));
             final AList<T> result = builder.build();
             afterIteration(result.size());
             return result;
         }));
     }
 
-    protected T doExtract(ResultSet rs, Object memento) throws SQLException {
-        return rowExtractor.fromSql(rowClass, primTypes, rs, memento);
+    protected T doExtract(Connection conn, ResultSet rs, Object memento) throws SQLException {
+        return rowExtractor.fromSql(conn, rowClass, primTypes, rs, memento);
     }
 
     @Override public Stream<T> stream () {
@@ -136,12 +136,14 @@ public class AQueryImpl<T> implements AQuery<T> {
     }
 
     private class ResultSetSpliterator implements Spliterator<T> {
+        private final Connection conn;
         private final PreparedStatement ps;
         private final ResultSet rs;
         private final Object memento;
         private int numRows = 0;
 
         ResultSetSpliterator(Connection conn) {
+            this.conn = conn;
             try {
                 listeners.forEach(l -> l.onBeforeQuery(sql, rowClass));
                 ps = conn.prepareStatement(sql.getSql());
@@ -173,7 +175,7 @@ public class AQueryImpl<T> implements AQuery<T> {
                     return false;
                 }
                 numRows += 1;
-                action.accept(doExtract(rs, memento));
+                action.accept(doExtract(conn, rs, memento));
                 return true;
             }
             catch(Throwable th) {

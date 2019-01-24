@@ -66,7 +66,7 @@ class DemoTest extends AbstractDatabaseTest {
 
     @Test void testMapper() throws SQLException {
         //TODO simplify setup: convenience factory, defaults, ...
-        final SqlMapper mapper = new SqlMapper(engine, new BeanRegistryImpl(ds, new SchemaRegistry(DatabaseDialect.H2),
+        final SqlMapper mapper = new SqlMapper(engine, new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
                 new DefaultTableNameExtractor(),
                 new GuessingPkStrategyDecider(),
                 new ImmutableWithBuilderMetaDataExtractor()

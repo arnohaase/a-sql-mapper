@@ -41,6 +41,17 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
         }
     }
 
+    @Override public boolean canHandle (Class<?> cls) {
+        try {
+            builderFactoryFor(cls);
+            builderFinalizerFor(cls);
+            return true;
+        }
+        catch (Exception exc) {
+            return false;
+        }
+    }
+
     @Override public List<BeanProperty> beanProperties (Connection conn, Class<?> beanType, TableMetaData tableMetaData) {
         return executeUnchecked(() -> {
             final AVector<Method> getters = wrap(beanType.getMethods())

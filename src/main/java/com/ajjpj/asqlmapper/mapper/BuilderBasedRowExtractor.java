@@ -6,6 +6,7 @@ import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ public class BuilderBasedRowExtractor implements RowExtractor {
         }
     }
 
-    @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) {
+    @Override public <T> T fromSql (Connection conn, Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) {
         //TODO configurable naming conventions
         //TODO caching
 

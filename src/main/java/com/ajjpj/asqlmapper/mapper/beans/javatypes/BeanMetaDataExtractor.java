@@ -1,6 +1,6 @@
 package com.ajjpj.asqlmapper.mapper.beans.javatypes;
 
-import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
+import com.ajjpj.asqlmapper.core.impl.CanHandle;
 import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.schema.TableMetaData;
 
@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 
-public interface BeanMetaDataExtractor {
+public interface BeanMetaDataExtractor extends CanHandle {
     List<BeanProperty> beanProperties(Connection conn, Class<?> beanType, TableMetaData tableMetaData);
 
     Supplier<Object> builderFactoryFor(Class<?> beanType);

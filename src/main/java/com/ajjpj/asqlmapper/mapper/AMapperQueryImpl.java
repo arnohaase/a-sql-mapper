@@ -28,8 +28,8 @@ class AMapperQueryImpl<T> extends AQueryImpl<T> implements AMapperQuery<T> {
         this.providedValues = providedValues;
     }
 
-    @Override protected T doExtract (ResultSet rs, Object memento) {
-        return executeUnchecked(() -> beanExtractor.fromSql(rowClass, primTypes, rs, memento, providedValues));
+    @Override protected T doExtract (Connection conn, ResultSet rs, Object memento) {
+        return executeUnchecked(() -> beanExtractor.fromSql(conn, rowClass, primTypes, rs, memento, providedValues));
     }
 
     @Override public AMapperQuery<T> withPropertyValues(String propName, ProvidedValues providedValues) {

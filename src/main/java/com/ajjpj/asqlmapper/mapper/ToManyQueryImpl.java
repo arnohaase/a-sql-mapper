@@ -72,10 +72,10 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
                     final K key = primTypes.fromSql(keyType, rs.getObject(keyColumn));
                     final T value;
                     if (beanExtractor instanceof BeanRegistryBasedRowExtractor) {
-                        value = ((BeanRegistryBasedRowExtractor) beanExtractor).fromSql(manyType, primTypes, rs, memento, providedProperties);
+                        value = ((BeanRegistryBasedRowExtractor) beanExtractor).fromSql(conn, manyType, primTypes, rs, memento, providedProperties);
                     }
                     else {
-                        value = beanExtractor.fromSql(manyType, primTypes, rs, memento);
+                        value = beanExtractor.fromSql(conn, manyType, primTypes, rs, memento);
                     }
                     raw.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
                 }
