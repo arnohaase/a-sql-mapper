@@ -31,10 +31,11 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
         conn.prepareStatement("create table person_permissions(person_id bigint references person, user_id bigint, primary key(person_id, user_id))").executeUpdate();
         SqlEngine engine = SqlEngine
                 .create()
+                .withDefaultConnectionSupplier(() -> conn)
                 .withDefaultPkName("id");
 
         //TODO simplify setup: convenience factory, defaults, ...
-        mapper = new SqlMapper(SqlEngine.create().withDefaultPkName("id"),
+        mapper = new SqlMapper(engine,
                 new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
                         new DefaultTableNameExtractor(),
                         new GuessingPkStrategyDecider(),
@@ -48,12 +49,12 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
         conn.prepareStatement("drop table person").executeUpdate();
     }
 
-    @Test void testSnippetBuildingBlocks() throws Exception {
+    @Test void testSnippetBuildingBlocks() {
         for (int i=0; i<1000; i++) {
-            long personId = mapper.insert(conn, Person.of(0L, String.format("%04d", i))).id();
-            mapper.engine().update("insert into person_permissions(person_id, user_id) values(?,?)", personId, 1L).execute(conn);
+            long personId = mapper.insert(Person.of(0L, String.format("%04d", i))).id();
+            mapper.engine().update("insert into person_permissions(person_id, user_id) values(?,?)", personId, 1L).execute();
             if (i%10 == 0)
-                mapper.engine().update("insert into person_permissions(person_id, user_id) values(?,?)", personId, 5L).execute(conn);
+                mapper.engine().update("insert into person_permissions(person_id, user_id) values(?,?)", personId, 5L).execute();
         }
 
         final Snippets snippets = new Snippets();
@@ -63,7 +64,7 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
                 sql("select * from person where name<? order by name", "zzz"),
                 snippets.pagination(3, 20)
         );
-        final List<Person> page3 = mapper.query(Person.class, page3Query).list(conn);
+        final List<Person> page3 = mapper.query(Person.class, page3Query).list();
         assertEquals(20, page3.size());
         for (int i=0; i<20; i++) {
             assertEquals(String.format("%04d", i+60), page3.get(i).name());
@@ -71,7 +72,7 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
 
         // pagination using the 'wrapping' method
         final SqlSnippet page3Query_2 = snippets.withPagination(3, 20, sql("select * from person where name<? order by name", "zzz"));
-        final List<Person> page3_2 = mapper.query(Person.class, page3Query_2).list(conn);
+        final List<Person> page3_2 = mapper.query(Person.class, page3Query_2).list();
         assertEquals(page3, page3_2);
 
         // now we add permission filtering to the mix
@@ -81,7 +82,7 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
                 sql("order by p.name"),
                 snippets.pagination(1, 20)
         );
-        final List<Person> filtered = mapper.query(Person.class, withPermissionQuery).list(conn);
+        final List<Person> filtered = mapper.query(Person.class, withPermissionQuery).list();
         assertEquals(20, filtered.size());
         for(int i=0; i<20; i++) {
             assertEquals(String.format("%04d", 10*(i+20)), filtered.get(i).name());

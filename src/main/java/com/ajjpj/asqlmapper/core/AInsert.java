@@ -11,6 +11,8 @@ import java.sql.SQLException;
  * @param <T> the type containing the generated column(s) - typically there is only one generated column, and this is its scalar type
  */
 public interface AInsert<T> {
-    T executeSingle(Connection conn) throws SQLException;
-    AList<T> executeMulti(Connection conn) throws SQLException;
+    T executeSingle(Connection conn);
+    T executeSingle();
+    AList<T> executeMulti(Connection conn);
+    AList<T> executeMulti();
 }

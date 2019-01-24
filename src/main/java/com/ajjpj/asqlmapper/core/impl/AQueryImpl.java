@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -29,17 +30,25 @@ public class AQueryImpl<T> implements AQuery<T> {
     protected final PrimitiveTypeRegistry primTypes;
     private final RowExtractor rowExtractor;
     protected final AVector<SqlEngineEventListener> listeners;
+    protected final AOption<Supplier<Connection>> defaultConnectionSupplier;
 
     public AQueryImpl (Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, RowExtractor rowExtractor,
-                       AVector<SqlEngineEventListener> listeners) {
+                       AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier) {
         this.rowClass = cls;
         this.sql = sql;
         this.primTypes = primTypes;
         this.rowExtractor = rowExtractor;
         this.listeners = listeners;
+        this.defaultConnectionSupplier = defaultConnectionSupplier;
     }
 
-    @Override public T single (Connection conn) throws SQLException {
+    @Override public T single () {
+        return single(defaultConnectionSupplier
+                .orElseThrow(() -> new IllegalStateException("no default connection supplier was configured"))
+                .get());
+    }
+
+    @Override public T single (Connection conn) {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             if (!rs.next()) throw new IllegalStateException("no result");
             final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs);
@@ -54,7 +63,7 @@ public class AQueryImpl<T> implements AQuery<T> {
         listeners.reverseIterator().forEachRemaining(l -> l.onAfterQueryIteration(numRows));
     }
 
-    private <X> X doQuery(Connection conn, Function<ResultSet, X> resultHandler) throws SQLException {
+    private <X> X doQuery(Connection conn, Function<ResultSet, X> resultHandler) {
         listeners.forEach(l -> l.onBeforeQuery(sql, rowClass));
         try {
             final PreparedStatement ps = conn.prepareStatement(sql.getSql());
@@ -70,11 +79,18 @@ public class AQueryImpl<T> implements AQuery<T> {
         }
         catch(Throwable th) {
             listeners.reverseIterator().forEachRemaining(l -> l.onFailed(th));
-            throw th;
+            AUnchecker.throwUnchecked(th);
+            throw new RuntimeException("just for the compiler");
         }
     }
 
-    @Override public AOption<T> optional (Connection conn) throws SQLException {
+    @Override public AOption<T> optional () {
+        return optional(defaultConnectionSupplier
+                .orElseThrow(() -> new IllegalStateException("no default connection supplier was configured"))
+                .get());
+    }
+
+    @Override public AOption<T> optional (Connection conn) {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             if (!rs.next()) {
                 afterIteration(0);
@@ -88,7 +104,13 @@ public class AQueryImpl<T> implements AQuery<T> {
         }));
     }
 
-    @Override public AList<T> list (Connection conn) throws SQLException {
+    @Override public AList<T> list () {
+        return list(defaultConnectionSupplier
+                .orElseThrow(() -> new IllegalStateException("no default connection supplier was configured"))
+                .get());
+    }
+
+    @Override public AList<T> list (Connection conn) {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             final AVector.Builder<T> builder = AVector.builder();
             final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs);
@@ -101,6 +123,12 @@ public class AQueryImpl<T> implements AQuery<T> {
 
     protected T doExtract(ResultSet rs, Object memento) throws SQLException {
         return rowExtractor.fromSql(rowClass, primTypes, rs, memento);
+    }
+
+    @Override public Stream<T> stream () {
+        return stream(defaultConnectionSupplier
+                .orElseThrow(() -> new IllegalStateException("no default connection supplier was configured"))
+                .get());
     }
 
     @Override public Stream<T> stream (Connection conn) {

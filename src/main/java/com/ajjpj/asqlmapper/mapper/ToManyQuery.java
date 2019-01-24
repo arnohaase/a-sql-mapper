@@ -8,7 +8,8 @@ import java.sql.SQLException;
 
 
 public interface ToManyQuery<K,R> {
-    ProvidedValues execute(Connection conn) throws SQLException;
+    ProvidedValues execute();
+    ProvidedValues execute(Connection conn);
     ToManyQuery withPropertyValues (String propertyName, ProvidedValues propertyValues);
     ToManyQuery withPropertyValues (ProvidedProperties providedProperties);
 }

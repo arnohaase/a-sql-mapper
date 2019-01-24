@@ -12,8 +12,12 @@ import java.util.stream.Stream;
  * represents a SELECT statement
  */
 public interface AQuery<T> {
-    T single(Connection conn) throws SQLException;
-    AOption<T> optional(Connection conn) throws SQLException;
-    AList<T> list(Connection conn) throws SQLException;
+    T single(Connection conn);
+    T single();
+    AOption<T> optional(Connection conn);
+    AOption<T> optional();
+    AList<T> list(Connection conn);
+    AList<T> list();
     Stream<T> stream(Connection conn);
+    Stream<T> stream();
 }

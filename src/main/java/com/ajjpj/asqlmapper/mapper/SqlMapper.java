@@ -46,7 +46,7 @@ public class SqlMapper {
     }
     public <T> AMapperQuery<T> query(Class<T> beanType, SqlSnippet sql) {
         if (!beanRowExtractor.canHandle(beanType)) throw new IllegalArgumentException(beanType + " is not a mapped bean");
-        return new AMapperQueryImpl<>(beanType,sql, sqlEngine.primitiveTypeRegistry(), beanRowExtractor, ProvidedProperties.empty(), sqlEngine.listeners());
+        return new AMapperQueryImpl<>(beanType,sql, sqlEngine.primitiveTypeRegistry(), beanRowExtractor, ProvidedProperties.empty(), sqlEngine.listeners(), engine().defaultConnectionSupplier());
     }                                                                                                         
 
     //TODO query convenience (factory for SqlSnippet?): by pk, "select * from <tablename>", ...;-)
@@ -67,9 +67,13 @@ public class SqlMapper {
     }
     public <K,T,R> ToManyQuery<K, R> queryForToMany(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql, Collector<T,?,? extends R> collectorPerPk) {
         final RowExtractor rowExtractor = engine().rowExtractorFor(beanType);
-        return new ToManyQueryImpl<>(rowExtractor, ProvidedProperties.empty(), fkType, fkName, beanType, sql, engine().primitiveTypeRegistry(), collectorPerPk);
+        return new ToManyQueryImpl<>(rowExtractor, ProvidedProperties.empty(), fkType, fkName, beanType, sql, engine().primitiveTypeRegistry(), collectorPerPk,
+                engine().defaultConnectionSupplier());
     }
 
+    public <T> AList<T> insertMany(List<T> os) {
+        return insertMany(engine().defaultConnection(), os);
+    }
     public <T> AList<T> insertMany(Connection conn, List<T> os) {
         if(os.isEmpty()) return AList.empty();
 
@@ -149,6 +153,9 @@ public class SqlMapper {
         });
     }
 
+    public <T> T insert(T o) {
+        return insert(engine().defaultConnection(), o);
+    }
     public <T> T insert(Connection conn, T o) {
         final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, o.getClass());
         if (beanMetaData.pkStrategy().isAutoIncrement()) {
@@ -215,6 +222,9 @@ public class SqlMapper {
         });
     }
 
+    public boolean update(Object bean) {
+        return update(engine().defaultConnection(), bean);
+    }
     public boolean update(Connection conn, Object bean) {
         return executeUnchecked(() -> {
             final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, bean.getClass());
@@ -237,6 +247,9 @@ public class SqlMapper {
         });
     }
 
+    public boolean delete(Object bean) {
+        return delete(engine().defaultConnection(), bean);
+    }
     public boolean delete(Connection conn, Object bean) {
         final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, bean.getClass());
         final BeanProperty pkProperty = beanMetaData.pkProperty().orElseThrow(() -> new IllegalArgumentException("bean type " + bean.getClass() + " has no defined primary key"));
@@ -244,6 +257,9 @@ public class SqlMapper {
         return executeUnchecked(() ->
             sqlEngine.update("DELETE FROM " + beanMetaData.tableMetaData().tableName + " WHERE " + pkProperty.columnMetaData().colName + "=?", pkProperty.get(bean)).execute(conn) == 1
         );
+    }
+    public boolean delete(Class<?> beanType, Object pk) {
+        return delete(engine().defaultConnection(), beanType, pk);
     }
     public boolean delete(Connection conn, Class<?> beanType, Object pk) {
         final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, beanType);
@@ -254,6 +270,9 @@ public class SqlMapper {
         );
     }
 
+    public boolean patch(Class<?> beanType, Object pk, Map<String,Object> newValues) {
+        return patch(engine().defaultConnection(), beanType, pk, newValues);
+    }
     public boolean patch(Connection conn, Class<?> beanType, Object pk, Map<String,Object> newValues) {
         final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, beanType);
         final BeanProperty pkProperty = beanMetaData.pkProperty().orElseThrow(() -> new IllegalArgumentException("bean type " + beanType + " has no defined primary key"));
