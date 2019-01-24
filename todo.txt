@@ -19,6 +19,8 @@ todo
 
 * statement check against live database ("yolo mode")
 
+* i18n as String from to-many: generator / snippet / convenience in mapper?
+
 * mapping layer
   * Java bean support
   * "semi-active" record --> generic 'model' class that keeps track of changes?

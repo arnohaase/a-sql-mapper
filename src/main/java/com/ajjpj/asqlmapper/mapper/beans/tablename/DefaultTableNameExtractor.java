@@ -14,7 +14,6 @@ public class DefaultTableNameExtractor implements TableNameExtractor {
                 .flatMap(c -> AOption.of(c.getAnnotation(Table.class)).map(Table::value))
                 .toSet();
 
-        final String tableName;
         switch(tableNamesFromAnnotation.size()) {
             case 0: return beanType.getSimpleName();
             case 1: return tableNamesFromAnnotation.head();
