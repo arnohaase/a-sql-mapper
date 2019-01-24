@@ -31,11 +31,11 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest  {
 
         //TODO simplify setup: convenience factory, defaults, ...
         mapper = new SqlMapper(SqlEngine.create().withDefaultPkName("id").withDefaultConnectionSupplier(() -> conn),
-                new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
+                new BeanRegistryImpl(ds, new SchemaRegistry(DatabaseDialect.H2),
                         new DefaultTableNameExtractor(),
                         new GuessingPkStrategyDecider(),
                         new ImmutableWithBuilderMetaDataExtractor()
-                ), ds);
+                ));
     }
 
     @AfterEach

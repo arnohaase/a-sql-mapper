@@ -36,11 +36,11 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
 
         //TODO simplify setup: convenience factory, defaults, ...
         mapper = new SqlMapper(engine,
-                new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
+                new BeanRegistryImpl(ds, new SchemaRegistry(DatabaseDialect.H2),
                         new DefaultTableNameExtractor(),
                         new GuessingPkStrategyDecider(),
                         new ImmutableWithBuilderMetaDataExtractor()
-                ), ds);
+                ));
     }
 
     @AfterEach

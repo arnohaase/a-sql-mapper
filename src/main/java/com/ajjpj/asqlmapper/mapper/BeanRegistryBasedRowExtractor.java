@@ -8,20 +8,14 @@ import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanRegistry;
 import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
-
 
 class BeanRegistryBasedRowExtractor implements RowExtractor {
-    private final DataSource ds;
     private final BeanRegistry beanRegistry;
 
-    public BeanRegistryBasedRowExtractor (DataSource ds, BeanRegistry beanRegistry) {
-        this.ds = ds;
+    public BeanRegistryBasedRowExtractor (BeanRegistry beanRegistry) {
         this.beanRegistry = beanRegistry;
     }
 
@@ -30,20 +24,13 @@ class BeanRegistryBasedRowExtractor implements RowExtractor {
     }
 
     private BeanMetaData getMetaData(Class<?> beanType) {
-        return executeUnchecked(() -> {
-            final Connection conn = ds.getConnection();
-            //noinspection TryFinallyCanBeTryWithResources
-            try {
-                return beanRegistry.getMetaData(conn, beanType);
-            }
-            catch (Exception exc) {
-                //TODO better error logging (e.g. 'table ... not found')
-                return null;
-            }
-            finally {
-                conn.close();
-            }
-        });
+        try {
+            return beanRegistry.getMetaData(beanType);
+        }
+        catch (Exception exc) {
+            //TODO better error logging (e.g. 'table ... not found')
+            return null;
+        }
     }
 
     @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) throws SQLException {

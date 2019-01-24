@@ -63,11 +63,11 @@ class DemoTest extends AbstractDatabaseTest {
 
     @Test void testMapper() throws SQLException {
         //TODO simplify setup: convenience factory, defaults, ...
-        final SqlMapper mapper = new SqlMapper(engine, new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
+        final SqlMapper mapper = new SqlMapper(engine, new BeanRegistryImpl(ds, new SchemaRegistry(DatabaseDialect.H2),
                 new DefaultTableNameExtractor(),
                 new GuessingPkStrategyDecider(),
                 new ImmutableWithBuilderMetaDataExtractor()
-                ), ds);
+                ));
 
         final Person inserted1 = mapper.insert(Person.of(0L, "Arno"));
         final Person inserted2 = mapper.insert(Person.of(0L, "Arno"));
