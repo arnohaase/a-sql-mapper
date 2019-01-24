@@ -64,7 +64,7 @@ class DemoTest extends AbstractDatabaseTest {
         assertEquals (Person.of(2L, "Arno"), engine.query(Person.class, "select * from person where id=?", 2).single());
     }
 
-    @Test void testMapper() throws SQLException {
+    @Test void testMapper() {
         //TODO simplify setup: convenience factory, defaults, ...
         final SqlMapper mapper = new SqlMapper(engine, new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
                 new DefaultTableNameExtractor(),
