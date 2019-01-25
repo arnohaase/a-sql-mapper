@@ -86,9 +86,13 @@ public class LoggingListener implements SqlEngineEventListener {
     }
 
     @Override public void onFailed (Throwable th) {
-        final long duration = start.get().until(Instant.now(), ChronoUnit.MILLIS);
-        log.debug("failed SQL after " + duration + "ms", th);
-        //TODO keep in statistics?
+        final Instant startInstant = start.get();
+
+        if (startInstant != null) {
+            final long duration = start.get().until(Instant.now(), ChronoUnit.MILLIS);
+            log.debug("failed SQL after " + duration + "ms", th);
+            //TODO add to statistics?
+        }
         start.remove();
         sqlString.remove();
     }
