@@ -48,9 +48,12 @@ public class SqlEngine {
     }
 
     public RowExtractor rowExtractorFor (Class<?> cls) {
-        return rowExtractorRegistry
-                .handlerFor(cls)
-                .orElseThrow(() -> new IllegalArgumentException("no row extractor registered for " + cls + " - pass in a RowExtractor instance explicitly or register it"));
+        final AOption<RowExtractor> registered = rowExtractorRegistry.handlerFor(cls);
+        if (registered.isDefined()) return registered.get();
+
+        if (primTypes.isPrimitiveType(cls)) return new ScalarRowExtractor(cls);
+
+        throw new IllegalArgumentException("no row extractor registered for " + cls + " - pass in a RowExtractor instance explicitly or register it");
     }
 
     //--------------------------- generic update statements, i.e. statements not returning a result set
@@ -98,7 +101,7 @@ public class SqlEngine {
         return insert(Long.class, ScalarRowExtractor.LONG_EXTRACTOR, sql, AVector.of(colName));
     }
     public <T> AInsert<T> insertSingleColPk (Class<T> pkType, SqlSnippet sql, String colName) {
-        return insert(pkType, new ScalarRowExtractor<>(pkType), sql, colName);
+        return insert(pkType, new ScalarRowExtractor(pkType), sql, colName);
     }
 
     public <T> AInsert<T> insert(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, String colName1, String... colNames) {
@@ -111,7 +114,7 @@ public class SqlEngine {
     // -------------------------- select statements
 
     public <T> AQuery<T> scalarQuery(Class<T> columnType, SqlSnippet sql) {
-        return new AQueryImpl<>(columnType, sql, primTypes, new ScalarRowExtractor<>(columnType), listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(columnType, sql, primTypes, new ScalarRowExtractor(columnType), listeners, defaultConnectionSupplier);
     }
     public <T> AQuery<T> scalarQuery(Class<T> columnType, String sql, Object... params) {
         return scalarQuery(columnType, SqlSnippet.sql(sql, params));

@@ -1,5 +1,6 @@
 package com.ajjpj.asqlmapper.mapper.beans.javatypes;
 
+import com.ajjpj.acollections.ACollection;
 import com.ajjpj.acollections.ASet;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
@@ -52,6 +53,19 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
         }
     }
 
+    private Method setterFor(Class<?> type, String name, Class<?> getterType, Method getter) {
+        final ACollection<Method> candidates = wrap(type.getMethods()).filter(m -> m.getName().equals(name) &&
+                m.getParameterCount() == 1 &&
+                m.getParameterTypes()[0].isAssignableFrom(getterType)
+                );
+
+        switch(candidates.size()) {
+            case 0: throw new IllegalArgumentException("no corresponding setter '" + name + "' for " + getter + " in " + type);
+            case 1: return candidates.iterator().next();
+            default: throw new IllegalArgumentException("conflicting setters '" + name + "' for " + getter + " in " + type + ": " + candidates);
+        }
+    }
+
     @Override public List<BeanProperty> beanProperties (Connection conn, Class<?> beanType, TableMetaData tableMetaData) {
         return executeUnchecked(() -> {
             final AVector<Method> getters = wrap(beanType.getMethods())
@@ -65,8 +79,8 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
             return getters
                     .filterNot(g -> hasIgnoreAnnotation(beanType, g))
                     .flatMap(getter -> executeUnchecked(() -> {
-                final Method setter = beanType.getMethod("with" + toFirstUpper(getter.getName()), getter.getReturnType());
-                final Method builderSetter = builderClass.getMethod(getter.getName(), getter.getReturnType());
+                final Method setter = setterFor(beanType, "with" + toFirstUpper(getter.getName()), getter.getReturnType(), getter);
+                final Method builderSetter = setterFor(builderClass, getter.getName(), getter.getReturnType(), getter);
 
                 final String columnName = columnNameFromAnnotation(beanType, getter).orElse(getter.getName());
                 final AOption<ColumnMetaData> optColumnMetaData = tableMetaData.findColByName(columnName);
