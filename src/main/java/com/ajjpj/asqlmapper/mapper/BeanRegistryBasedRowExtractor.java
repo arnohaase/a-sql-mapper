@@ -30,9 +30,16 @@ class BeanRegistryBasedRowExtractor implements RowExtractor {
 
     public <T> T fromSql (Connection conn, Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedProperties providedProperties) throws SQLException {
         final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, cls);
-        if (beanMetaData.tableMetaData().pkColumns().size() != 1)
-            throw new IllegalArgumentException("bean must have exactly one PK column for provided values to work - table " + beanMetaData.tableMetaData() + " has PK columns " + beanMetaData.tableMetaData());
-        final String pkColumnName = beanMetaData.tableMetaData().pkColumns().head().colName; //TODO pass this in as an optional value? any column 'referenced' by a many side would suffice...
+
+        final String pkColumnName;
+        if (providedProperties.nonEmpty()) {
+            if (beanMetaData.tableMetaData().pkColumns().size() != 1)
+                throw new IllegalArgumentException("bean must have exactly one PK column for provided values to work - table " + beanMetaData.tableMetaData() + " has PK columns " + beanMetaData.tableMetaData());
+            pkColumnName = beanMetaData.tableMetaData().pkColumns().head().colName; //TODO pass this in as an optional value? any column 'referenced' by a many side would suffice...
+        }
+        else {
+            pkColumnName = null;
+        }
 
         Object builder = beanMetaData.newBuilder();
         for(BeanProperty prop: beanMetaData.beanProperties()) {
@@ -46,7 +53,7 @@ class BeanRegistryBasedRowExtractor implements RowExtractor {
                }
             }
             else {
-                final Object value = primTypes.fromSql(prop.propType(), rs.getObject(prop.columnMetaData().colName));
+                final Object value = primTypes.fromSql(prop.propType(), rs.getObject(prop.columnName()));
                 builder = prop.setOnBuilder(builder, value);
             }
         }

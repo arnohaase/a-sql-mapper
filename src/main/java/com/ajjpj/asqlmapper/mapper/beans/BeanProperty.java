@@ -1,5 +1,6 @@
 package com.ajjpj.asqlmapper.mapper.beans;
 
+import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 
 import java.lang.reflect.Method;
@@ -29,16 +30,17 @@ public class BeanProperty {
     }
 
     public boolean isPrimaryKey() {
-        return columnMetaData != null && columnMetaData().isPrimaryKey;
+        return columnMetaData != null && columnMetaData.isPrimaryKey;
     }
 
     public Class<?> propType() {
         return propType;
     }
-    public ColumnMetaData columnMetaData() {
-        if (columnMetaData == null)
-            throw new IllegalArgumentException("no column meta data for property " + name + " of class " + getterMethod.getDeclaringClass());
-        return columnMetaData;
+    public AOption<ColumnMetaData> columnMetaData() {
+        return AOption.of(columnMetaData);
+    }
+    public String columnName() {
+        return columnMetaData().map(m -> m.colName).orElse(name);
     }
 
     public boolean isReadable() {
@@ -70,5 +72,18 @@ public class BeanProperty {
 
     public String name() {
         return name;
+    }
+
+    @Override
+    public String toString () {
+        return "BeanProperty{" +
+                "propType=" + propType +
+                ", name='" + name + '\'' +
+                ", columnMetaData=" + columnMetaData +
+                ", getterMethod=" + getterMethod +
+                ", setterMethod=" + setterMethod +
+                ", setterReturnsBean=" + setterReturnsBean +
+                ", builderSetterMethod=" + builderSetterMethod +
+                '}';
     }
 }

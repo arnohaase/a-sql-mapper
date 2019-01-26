@@ -48,7 +48,7 @@ public class BeanMetaData {
     public AVector<BeanProperty> insertedBeanProperties() {
         if (insertedProperties == null) {
             insertedProperties = beanProperties
-                    .filter(p -> p.columnMetaData() != null && (!p.columnMetaData().isPrimaryKey || !pkStrategy.isAutoIncrement()));
+                    .filter(p -> !p.isPrimaryKey() || !pkStrategy.isAutoIncrement());
         }
         return insertedProperties;
     }

@@ -96,7 +96,7 @@ public class SqlMapper {
             }
 
             if (pkProperty != null) {
-                final List<?> pkValues = sqlEngine.insertSingleColPk(pkProperty.propType(), builder.build(), pkProperty.columnMetaData().colName).executeMulti(conn);
+                final List<?> pkValues = sqlEngine.insertSingleColPk(pkProperty.propType(), builder.build(), pkProperty.columnName()).executeMulti(conn);
                 if (pkValues.size() != os.size()) throw new IllegalStateException("inserting " + os.size() + " rows returned " + pkValues.size() + " - mismatch");
 
                 final AVector.Builder<T> result = AVector.builder();
@@ -171,7 +171,7 @@ public class SqlMapper {
 
             if (beanMetaData.pkProperty().isDefined()) {
                 final BeanProperty pkProperty = beanMetaData.pkProperty().get();
-                final Object pkValue = sqlEngine.insertSingleColPk(pkProperty.propType(), insertStmt, pkProperty.columnMetaData().colName).executeSingle(conn);
+                final Object pkValue = sqlEngine.insertSingleColPk(pkProperty.propType(), insertStmt, pkProperty.columnName()).executeSingle(conn);
                 //noinspection unchecked
                 return (T) pkProperty.set(o, pkValue);
             }
@@ -185,12 +185,13 @@ public class SqlMapper {
         final SqlSnippet into = commaSeparated(
                 beanMetaData
                         .insertedBeanProperties()
-                        .map(p -> sql(p.columnMetaData().colName))
+                        .flatMap(p -> p.columnMetaData().map(m -> sql(m.colName)))
         );
+
         final SqlSnippet values = params(
                 beanMetaData
                         .insertedBeanProperties()
-                        .map(p -> p.get(bean))
+                        .flatMap(p -> p.columnMetaData().map(m -> p.get(bean)))
         );
         return concat(
                 sql("INSERT INTO " + beanMetaData.tableMetaData().tableName + "("),
@@ -232,14 +233,14 @@ public class SqlMapper {
             final SqlSnippet updates = commaSeparated(
                     beanMetaData.beanProperties()
                             .iterator()
-                            .filterNot(p -> p.columnMetaData().isPrimaryKey)
-                            .map(p -> sql(p.columnMetaData().colName + "=?", p.get(bean)))
+                            .filterNot(BeanProperty::isPrimaryKey)
+                            .flatMap(p -> p.columnMetaData().map(m -> sql(m.colName + "=?", p.get(bean))).iterator())
             );
 
             final SqlSnippet stmt = concat(
                     sql("UPDATE " + beanMetaData.tableMetaData().tableName + " SET"),
                     updates,
-                    sql("WHERE " + beanMetaData.pkProperty().get().columnMetaData().colName + "=?", beanMetaData.pkProperty().get().get(bean))
+                    sql("WHERE " + beanMetaData.pkProperty().get().columnName() + "=?", beanMetaData.pkProperty().get().get(bean))
             );
 
             return sqlEngine.update(stmt).execute(conn) == 1;
@@ -254,7 +255,7 @@ public class SqlMapper {
         final BeanProperty pkProperty = beanMetaData.pkProperty().orElseThrow(() -> new IllegalArgumentException("bean type " + bean.getClass() + " has no defined primary key"));
 
         return executeUnchecked(() ->
-            sqlEngine.update("DELETE FROM " + beanMetaData.tableMetaData().tableName + " WHERE " + pkProperty.columnMetaData().colName + "=?", pkProperty.get(bean)).execute(conn) == 1
+            sqlEngine.update("DELETE FROM " + beanMetaData.tableMetaData().tableName + " WHERE " + pkProperty.columnName() + "=?", pkProperty.get(bean)).execute(conn) == 1
         );
     }
     public boolean delete(Class<?> beanType, Object pk) {
@@ -265,7 +266,7 @@ public class SqlMapper {
         final BeanProperty pkProperty = beanMetaData.pkProperty().orElseThrow(() -> new IllegalArgumentException("bean type " + beanType + " has no defined primary key"));
 
         return executeUnchecked(() ->
-                sqlEngine.update("DELETE FROM " + beanMetaData.tableMetaData().tableName + " WHERE " + pkProperty.columnMetaData().colName + "=?", pk).execute(conn) == 1
+                sqlEngine.update("DELETE FROM " + beanMetaData.tableMetaData().tableName + " WHERE " + pkProperty.columnName() + "=?", pk).execute(conn) == 1
         );
     }
 
@@ -296,10 +297,10 @@ public class SqlMapper {
             else {
                 builder.append(",");
             }
-            builder.append(prop.columnMetaData().colName + "=?", newValues.get(propName));
+            builder.append(prop.columnName() + "=?", newValues.get(propName));
         }
 
-        builder.append("WHERE " + pkProperty.columnMetaData().colName + "=?", pk);
+        builder.append("WHERE " + pkProperty.columnName() + "=?", pk);
 
         return executeUnchecked(() ->
             sqlEngine.update(builder.build()).execute(conn) == 1

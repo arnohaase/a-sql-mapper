@@ -27,7 +27,7 @@ class ProvidedPropertiesImpl implements ProvidedProperties {
     }
 
     @Override public ProvidedProperties with (String propertyName, ProvidedValues providedValues) {
-        return new ProvidedPropertiesImpl(properties.plus(propertyName, providedValues));
+        return new ProvidedPropertiesImpl(properties.plus(propertyName.toLowerCase(), providedValues));
     }
 
     @Override public boolean nonEmpty () {
