@@ -66,7 +66,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
         }
     }
 
-    @Override public List<BeanProperty> beanProperties (Connection conn, Class<?> beanType, TableMetaData tableMetaData) {
+    @Override public AVector<BeanProperty> beanProperties (Connection conn, Class<?> beanType, AOption<TableMetaData> tableMetaData) {
         return executeUnchecked(() -> {
             final AVector<Method> getters = wrap(beanType.getMethods())
                     .filterNot(m -> m.getName().equals("hashCode") || m.getName().equals("toString") || m.getName().equals("getClass"))
@@ -79,18 +79,18 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
             return getters
                     .filterNot(g -> hasIgnoreAnnotation(beanType, g))
                     .flatMap(getter -> executeUnchecked(() -> {
-                final Method setter = setterFor(beanType, "with" + toFirstUpper(getter.getName()), getter.getReturnType(), getter);
-                final Method builderSetter = setterFor(builderClass, getter.getName(), getter.getReturnType(), getter);
+                        final Method setter = setterFor(beanType, "with" + toFirstUpper(getter.getName()), getter.getReturnType(), getter);
+                        final Method builderSetter = setterFor(builderClass, getter.getName(), getter.getReturnType(), getter);
 
-                final String columnName = columnNameFromAnnotation(beanType, getter).orElse(getter.getName());
-                final AOption<ColumnMetaData> optColumnMetaData = tableMetaData.findColByName(columnName);
-                if (optColumnMetaData.isEmpty()) {
-                    log.warn("no database column {}.{} for property {} of bean {}", tableMetaData.tableName, columnName, getter.getName(), beanType.getName());
-                }
+                        final String columnName = columnNameFromAnnotation(beanType, getter).orElse(getter.getName());
 
-                final ColumnMetaData columnMetaData = optColumnMetaData.orNull();
-                return AOption.some(new BeanProperty(getter.getReturnType(), getter.getName(), columnMetaData, getter, setter, true, builderSetter));
-            }));
+                        final AOption<ColumnMetaData> optColumnMetaData = tableMetaData.flatMap(m -> m.findColByName(columnName));
+                        if (tableMetaData.isPresent() && optColumnMetaData.isEmpty()) {
+                            log.warn("no database column {}.{} for property {} of bean {}", tableMetaData.get().tableName(), columnName, getter.getName(), beanType.getName());
+                        }
+
+                        return AOption.some(new BeanProperty(getter.getReturnType(), getter.getName(), optColumnMetaData, getter, setter, true, builderSetter));
+                    }));
         });
     }
 

@@ -6,20 +6,28 @@ import com.ajjpj.acollections.util.AOption;
 import java.util.Objects;
 
 public class TableMetaData {
-    public final String tableName;
-    public final AVector<ColumnMetaData> columns;
+    private final String tableName;
+    private final AVector<ColumnMetaData> columns;
 
     public TableMetaData (String tableName, AVector<ColumnMetaData> columns) {
         this.tableName = tableName;
         this.columns = columns;
     }
 
+    public String tableName () {
+        return tableName;
+    }
+
+    public AVector<ColumnMetaData> columns () {
+        return columns;
+    }
+
     public AOption<ColumnMetaData> findColByName(String name) {
-        return columns.find(c -> c.colName.equalsIgnoreCase(name));
+        return columns.find(c -> c.colName().equalsIgnoreCase(name));
     }
 
     public AVector<ColumnMetaData> pkColumns() {
-        return columns.filter(c -> c.isPrimaryKey);
+        return columns.filter(ColumnMetaData::isPrimaryKey);
     }
 
     @Override public String toString () {

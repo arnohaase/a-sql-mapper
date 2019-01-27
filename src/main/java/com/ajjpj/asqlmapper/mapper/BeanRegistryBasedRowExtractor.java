@@ -3,9 +3,9 @@ package com.ajjpj.asqlmapper.mapper;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.core.RowExtractor;
-import com.ajjpj.asqlmapper.mapper.beans.BeanMetaData;
 import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanRegistry;
+import com.ajjpj.asqlmapper.mapper.beans.QueryMappingBeanMetaData;
 import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
 
 import java.sql.Connection;
@@ -29,13 +29,11 @@ class BeanRegistryBasedRowExtractor implements RowExtractor {
     }
 
     public <T> T fromSql (Connection conn, Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedProperties providedProperties) throws SQLException {
-        final BeanMetaData beanMetaData = beanRegistry.getMetaData(conn, cls);
+        final QueryMappingBeanMetaData beanMetaData = beanRegistry.getQueryMappingMetaData(conn, cls);
 
         final String pkColumnName;
         if (providedProperties.nonEmpty()) {
-            if (beanMetaData.tableMetaData().pkColumns().size() != 1)
-                throw new IllegalArgumentException("bean must have exactly one PK column for provided values to work - table " + beanMetaData.tableMetaData() + " has PK columns " + beanMetaData.tableMetaData());
-            pkColumnName = beanMetaData.tableMetaData().pkColumns().head().colName; //TODO pass this in as an optional value? any column 'referenced' by a many side would suffice...
+            pkColumnName = beanMetaData.pkColumnName().orElseThrow(() -> new IllegalArgumentException("bean " + cls.getName() + " must have exactly one known primary key column for providedProperties to work"));
         }
         else {
             pkColumnName = null;

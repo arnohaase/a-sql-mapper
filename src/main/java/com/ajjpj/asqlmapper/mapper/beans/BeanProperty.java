@@ -11,7 +11,7 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 public class BeanProperty {
     private final Class<?> propType;
     private final String name;
-    private final ColumnMetaData columnMetaData;
+    private final AOption<ColumnMetaData> columnMetaData;
 
     private final Method getterMethod;
     private final Method setterMethod;
@@ -19,7 +19,7 @@ public class BeanProperty {
 
     private final Method builderSetterMethod;
 
-    public BeanProperty (Class<?> propType, String name, ColumnMetaData columnMetaData, Method getterMethod, Method setterMethod, boolean setterReturnsBean, Method builderSetterMethod) {
+    public BeanProperty (Class<?> propType, String name, AOption<ColumnMetaData> columnMetaData, Method getterMethod, Method setterMethod, boolean setterReturnsBean, Method builderSetterMethod) {
         this.propType = propType;
         this.name = name;
         this.columnMetaData = columnMetaData;
@@ -29,25 +29,14 @@ public class BeanProperty {
         this.builderSetterMethod = builderSetterMethod;
     }
 
-    public boolean isPrimaryKey() {
-        return columnMetaData != null && columnMetaData.isPrimaryKey;
-    }
-
     public Class<?> propType() {
         return propType;
     }
     public AOption<ColumnMetaData> columnMetaData() {
-        return AOption.of(columnMetaData);
+        return columnMetaData;
     }
     public String columnName() {
-        return columnMetaData().map(m -> m.colName).orElse(name);
-    }
-
-    public boolean isReadable() {
-        return getterMethod != null;
-    }
-    public boolean isWritable() {
-        return setterMethod != null;
+        return columnMetaData().map(ColumnMetaData::colName).orElse(name);
     }
 
     public Object get(Object bean) {

@@ -5,5 +5,6 @@ import com.ajjpj.asqlmapper.core.impl.CanHandle;
 import java.sql.Connection;
 
 public interface BeanRegistry extends CanHandle {
-    BeanMetaData getMetaData(Connection conn, Class<?> beanType);
+    QueryMappingBeanMetaData getQueryMappingMetaData(Connection conn, Class<?> beanType);
+    TableAwareBeanMetaData getTableAwareMetaData(Connection conn, Class<?> beanType);
 }
