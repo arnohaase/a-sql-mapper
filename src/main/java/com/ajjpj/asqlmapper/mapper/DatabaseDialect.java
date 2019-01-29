@@ -13,13 +13,6 @@ public interface DatabaseDialect {
     }
 
     class PostgresqlDialect implements DatabaseDialect {
-        @Override public String normalizeSchemaName (String schemaName) {
-            return schemaName.toLowerCase();
-        }
-
-        @Override public String normalizeTableName (String tableName) {
-            return tableName; //TODO???
-        }
     }
 
     class H2Dialect implements DatabaseDialect {
