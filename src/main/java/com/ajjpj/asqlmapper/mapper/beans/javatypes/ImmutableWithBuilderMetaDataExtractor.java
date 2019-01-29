@@ -1,10 +1,8 @@
 package com.ajjpj.asqlmapper.mapper.beans.javatypes;
 
 import com.ajjpj.acollections.ACollection;
-import com.ajjpj.acollections.ASet;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.mapper.annotations.Column;
 import com.ajjpj.asqlmapper.mapper.annotations.Ignore;
 import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
@@ -16,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -27,19 +24,16 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtractor {
     private static final Logger log = LoggerFactory.getLogger(ImmutableWithBuilderMetaDataExtractor.class);
 
+    private final ColumnNameExtractor columnNameExtractor;
+
+    public ImmutableWithBuilderMetaDataExtractor (ColumnNameExtractor columnNameExtractor) {
+        this.columnNameExtractor = columnNameExtractor;
+    }
+
     private boolean hasIgnoreAnnotation(Class<?> beanType, Method mtd) {
         return BeanReflectionHelper.allSuperMethods(beanType, mtd).exists(g ->
                 g.getAnnotation(Ignore.class) != null && g.getAnnotation(Ignore.class).value()
         );
-    }
-
-    private AOption<String> columnNameFromAnnotation(Class<?> beanType, Method mtd) {
-        final ASet<String> all = BeanReflectionHelper.allSuperMethods(beanType, mtd).flatMap(m -> AOption.of(m.getAnnotation(Column.class)).map(Column::value)).toSet();
-        switch(all.size()) {
-            case 0: return AOption.empty();
-            case 1: return AOption.of(all.head());
-            default: throw new IllegalArgumentException("there are conflicting @Column annotations on overridden methods of " + mtd + " in " + beanType);
-        }
     }
 
     @Override public boolean canHandle (Class<?> cls) {
@@ -82,8 +76,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
                         final Method setter = setterFor(beanType, "with" + toFirstUpper(getter.getName()), getter.getReturnType(), getter);
                         final Method builderSetter = setterFor(builderClass, getter.getName(), getter.getReturnType(), getter);
 
-                        final String columnName = columnNameFromAnnotation(beanType, getter).orElse(getter.getName());
-
+                        final String columnName = columnNameExtractor.columnNameFor(beanType, getter, getter.getName());
                         final AOption<ColumnMetaData> optColumnMetaData = tableMetaData.flatMap(m -> m.findColByName(columnName));
                         if (tableMetaData.isPresent() && optColumnMetaData.isEmpty()) {
                             log.warn("no database column {}.{} for property {} of bean {}", tableMetaData.get().tableName(), columnName, getter.getName(), beanType.getName());

@@ -6,6 +6,7 @@ import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
 import com.ajjpj.asqlmapper.mapper.beans.BeanRegistryImpl;
+import com.ajjpj.asqlmapper.mapper.beans.javatypes.AnnotationBasedColumnNameExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
@@ -34,7 +35,7 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest  {
                 new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
                         new DefaultTableNameExtractor(),
                         new GuessingPkStrategyDecider(),
-                        new ImmutableWithBuilderMetaDataExtractor()
+                        new ImmutableWithBuilderMetaDataExtractor(new AnnotationBasedColumnNameExtractor())
                 ));
     }
 
