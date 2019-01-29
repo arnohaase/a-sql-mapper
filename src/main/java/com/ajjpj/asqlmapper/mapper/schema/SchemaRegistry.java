@@ -29,6 +29,23 @@ public class SchemaRegistry {
         tableCache.clear();
     }
 
+    private JDBCType typeFor(int tpe) {
+        try {
+            return JDBCType.valueOf(tpe);
+        }
+        catch(Exception exc) {
+            return JDBCType.OTHER;
+        }
+    }
+    private AOption<Class<?>> classFor(String fqn) {
+        try {
+            return AOption.of(Class.forName(fqn));
+        }
+        catch (Exception e) {
+            return AOption.empty();
+        }
+    }
+
     public AOption<TableMetaData> getTableMetaData(Connection conn, String tableName) {
         return tableCache.computeIfAbsent(tableName.toLowerCase(), n -> executeUnchecked (() -> {
             try {
@@ -46,8 +63,8 @@ public class SchemaRegistry {
 
                     for (int i = 1; i <= rsMeta.getColumnCount(); i++) {
                         final String colName = rsMeta.getColumnName(i);
-                        final Class<?> colClass = Class.forName(rsMeta.getColumnClassName(i)); //TODO secure this
-                        final JDBCType colType = JDBCType.valueOf(rsMeta.getColumnType(i));
+                        final AOption<Class<?>> colClass = classFor(rsMeta.getColumnClassName(i));
+                        final JDBCType colType = typeFor(rsMeta.getColumnType(i));
                         final String colTypeName = rsMeta.getColumnTypeName(i);
                         final int size = rsMeta.getColumnDisplaySize(i);
                         final int precision = rsMeta.getPrecision(i);
@@ -65,7 +82,7 @@ public class SchemaRegistry {
                 }
             }
             catch(SQLException exc) {
-                log.debug("could not retrieve meta data for table " + tableName + " - this may be because a bean has no corresponding 'default' table, which is perfectly fine", exc);
+                log.debug("could not retrieve meta data for table " + tableName + " - this may be because a bean has no corresponding 'default' table, which is perfectly fine for queries but prevents it from being used for mapped write access", exc);
                 return AOption.empty();
             }
         }));

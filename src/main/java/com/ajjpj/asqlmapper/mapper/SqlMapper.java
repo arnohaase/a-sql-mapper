@@ -48,6 +48,14 @@ public class SqlMapper {
         return new AMapperQueryImpl<>(beanType,sql, sqlEngine.primitiveTypeRegistry(), beanRowExtractor, ProvidedProperties.empty(), sqlEngine.listeners(), engine().defaultConnectionSupplier());
     }                                                                                                         
 
+    public SqlSnippet tableName(Class<?> beanType) {
+        return tableName(engine().defaultConnection(), beanType);
+    }
+    public SqlSnippet tableName(Connection conn, Class<?> beanType) {
+        return sql(beanRegistry.getTableAwareMetaData(conn, beanType).tableName());
+    }
+
+
     //TODO query convenience (factory for SqlSnippet?): by pk, "select * from <tablename>", ...;-)
 
     //TODO convenience: queryForOneToMany, queryForManyToMany

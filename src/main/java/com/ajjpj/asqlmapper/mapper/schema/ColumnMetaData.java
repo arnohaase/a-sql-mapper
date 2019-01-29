@@ -1,12 +1,14 @@
 package com.ajjpj.asqlmapper.mapper.schema;
 
+import com.ajjpj.acollections.util.AOption;
+
 import java.sql.JDBCType;
 import java.util.Objects;
 
 
 public class ColumnMetaData {
     private final String colName;
-    private final Class<?> colClass;
+    private final AOption<Class<?>> colClass;
     private final JDBCType colType;
     private final String colTypeName;
     private final int size;
@@ -17,7 +19,7 @@ public class ColumnMetaData {
     private final boolean isAutoIncrement;
     private final boolean isNullable;
 
-    public ColumnMetaData (String colName, Class<?> colClass, JDBCType colType, String colTypeName, int size, int precision, int scale, boolean isPrimaryKey, boolean isAutoIncrement, boolean isNullable) {
+    public ColumnMetaData (String colName, AOption<Class<?>> colClass, JDBCType colType, String colTypeName, int size, int precision, int scale, boolean isPrimaryKey, boolean isAutoIncrement, boolean isNullable) {
         this.colName = colName;
         this.colClass = colClass;
         this.colType = colType;
@@ -33,7 +35,7 @@ public class ColumnMetaData {
     public String colName() {
         return colName;
     }
-    public Class<?> colClass() {
+    public AOption<Class<?>> colClass() {
         return colClass;
     }
     public JDBCType colType() {
