@@ -6,7 +6,7 @@
 
     <groupId>com.ajjpj.a-sql-mapper</groupId>
     <artifactId>a-sql-mapper</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.9-pre1</version>
 
     <licenses>
         <license>

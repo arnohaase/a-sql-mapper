@@ -10,12 +10,11 @@ import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 import com.ajjpj.asqlmapper.mapper.schema.TableMetaData;
 
 import java.sql.Connection;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
-import static com.ajjpj.acollections.util.AUnchecker.executeUncheckedVoid;
 
 
 public class BeanRegistryImpl implements BeanRegistry {
@@ -25,7 +24,8 @@ public class BeanRegistryImpl implements BeanRegistry {
     private final BeanMetaDataExtractor beanMetaDataExtractor;
 
     private final Map<Class<?>, BeanMetaData> queryMappingCache = new ConcurrentHashMap<>();
-    private final Map<Class<?>, AOption<TableAwareBeanMetaData>> tableAwareCache = new ConcurrentHashMap<>();
+    private final Map<CacheKey, AOption<TableAwareBeanMetaData>> tableAwareCache = new ConcurrentHashMap<>();
+
 
     public BeanRegistryImpl (SchemaRegistry schemaRegistry, TableNameExtractor tableNameExtractor, PkStrategyDecider pkStrategyDecider, BeanMetaDataExtractor beanMetaDataExtractor) {
         this.schemaRegistry = schemaRegistry;
@@ -48,21 +48,22 @@ public class BeanRegistryImpl implements BeanRegistry {
         final QueryMappingBeanMetaData result = queryMappingCache.get(beanType);
         if (result != null)
             return result;
-        return initMetaData(conn, beanType);
+        return initMetaData(conn, beanType, AOption.empty());
     }
 
-    @Override public TableAwareBeanMetaData getTableAwareMetaData (Connection conn, Class<?> beanType) {
-        final AOption<TableAwareBeanMetaData> result = tableAwareCache.get(beanType);
+    @Override public TableAwareBeanMetaData getTableAwareMetaData (Connection conn, Class<?> beanType, AOption<String> providedTableName) {
+        final AOption<TableAwareBeanMetaData> result = tableAwareCache.get(new CacheKey(beanType, providedTableName));
         if (result != null) {
             return result.orElseThrow(() -> new IllegalArgumentException("no corresponding table for bean " + beanType));
         }
-        initMetaData(conn, beanType);
-        return getTableAwareMetaData(null, beanType); // 'null' as a safe guard against endless recursion: should not happen anyway but still...
+        initMetaData(conn, beanType, providedTableName);
+        return getTableAwareMetaData(null, beanType, providedTableName); // 'null' as a safe guard against endless recursion: should not happen anyway but still...
     }
 
-    private BeanMetaData initMetaData (Connection conn, Class<?> beanType) {
+    private BeanMetaData initMetaData (Connection conn, Class<?> beanType, AOption<String> providedTableName) {
         return executeUnchecked(() -> {
-            final AOption<TableMetaData> optTableMetaData = schemaRegistry.getTableMetaData(conn, tableNameExtractor.tableNameForBean(conn, beanType, schemaRegistry));
+            final String tableName = providedTableName.orElseGet(() -> tableNameExtractor.tableNameForBean(conn, beanType, schemaRegistry));
+            final AOption<TableMetaData> optTableMetaData = schemaRegistry.getTableMetaData(conn, tableName);
             final AVector<BeanProperty> beanProperties = beanMetaDataExtractor.beanProperties(conn, beanType, optTableMetaData);
 
             final PkStrategy pkStrategy = optTableMetaData.isDefined() ? pkStrategyDecider.pkStrategy(conn, beanType, optTableMetaData.get()) : null;
@@ -76,12 +77,41 @@ public class BeanRegistryImpl implements BeanRegistry {
 
             queryMappingCache.put(beanType, result);
             if (optTableMetaData.isDefined()) {
-                tableAwareCache.put(beanType, AOption.of(result));
+                tableAwareCache.put(new CacheKey(beanType, providedTableName), AOption.of(result));
             }
             else {
-                tableAwareCache.put(beanType, AOption.empty());
+                tableAwareCache.put(new CacheKey(beanType, providedTableName), AOption.empty());
             }
             return result;
         });
+    }
+
+    private static class CacheKey {
+        private final Class<?> beanType;
+        private final AOption<String> providedTableName;
+
+        CacheKey (Class<?> beanType, AOption<String> providedTableName) {
+            this.beanType = beanType;
+            this.providedTableName = providedTableName;
+        }
+
+        @Override public boolean equals (Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            CacheKey cacheKey = (CacheKey) o;
+            return beanType.equals(cacheKey.beanType) &&
+                    providedTableName.equals(cacheKey.providedTableName);
+        }
+
+        @Override public int hashCode () {
+            return Objects.hash(beanType, providedTableName);
+        }
+
+        @Override public String toString () {
+            return "CacheKey{" +
+                    "beanType=" + beanType +
+                    ", providedTableName=" + providedTableName +
+                    '}';
+        }
     }
 }
