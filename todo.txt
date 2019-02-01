@@ -1,5 +1,11 @@
 todo
 ----
+* Setup / initialization: builder with "guessing" defaults
+* Java Bean support
+* Tx Support / Thread Local, ...
+* unit tests
+* javadoc
+
 * base
   * tuples
     * special handling, 'implicit' row extractor based on ptm
@@ -7,8 +13,6 @@ todo
     * for insert?
 
 * to one -> FK
-
-* javadoc
 
 * SQL snippets
   * arithmetic: and, or, in, ...

@@ -79,7 +79,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
                         final String columnName = columnNameExtractor.columnNameFor(beanType, getter, getter.getName());
                         final AOption<ColumnMetaData> optColumnMetaData = tableMetaData.flatMap(m -> m.findColByName(columnName));
                         if (tableMetaData.isPresent() && optColumnMetaData.isEmpty()) {
-                            log.warn("no database column {}.{} for property {} of bean {}", tableMetaData.get().tableName(), columnName, getter.getName(), beanType.getName());
+                            log.debug("no database column {}.{} for property {} of bean {}", tableMetaData.get().tableName(), columnName, getter.getName(), beanType.getName());
                         }
 
                         return AOption.some(new BeanProperty(getter.getReturnType(), getter.getName(), optColumnMetaData, getter, setter, true, builderSetter));
