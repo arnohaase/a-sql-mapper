@@ -6,7 +6,7 @@
 
     <groupId>com.ajjpj.a-sql-mapper</groupId>
     <artifactId>a-sql-mapper</artifactId>
-    <version>0.9-pre2</version>
+    <version>0.9-pre3</version>
 
     <name>${project.artifactId}-${project.version}</name>
     <description>a-sql-mapper is a lightweight library for reading from and writing to relational databases, embracing SQL code and SQL's abstractions</description>
@@ -88,6 +88,12 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>27.0.1-jre</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.tpolecat</groupId>
+            <artifactId>doobie-postgres_2.12</artifactId>
+            <version>0.7.0-M2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

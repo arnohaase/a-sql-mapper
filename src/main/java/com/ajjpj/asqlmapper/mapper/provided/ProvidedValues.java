@@ -29,4 +29,8 @@ public class ProvidedValues {
             return AOption.empty();
         }
     }
+    
+    public Map<?,?> data() {
+        return values;
+    }
 }
