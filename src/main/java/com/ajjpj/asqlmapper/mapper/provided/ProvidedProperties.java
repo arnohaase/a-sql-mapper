@@ -13,7 +13,7 @@ public interface ProvidedProperties {
         return empty().with(propertyName, propertyValues);
     }
 
-    boolean hasValuesFor(String name); //TODO case insensitive; //            if(optProvided.isDefined() && optProvided.get().size() > 0) {
+    boolean hasValuesFor(String name);
     Class<?> pkType(String name);
 
     AOption<Object> get(String name, Object pk);

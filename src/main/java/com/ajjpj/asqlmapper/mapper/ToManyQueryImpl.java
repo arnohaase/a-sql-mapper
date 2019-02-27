@@ -89,7 +89,7 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
                 final R r = e.getValue().stream().collect(collectorPerPk);
                 result.put(e.getKey(), r);
             }
-            return ProvidedValues.of(result);
+            return ProvidedValues.of(keyType, result);
         });
 
     }

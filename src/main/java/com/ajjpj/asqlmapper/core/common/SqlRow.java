@@ -41,4 +41,8 @@ public class SqlRow {
     public Object get(int idx) {
         return get(columnNames.get(idx));
     }
+
+    @Override public String toString () {
+        return "SqlRow{" + byLowerCaseColumn.mkString(",") + "}";
+    }
 }

@@ -6,19 +6,20 @@ import java.util.Map;
 
 
 public class ProvidedValues {
+    private final Class<?> pkType;
     private final Map<?,?> values;
 
-    private ProvidedValues (Map<?, ?> values) {
+    private ProvidedValues (Class<?> pkType, Map<?, ?> values) {
+        this.pkType = pkType;
         this.values = values;
     }
 
-    public static ProvidedValues of (Map<?,?> values) {
-        return new ProvidedValues(values);
+    public static ProvidedValues of (Class<?> pkType, Map<?,?> values) {
+        return new ProvidedValues(pkType, values);
     }
 
     public Class<?> pkType () {
-        if (values.isEmpty()) return null;
-        return values.keySet().iterator().next().getClass();
+        return pkType;
     }
 
     public AOption<Object> get(Object pk) {
