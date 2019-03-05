@@ -61,7 +61,6 @@ class DemoTest extends AbstractDatabaseTest {
 
         assertEquals(Long.valueOf(3), q1.single());
 
-
         assertEquals (Person.of(2L, "Arno"), engine.query(Person.class, "select * from person where id=?", 2).single());
     }
 
