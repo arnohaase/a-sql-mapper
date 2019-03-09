@@ -38,8 +38,8 @@ public class SqlSnippet {
         return new SqlSnippet(sql, AVector.from(params));
     }
 
-    public static SqlSnippet concat(SqlSnippet... snippets) {
-        return concat(AMutableArrayWrapper.wrap(snippets));
+    public static SqlSnippet concat(SqlSnippet s0, SqlSnippet... snippets) {
+        return concat(AIterator.single(s0).concat(AMutableArrayWrapper.from(snippets).iterator()));
     }
     public static SqlSnippet concat(Iterable<SqlSnippet> snippets) {
         return concat(snippets.iterator());

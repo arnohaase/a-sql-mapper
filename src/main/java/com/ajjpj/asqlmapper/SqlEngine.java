@@ -1,5 +1,7 @@
 package com.ajjpj.asqlmapper;
 
+import static com.ajjpj.asqlmapper.core.SqlSnippet.concat;
+
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.*;
@@ -58,8 +60,8 @@ public class SqlEngine {
 
     //--------------------------- generic update statements, i.e. statements not returning a result set
 
-    public AUpdate update(SqlSnippet sql) {
-        return new AUpdateImpl(sql, primTypes, listeners, defaultConnectionSupplier);
+    public AUpdate update(SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AUpdateImpl(concat(sql, moreSql), primTypes, listeners, defaultConnectionSupplier);
     }
 
     public AUpdate update(String sql, Object... params) {
@@ -73,102 +75,117 @@ public class SqlEngine {
     }
 
     public AInsert<UUID> insertUuidPk(String sql, Object... params) {
-        return insertUuidPk(SqlSnippet.sql(sql, params), defaultPkName());
+        return insertUuidPk(SqlSnippet.sql(sql, params));
     }
     public AInsert<String> insertStringPk(String sql, Object... params) {
-        return insertStringPk(SqlSnippet.sql(sql, params), defaultPkName());
+        return insertStringPk(SqlSnippet.sql(sql, params));
     }
     public AInsert<Integer> insertIntegerPk(String sql, Object... params) {
-        return insertIntegerPk(SqlSnippet.sql(sql, params), defaultPkName());
+        return insertIntegerPk(SqlSnippet.sql(sql, params));
     }
     public AInsert<Long> insertLongPk(String sql, Object... params) {
-        return insertLongPk(SqlSnippet.sql(sql, params), defaultPkName());
+        return insertLongPk(SqlSnippet.sql(sql, params));
     }
     public <T> AInsert<T> insertSingleColPk (Class<T> pkType, String sql, Object... params) {
-        return insertSingleColPk(pkType, SqlSnippet.sql(sql, params), defaultPkName());
+        return insertSingleColPk(pkType, SqlSnippet.sql(sql, params));
     }
 
-    public AInsert<UUID> insertUuidPk(SqlSnippet sql, String colName) {
-        return insert(UUID.class, ScalarRowExtractor.UUID_EXTRACTOR, sql, AVector.of(colName));
+    public AInsert<UUID> insertUuidPk(SqlSnippet sql, SqlSnippet... moreSql) {
+        return insertUuidPkInCol(defaultPkName(), sql, moreSql);
     }
-    public AInsert<String> insertStringPk(SqlSnippet sql, String colName) {
-        return insert(String.class, ScalarRowExtractor.STRING_EXTRACTOR, sql, AVector.of(colName));
+    public AInsert<String> insertStringPk(SqlSnippet sql, SqlSnippet... moreSql) {
+        return insertStringPkInCol(defaultPkName(), sql, moreSql);
     }
-    public AInsert<Integer> insertIntegerPk(SqlSnippet sql, String colName) {
-        return insert(Integer.class, ScalarRowExtractor.INT_EXTRACTOR, sql, AVector.of(colName));
+    public AInsert<Integer> insertIntegerPk(SqlSnippet sql, SqlSnippet... moreSql) {
+        return insertIntegerPkInCol(defaultPkName(), sql, moreSql);
     }
-    public AInsert<Long> insertLongPk(SqlSnippet sql, String colName) {
-        return insert(Long.class, ScalarRowExtractor.LONG_EXTRACTOR, sql, AVector.of(colName));
+    public AInsert<Long> insertLongPk(SqlSnippet sql, SqlSnippet... moreSql) {
+        return insertLongPkInCol(defaultPkName(), sql, moreSql);
     }
-    public <T> AInsert<T> insertSingleColPk (Class<T> pkType, SqlSnippet sql, String colName) {
-        return insert(pkType, new ScalarRowExtractor(pkType), sql, colName);
+    public <T> AInsert<T> insertSingleColPk (Class<T> pkType, SqlSnippet sql, SqlSnippet... moreSql) {
+        return insertSingleColPkInCol(defaultPkName(), pkType, sql, moreSql);
+    }
+
+    public AInsert<UUID> insertUuidPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
+        return insert(UUID.class, ScalarRowExtractor.UUID_EXTRACTOR, concat(sql, moreSql), AVector.of(colName));
+    }
+    public AInsert<String> insertStringPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
+        return insert(String.class, ScalarRowExtractor.STRING_EXTRACTOR, concat(sql, moreSql), AVector.of(colName));
+    }
+    public AInsert<Integer> insertIntegerPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
+        return insert(Integer.class, ScalarRowExtractor.INT_EXTRACTOR, concat(sql, moreSql), AVector.of(colName));
+    }
+    public AInsert<Long> insertLongPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
+        return insert(Long.class, ScalarRowExtractor.LONG_EXTRACTOR, concat(sql, moreSql), AVector.of(colName));
+    }
+    public <T> AInsert<T> insertSingleColPkInCol(String colName, Class<T> pkType, SqlSnippet sql, SqlSnippet... moreSql) {
+        return insert(pkType, new ScalarRowExtractor(pkType), concat(sql, moreSql), colName);
     }
 
     public <T> AInsert<T> insert(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, String colName1, String... colNames) {
         return insert(pkType, rowExtractor, sql, AVector.<String>builder().add(colName1).addAll(colNames).build());
     }
-    public <T> AInsert<T> insert(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, AVector<String> colNames) { //TODO colNames varargs? works without?
+    public <T> AInsert<T> insert(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, AVector<String> colNames) {
         return new AInsertImpl<>(pkType, sql, primTypes, rowExtractor, colNames, listeners, defaultConnectionSupplier);
     }
 
     // -------------------------- select statements
 
-    public <T> AQuery<T> scalarQuery(Class<T> columnType, SqlSnippet sql) {
-        return new AQueryImpl<>(columnType, sql, primTypes, new ScalarRowExtractor(columnType), listeners, defaultConnectionSupplier);
+    public <T> AQuery<T> scalarQuery(Class<T> columnType, SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(columnType, concat(sql, moreSql), primTypes, new ScalarRowExtractor(columnType), listeners, defaultConnectionSupplier);
     }
     public <T> AQuery<T> scalarQuery(Class<T> columnType, String sql, Object... params) {
         return scalarQuery(columnType, SqlSnippet.sql(sql, params));
     }
 
-    public AQuery<Long> longQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(Long.class, sql, primTypes, ScalarRowExtractor.LONG_EXTRACTOR, listeners, defaultConnectionSupplier);
+    public AQuery<Long> longQuery(SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(Long.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.LONG_EXTRACTOR, listeners, defaultConnectionSupplier);
     }
     public AQuery<Long> longQuery(String sql, Object... params) {
         return longQuery(SqlSnippet.sql(sql, params));
     }
-    public AQuery<Integer> intQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(Integer.class, sql, primTypes, ScalarRowExtractor.INT_EXTRACTOR, listeners, defaultConnectionSupplier);
+    public AQuery<Integer> intQuery(SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(Integer.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.INT_EXTRACTOR, listeners, defaultConnectionSupplier);
     }
     public AQuery<Integer> intQuery(String sql, Object... params) {
         return intQuery(SqlSnippet.sql(sql, params));
     }
-    public AQuery<String> stringQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(String.class, sql, primTypes, ScalarRowExtractor.STRING_EXTRACTOR, listeners, defaultConnectionSupplier);
+    public AQuery<String> stringQuery(SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(String.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.STRING_EXTRACTOR, listeners, defaultConnectionSupplier);
     }
     public AQuery<String> stringQuery(String sql, Object... params) {
         return stringQuery(SqlSnippet.sql(sql, params));
     }
-    public AQuery<Double> doubleQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(Double.class, sql, primTypes, ScalarRowExtractor.DOUBLE_EXTRACTOR, listeners, defaultConnectionSupplier);
+    public AQuery<Double> doubleQuery(SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(Double.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.DOUBLE_EXTRACTOR, listeners, defaultConnectionSupplier);
     }
     public AQuery<Double> doubleQuery(String sql, Object... params) {
         return doubleQuery(SqlSnippet.sql(sql, params));
     }
-    public AQuery<BigDecimal> bigDecimalQuery (SqlSnippet sql) {
-        return new AQueryImpl<>(BigDecimal.class, sql, primTypes, ScalarRowExtractor.BIG_DECIMAL_EXTRACTOR, listeners, defaultConnectionSupplier);
+    public AQuery<BigDecimal> bigDecimalQuery (SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(BigDecimal.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.BIG_DECIMAL_EXTRACTOR, listeners, defaultConnectionSupplier);
     }
     public AQuery<BigDecimal> bigDecimalQuery (String sql, Object... params) {
         return bigDecimalQuery(SqlSnippet.sql(sql, params));
     }
 
-
-    public AQuery<SqlRow> rawQuery(SqlSnippet sql) {
-        return new AQueryImpl<>(SqlRow.class, sql, primTypes, SqlRowExtractor.INSTANCE, listeners, defaultConnectionSupplier);
+    public AQuery<SqlRow> rawQuery(SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(SqlRow.class, concat(sql, moreSql), primTypes, SqlRowExtractor.INSTANCE, listeners, defaultConnectionSupplier);
     }
     public AQuery<SqlRow> rawQuery(String sql, Object... params) {
         return new AQueryImpl<>(SqlRow.class, SqlSnippet.sql(sql, params), primTypes, SqlRowExtractor.INSTANCE, listeners, defaultConnectionSupplier);
     }
 
-    public <T> AQuery<T> query(Class<T> targetType, SqlSnippet sql) {
-        return query(targetType, rowExtractorFor(targetType), sql);
+    public <T> AQuery<T> query(Class<T> targetType, SqlSnippet sql, SqlSnippet... moreSql) {
+        return query(targetType, rowExtractorFor(targetType), concat(sql, moreSql));
     }
 
     public <T> AQuery<T> query(Class<T> targetType, String sql, Object... params) {
         return query(targetType, SqlSnippet.sql(sql, params));
     }
 
-    public <T> AQuery<T> query(Class<T> cls, RowExtractor rowExtractor, SqlSnippet sql) { //TODO consistent ordering of parameters
-        return new AQueryImpl<>(cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier);
+    public <T> AQuery<T> query(Class<T> cls, RowExtractor rowExtractor, SqlSnippet sql, SqlSnippet... moreSql) { //TODO consistent ordering of parameters
+        return new AQueryImpl<>(cls, concat(sql, moreSql), primTypes, rowExtractor, listeners, defaultConnectionSupplier);
     }
 
     //TODO tuples as query results

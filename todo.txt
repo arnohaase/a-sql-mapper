@@ -14,9 +14,10 @@ todo
 
 * to one -> FK
 
-* varargs of SqlSnippet for engine
 * snake_case column name strategy
-* "engine.insertLong" etc.: make column name optional
+
+* unit tests
+* documentation
 
 * "derived" columns -> ?
 * generify ProvidedValues?
