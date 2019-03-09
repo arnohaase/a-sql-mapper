@@ -15,7 +15,6 @@ todo
 * to one -> FK
 
 * 'getter' convention based column name strategy
-* snake_case column name strategy
 
 * unit tests
 * documentation
@@ -24,7 +23,6 @@ todo
 * generify ProvidedValues?
 
 * SQL snippets
-  * arithmetic: and, or, in, ...
   * "query by example": fields -> optional -> and
 
 * optimistic locking
