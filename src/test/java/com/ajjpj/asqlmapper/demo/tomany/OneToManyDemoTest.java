@@ -1,26 +1,26 @@
 package com.ajjpj.asqlmapper.demo.tomany;
 
+import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.sql.SQLException;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import com.ajjpj.acollections.AList;
-import com.ajjpj.asqlmapper.SqlEngine;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
+import com.ajjpj.asqlmapper.SqlEngine;
 import com.ajjpj.asqlmapper.demo.simple.Person;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
 import com.ajjpj.asqlmapper.mapper.beans.BeanRegistryImpl;
-import com.ajjpj.asqlmapper.mapper.beans.javatypes.AnnotationBasedColumnNameExtractor;
+import com.ajjpj.asqlmapper.mapper.beans.javatypes.DirectColumnNameExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.sql.SQLException;
-
-import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class OneToManyDemoTest extends AbstractDatabaseTest  {
     private SqlMapper mapper;
@@ -35,7 +35,7 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
                 new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
                         new DefaultTableNameExtractor(),
                         new GuessingPkStrategyDecider(),
-                        new ImmutableWithBuilderMetaDataExtractor(new AnnotationBasedColumnNameExtractor())
+                        new ImmutableWithBuilderMetaDataExtractor(new DirectColumnNameExtractor())
                 ));
     }
 
