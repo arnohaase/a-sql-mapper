@@ -114,7 +114,7 @@ public class SqlMapper {
             }
 
             if (pkProperty != null) {
-                final List<?> pkValues = sqlEngine.insertSingleColPk(pkProperty.propType(), builder.build(), pkProperty.columnName()).executeMulti(conn);
+                final List<?> pkValues = sqlEngine.insertSingleColPkInCol(pkProperty.columnName(), pkProperty.propType(), builder.build()).executeMulti(conn);
                 if (pkValues.size() != os.size()) throw new IllegalStateException("inserting " + os.size() + " rows returned " + pkValues.size() + " - mismatch");
 
                 final AVector.Builder<T> result = AVector.builder();
@@ -197,7 +197,7 @@ public class SqlMapper {
 
             if (beanMetaData.pkProperty().isDefined()) {
                 final BeanProperty pkProperty = beanMetaData.pkProperty().get();
-                final Object pkValue = sqlEngine.insertSingleColPk(pkProperty.propType(), insertStmt, pkProperty.columnName()).executeSingle(conn);
+                final Object pkValue = sqlEngine.insertSingleColPkInCol(pkProperty.columnName(), pkProperty.propType(), insertStmt).executeSingle(conn);
                 //noinspection unchecked
                 return (T) pkProperty.set(o, pkValue);
             }
