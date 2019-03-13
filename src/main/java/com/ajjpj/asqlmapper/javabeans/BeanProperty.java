@@ -1,11 +1,11 @@
-package com.ajjpj.asqlmapper.mapper.beans;
+package com.ajjpj.asqlmapper.javabeans;
 
-import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
+import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.lang.reflect.Method;
 
-import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
+import com.ajjpj.acollections.util.AOption;
+import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 
 
 public class BeanProperty {

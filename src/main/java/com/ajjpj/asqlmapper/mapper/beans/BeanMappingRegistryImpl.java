@@ -17,17 +17,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 
-public class BeanRegistryImpl implements BeanRegistry {
+public class BeanMappingRegistryImpl implements BeanMappingRegistry {
     private final SchemaRegistry schemaRegistry;
     private final TableNameExtractor tableNameExtractor;
     private final PkStrategyDecider pkStrategyDecider;
     private final BeanMetaDataExtractor beanMetaDataExtractor;
 
-    private final Map<Class<?>, BeanMetaData> queryMappingCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, BeanMapping> queryMappingCache = new ConcurrentHashMap<>();
     private final Map<CacheKey, AOption<TableAwareBeanMetaData>> tableAwareCache = new ConcurrentHashMap<>();
 
 
-    public BeanRegistryImpl (SchemaRegistry schemaRegistry, TableNameExtractor tableNameExtractor, PkStrategyDecider pkStrategyDecider, BeanMetaDataExtractor beanMetaDataExtractor) {
+    public BeanMappingRegistryImpl (SchemaRegistry schemaRegistry, TableNameExtractor tableNameExtractor, PkStrategyDecider pkStrategyDecider, BeanMetaDataExtractor beanMetaDataExtractor) {
         this.schemaRegistry = schemaRegistry;
         this.tableNameExtractor = tableNameExtractor;
         this.pkStrategyDecider = pkStrategyDecider;
@@ -60,20 +60,21 @@ public class BeanRegistryImpl implements BeanRegistry {
         return getTableAwareMetaData(null, beanType, providedTableName); // 'null' as a safe guard against endless recursion: should not happen anyway but still...
     }
 
-    private BeanMetaData initMetaData (Connection conn, Class<?> beanType, AOption<String> providedTableName) {
+    private BeanMapping initMetaData (Connection conn, Class<?> beanType, AOption<String> providedTableName) {
         return executeUnchecked(() -> {
             final String tableName = providedTableName.orElseGet(() -> tableNameExtractor.tableNameForBean(conn, beanType, schemaRegistry));
             final AOption<TableMetaData> optTableMetaData = schemaRegistry.getTableMetaData(conn, tableName);
-            final AVector<BeanProperty> beanProperties = beanMetaDataExtractor.beanProperties(conn, beanType, optTableMetaData);
+            final AVector<BeanMappingProperty> beanProperties = beanMetaDataExtractor.beanProperties(conn, beanType, optTableMetaData);
 
             final PkStrategy pkStrategy = optTableMetaData.isDefined() ? pkStrategyDecider.pkStrategy(conn, beanType, optTableMetaData.get()) : null;
 
-            final BeanMetaData result = new BeanMetaData(beanType,
-                        beanProperties,
-                        optTableMetaData.orNull(),
-                        pkStrategy,
-                        beanMetaDataExtractor.builderFactoryFor(beanType),
-                        beanMetaDataExtractor.builderFinalizerFor(beanType));
+            final BeanMapping result = new BeanMapping(
+                    beanType,
+                    beanProperties,
+                    optTableMetaData.orNull(),
+                    pkStrategy,
+                    beanMetaDataExtractor.builderFactoryFor(beanType),
+                    beanMetaDataExtractor.builderFinalizerFor(beanType));
 
             queryMappingCache.put(beanType, result);
             if (optTableMetaData.isDefined()) {
