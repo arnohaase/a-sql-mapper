@@ -21,5 +21,5 @@ public interface AQuery<T> {
     Stream<T> stream(Connection conn);
     Stream<T> stream();
 
-    AQuery<T> withPropertyValues (String propName, String referencedPropertyName, ProvidedValues providedValues);
+    AQuery<T> withPropertyValues (String propName, String referencedColumnName, ProvidedValues providedValues);
 }

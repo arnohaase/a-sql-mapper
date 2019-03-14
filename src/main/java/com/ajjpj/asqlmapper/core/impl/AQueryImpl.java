@@ -46,8 +46,8 @@ public class AQueryImpl<T> implements AQuery<T> {
         this.providedValues = providedValues;
     }
 
-    @Override public AQuery<T> withPropertyValues (String propName, String referencedPropertyName, ProvidedValues providedValues) {
-        return new AQueryImpl<>(rowClass, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, this.providedValues.with(propName, referencedPropertyName, providedValues));
+    @Override public AQuery<T> withPropertyValues (String propName, String referencedColumnName, ProvidedValues providedValues) {
+        return new AQueryImpl<>(rowClass, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, this.providedValues.with(propName, referencedColumnName, providedValues));
     }
 
     @Override public T single () {

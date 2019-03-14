@@ -6,11 +6,11 @@ import com.ajjpj.acollections.util.AOption;
 
 class ProvidedPropertiesImpl implements ProvidedProperties {
     private final AMap<String, ProvidedValues> properties;
-    private final AMap<String, String> referencedProperties;
+    private final AMap<String, String> referencedColumns;
 
-    ProvidedPropertiesImpl (AMap<String, ProvidedValues> properties, AMap<String, String> referencedProperties) {
+    ProvidedPropertiesImpl (AMap<String, ProvidedValues> properties, AMap<String, String> referencedColumns) {
         this.properties = properties;
-        this.referencedProperties = referencedProperties;
+        this.referencedColumns = referencedColumns;
     }
 
     @Override public boolean hasValuesFor (String name) {
@@ -28,14 +28,14 @@ class ProvidedPropertiesImpl implements ProvidedProperties {
         return forName.get(pk);
     }
 
-    @Override public String referencedPropertyNameFor (String name) {
-        return referencedProperties.get(name);
+    @Override public String referencedColumnNameFor (String name) {
+        return referencedColumns.get(name);
     }
 
-    @Override public ProvidedProperties with (String propertyName, String referencedProperty, ProvidedValues providedValues) {
+    @Override public ProvidedProperties with (String propertyName, String referencedColumn, ProvidedValues providedValues) {
         return new ProvidedPropertiesImpl(
                 properties.plus(propertyName, providedValues),
-                referencedProperties.plus(propertyName, referencedProperty));
+                referencedColumns.plus(propertyName, referencedColumn));
     }
 
     @Override public boolean nonEmpty () {

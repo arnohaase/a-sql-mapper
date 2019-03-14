@@ -20,7 +20,6 @@ import java.util.stream.Collector;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
-
 //TODO demo / test: bean (with nested to-many), scalar
 class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
     private final RowExtractor beanExtractor;
@@ -46,10 +45,6 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
         this.primTypes = primTypes;
         this.collectorPerPk = collectorPerPk;
         this.defaultConnectionSupplier = defaultConnectionSupplier;
-
-        if (providedProperties.nonEmpty() && ! (beanExtractor instanceof BeanRegistryBasedRowExtractor)) {
-            throw new IllegalArgumentException("provided values are only supported for bean mappings");
-        }
     }
 
     @Override public ProvidedValues execute () {
@@ -70,13 +65,7 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
 
                 while(rs.next()) {
                     final K key = primTypes.fromSql(keyType, rs.getObject(keyColumn));
-                    final T value;
-                    if (beanExtractor instanceof BeanRegistryBasedRowExtractor) {
-                        value = ((BeanRegistryBasedRowExtractor) beanExtractor).fromSql(conn, manyType, primTypes, rs, memento, providedProperties);
-                    }
-                    else {
-                        value = beanExtractor.fromSql(conn, manyType, primTypes, rs, memento);
-                    }
+                    final T value = beanExtractor.fromSql(manyType, primTypes, rs, memento, providedProperties);
                     raw.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
                 }
             }
@@ -94,8 +83,8 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
 
     }
 
-    @Override public ToManyQuery withPropertyValues (String propertyName, ProvidedValues propertyValues) {
-        return new ToManyQueryImpl<>(beanExtractor, providedProperties.with(propertyName, propertyValues), keyType, keyColumn, manyType, sql, primTypes, collectorPerPk, defaultConnectionSupplier);
+    @Override public ToManyQuery withPropertyValues (String propertyName, String referencedColumnName, ProvidedValues propertyValues) {
+        return new ToManyQueryImpl<>(beanExtractor, providedProperties.with(propertyName, referencedColumnName, propertyValues), keyType, keyColumn, manyType, sql, primTypes, collectorPerPk, defaultConnectionSupplier);
     }
 
     @Override public ToManyQuery withPropertyValues (ProvidedProperties providedProperties) {

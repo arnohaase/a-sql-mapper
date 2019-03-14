@@ -9,6 +9,6 @@ import java.sql.Connection;
 public interface ToManyQuery<K,R> {
     ProvidedValues execute();
     ProvidedValues execute(Connection conn);
-    ToManyQuery withPropertyValues (String propertyName, ProvidedValues propertyValues);
+    ToManyQuery withPropertyValues (String propertyName, String referencedColumnName, ProvidedValues propertyValues);
     ToManyQuery withPropertyValues (ProvidedProperties providedProperties);
 }

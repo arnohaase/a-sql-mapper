@@ -26,11 +26,7 @@ class BeanMetaDataBasedRowExtractor implements RowExtractor {
         for(BeanProperty prop: beanMetaData.beanProperties().values()) {
             if (providedProperties.hasValuesFor(prop.name())) {
                 final Class<?> keyClass = providedProperties.pkType(prop.name());
-                final String referencedPropertyName = providedProperties.referencedPropertyNameFor(prop.name());
-                final BeanProperty referencedProperty = beanMetaData.beanProperties().get(referencedPropertyName);
-                if(referencedProperty == null)
-                    throw new IllegalArgumentException(beanMetaData.getClass() + " has no property '" + referencedProperty + "'");
-                final String referencedColumnName = referencedProperty.columnName();
+                final String referencedColumnName = providedProperties.referencedColumnNameFor(prop.name());
 
                 final Object pk = primTypes.fromSql(keyClass, rs.getObject(referencedColumnName));
                 final AOption<Object> optValue = providedProperties.get(prop.name(), pk);
