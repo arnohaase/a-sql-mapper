@@ -3,9 +3,7 @@ package com.ajjpj.asqlmapper.mapper.beans;
 import java.util.Map;
 
 import com.ajjpj.acollections.ACollection;
-import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.AMap;
-import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.javabeans.BeanMetaData;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
@@ -20,6 +18,7 @@ public class BeanMapping {
     private final PkStrategy pkStrategy;
 
     private final AMap<BeanProperty, ColumnMetaData> mappedProperties;
+    private final AMap<BeanProperty, ColumnMetaData> mappedPropertiesWithoutPk;
 
     private AOption<BeanProperty> pkProperty;
 //    private final AVector<BeanProperty> writablePropertiesWithPk;
@@ -31,6 +30,7 @@ public class BeanMapping {
         this.tableMetaData = tableMetaData;
         this.pkStrategy = pkStrategy;
         this.mappedProperties = mappedProperties;
+        this.mappedPropertiesWithoutPk = mappedProperties.filterNot(e -> e.getValue().isPrimaryKey());
 
 //        if (tableMetaData != null) {
 //            this.writablePropertiesWithPk = beanProperties.filter(p -> p.columnMetaData().isDefined());
@@ -64,6 +64,14 @@ public class BeanMapping {
         return this.pkStrategy;
     }
 
+    public AMap<BeanProperty, ColumnMetaData> mappedProperties () {
+        return mappedProperties;
+    }
+
+    public AMap<BeanProperty, ColumnMetaData> mappedPropertiesWithoutPk () {
+        return mappedPropertiesWithoutPk;
+    }
+
     public AOption<BeanProperty> pkProperty() {
         if (pkProperty == null) {
             final ACollection<BeanProperty> pks = mappedProperties
@@ -73,7 +81,7 @@ public class BeanMapping {
             switch(pks.size()) {
                 case 0: pkProperty = AOption.empty(); break;
                 case 1: pkProperty = AOption.of(pks.head()); break;
-                default: throw new IllegalStateException("more than one PK column for bean " + beanMetaData.beanType.getName() + ": " + pks);
+                default: throw new IllegalStateException("more than one PK column for bean " + beanMetaData.beanType().getName() + ": " + pks);
             }
         }
         return pkProperty;

@@ -7,9 +7,10 @@ import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.*;
 import com.ajjpj.asqlmapper.core.common.ScalarRowExtractor;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
-import com.ajjpj.asqlmapper.core.common.SqlRowExtractor;
+import com.ajjpj.asqlmapper.core.common.RawRowExtractor;
 import com.ajjpj.asqlmapper.core.impl.*;
 import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
+import com.ajjpj.asqlmapper.core.provided.ProvidedProperties;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -132,48 +133,48 @@ public class SqlEngine {
     // -------------------------- select statements
 
     public <T> AQuery<T> scalarQuery(Class<T> columnType, SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(columnType, concat(sql, moreSql), primTypes, new ScalarRowExtractor(columnType), listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(columnType, concat(sql, moreSql), primTypes, new ScalarRowExtractor(columnType), listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }
     public <T> AQuery<T> scalarQuery(Class<T> columnType, String sql, Object... params) {
         return scalarQuery(columnType, SqlSnippet.sql(sql, params));
     }
 
     public AQuery<Long> longQuery(SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(Long.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.LONG_EXTRACTOR, listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(Long.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.LONG_EXTRACTOR, listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }
     public AQuery<Long> longQuery(String sql, Object... params) {
         return longQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<Integer> intQuery(SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(Integer.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.INT_EXTRACTOR, listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(Integer.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.INT_EXTRACTOR, listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }
     public AQuery<Integer> intQuery(String sql, Object... params) {
         return intQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<String> stringQuery(SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(String.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.STRING_EXTRACTOR, listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(String.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.STRING_EXTRACTOR, listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }
     public AQuery<String> stringQuery(String sql, Object... params) {
         return stringQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<Double> doubleQuery(SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(Double.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.DOUBLE_EXTRACTOR, listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(Double.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.DOUBLE_EXTRACTOR, listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }
     public AQuery<Double> doubleQuery(String sql, Object... params) {
         return doubleQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<BigDecimal> bigDecimalQuery (SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(BigDecimal.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.BIG_DECIMAL_EXTRACTOR, listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(BigDecimal.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.BIG_DECIMAL_EXTRACTOR, listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }
     public AQuery<BigDecimal> bigDecimalQuery (String sql, Object... params) {
         return bigDecimalQuery(SqlSnippet.sql(sql, params));
     }
 
     public AQuery<SqlRow> rawQuery(SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(SqlRow.class, concat(sql, moreSql), primTypes, SqlRowExtractor.INSTANCE, listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(SqlRow.class, concat(sql, moreSql), primTypes, RawRowExtractor.INSTANCE, listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }
     public AQuery<SqlRow> rawQuery(String sql, Object... params) {
-        return new AQueryImpl<>(SqlRow.class, SqlSnippet.sql(sql, params), primTypes, SqlRowExtractor.INSTANCE, listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(SqlRow.class, SqlSnippet.sql(sql, params), primTypes, RawRowExtractor.INSTANCE, listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }
 
     public <T> AQuery<T> query(Class<T> targetType, SqlSnippet sql, SqlSnippet... moreSql) {
@@ -185,7 +186,7 @@ public class SqlEngine {
     }
 
     public <T> AQuery<T> query(Class<T> cls, RowExtractor rowExtractor, SqlSnippet sql, SqlSnippet... moreSql) { //TODO consistent ordering of parameters
-        return new AQueryImpl<>(cls, concat(sql, moreSql), primTypes, rowExtractor, listeners, defaultConnectionSupplier);
+        return new AQueryImpl<>(cls, concat(sql, moreSql), primTypes, rowExtractor, listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }
 
     //TODO tuples as query results

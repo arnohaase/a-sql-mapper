@@ -18,7 +18,7 @@ import com.ajjpj.asqlmapper.mapper.beans.javatypes.DirectColumnNameExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
-import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
+import com.ajjpj.asqlmapper.core.provided.ProvidedValues;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 
 public class ManyToManyDemoTest extends AbstractDatabaseTest  {

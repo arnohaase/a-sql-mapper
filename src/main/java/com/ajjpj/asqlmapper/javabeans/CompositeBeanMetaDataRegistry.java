@@ -2,6 +2,7 @@ package com.ajjpj.asqlmapper.javabeans;
 
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import com.ajjpj.acollections.immutable.ALinkedList;
@@ -9,6 +10,11 @@ import com.ajjpj.acollections.util.AOption;
 
 public class CompositeBeanMetaDataRegistry implements BeanMetaDataRegistry {
     private final ALinkedList<Map.Entry<BeanMetaDataRegistry, Predicate<Class<?>>>> registries;
+    private final Map<Class<?>, AOption<BeanMetaDataRegistry>> cache = new ConcurrentHashMap<>();
+
+    public static CompositeBeanMetaDataRegistry empty() {
+        return new CompositeBeanMetaDataRegistry(ALinkedList.empty());
+    }
 
     private CompositeBeanMetaDataRegistry (ALinkedList<Map.Entry<BeanMetaDataRegistry, Predicate<Class<?>>>> registries) {
         this.registries = registries;
@@ -19,7 +25,7 @@ public class CompositeBeanMetaDataRegistry implements BeanMetaDataRegistry {
     }
 
     private AOption<BeanMetaDataRegistry> registryFor(Class<?> beanType) {
-        return registries.find(e -> e.getValue().test(beanType)).map(Map.Entry::getKey);
+        return cache.computeIfAbsent(beanType, bt -> registries.find(e -> e.getValue().test(bt)).map(Map.Entry::getKey));
     }
 
     @Override public boolean canHandle (Class<?> cls) {

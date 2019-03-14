@@ -1,10 +1,9 @@
 package com.ajjpj.asqlmapper.mapper;
 
-import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
-import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
+import com.ajjpj.asqlmapper.core.provided.ProvidedProperties;
+import com.ajjpj.asqlmapper.core.provided.ProvidedValues;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 
 public interface ToManyQuery<K,R> {

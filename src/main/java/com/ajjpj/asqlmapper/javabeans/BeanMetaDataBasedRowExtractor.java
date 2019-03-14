@@ -1,11 +1,12 @@
 package com.ajjpj.asqlmapper.javabeans;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.core.RowExtractor;
+import com.ajjpj.asqlmapper.core.provided.ProvidedProperties;
 
 class BeanMetaDataBasedRowExtractor implements RowExtractor {
     private final BeanMetaDataRegistry beanRegistry;
@@ -18,13 +19,29 @@ class BeanMetaDataBasedRowExtractor implements RowExtractor {
         return beanRegistry.canHandle(cls);
     }
 
-    @Override public <T> T fromSql (Connection conn, Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) throws SQLException {
+    @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedProperties providedProperties) throws SQLException {
         final BeanMetaData beanMetaData = beanRegistry.getBeanMetaData(cls);
 
         Object builder = beanMetaData.newBuilder();
-        for(BeanProperty prop: beanMetaData.beanProperties()) {
-            final Object value = primTypes.fromSql(prop.propType(), rs.getObject(prop.columnName()));
-            builder = prop.setOnBuilder(builder, value);
+        for(BeanProperty prop: beanMetaData.beanProperties().values()) {
+            if (providedProperties.hasValuesFor(prop.name())) {
+                final Class<?> keyClass = providedProperties.pkType(prop.name());
+                final String referencedPropertyName = providedProperties.referencedPropertyNameFor(prop.name());
+                final BeanProperty referencedProperty = beanMetaData.beanProperties().get(referencedPropertyName);
+                if(referencedProperty == null)
+                    throw new IllegalArgumentException(beanMetaData.getClass() + " has no property '" + referencedProperty + "'");
+                final String referencedColumnName = referencedProperty.columnName();
+
+                final Object pk = primTypes.fromSql(keyClass, rs.getObject(referencedColumnName));
+                final AOption<Object> optValue = providedProperties.get(prop.name(), pk);
+                if (optValue.isDefined()) {
+                    builder = prop.setOnBuilder(builder, optValue.get());
+                }
+            }
+            else {
+                final Object value = primTypes.fromSql(prop.propType(), rs.getObject(prop.columnName()));
+                builder = prop.setOnBuilder(builder, value);
+            }
         }
         //noinspection unchecked
         return (T) beanMetaData.finalizeBuilder(builder);

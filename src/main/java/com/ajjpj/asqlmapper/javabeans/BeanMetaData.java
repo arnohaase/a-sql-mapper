@@ -2,12 +2,14 @@ package com.ajjpj.asqlmapper.javabeans;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
+import com.ajjpj.acollections.AMap;
 import com.ajjpj.acollections.immutable.AVector;
 
 public class BeanMetaData {
     private final Class<?> beanType;
-    private final AVector<BeanProperty> beanProperties;
+    private final AMap<String, BeanProperty> beanProperties;
 
     private final Supplier<Object> builderFactory;
     private final Function<Object,Object> builderFinalizer;
@@ -15,7 +17,7 @@ public class BeanMetaData {
 
     public BeanMetaData (Class<?> beanType, AVector<BeanProperty> beanProperties, Supplier<Object> builderFactory, Function<Object, Object> builderFinalizer) {
         this.beanType = beanType;
-        this.beanProperties = beanProperties;
+        this.beanProperties = beanProperties.groupBy(BeanProperty::name).mapValues(AVector::head);
         this.builderFactory = builderFactory;
         this.builderFinalizer = builderFinalizer;
     }
@@ -24,7 +26,7 @@ public class BeanMetaData {
         return beanType;
     }
 
-    public AVector<BeanProperty> beanProperties () {
+    public AMap<String, BeanProperty> beanProperties () {
         return beanProperties;
     }
 

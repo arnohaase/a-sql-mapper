@@ -1,5 +1,4 @@
-package com.ajjpj.asqlmapper.mapper.beans.javatypes;
-
+package com.ajjpj.asqlmapper.javabeans.columnnames;
 
 public class SnakeCaseColumnNameExtractor extends AnnotationBasedColumnNameExtractor {
     @Override

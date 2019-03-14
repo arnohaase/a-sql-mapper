@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.mapper.provided;
+package com.ajjpj.asqlmapper.core.provided;
 
 import com.ajjpj.acollections.util.AOption;
 

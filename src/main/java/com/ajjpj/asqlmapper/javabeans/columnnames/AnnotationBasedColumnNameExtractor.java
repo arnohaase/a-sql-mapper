@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import com.ajjpj.acollections.ASet;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.mapper.annotations.Column;
-import com.ajjpj.asqlmapper.mapper.beans.javatypes.ColumnNameExtractor;
 import com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper;
 
 public abstract class AnnotationBasedColumnNameExtractor implements ColumnNameExtractor {

@@ -1,14 +1,6 @@
 package com.ajjpj.asqlmapper.core.impl;
 
-import com.ajjpj.acollections.AList;
-import com.ajjpj.acollections.immutable.AVector;
-import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.acollections.util.AUnchecker;
-import com.ajjpj.asqlmapper.core.AQuery;
-import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
-import com.ajjpj.asqlmapper.core.RowExtractor;
-import com.ajjpj.asqlmapper.core.SqlSnippet;
-import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
+import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,7 +13,17 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
+import com.ajjpj.acollections.AList;
+import com.ajjpj.acollections.immutable.AVector;
+import com.ajjpj.acollections.util.AOption;
+import com.ajjpj.acollections.util.AUnchecker;
+import com.ajjpj.asqlmapper.core.AQuery;
+import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
+import com.ajjpj.asqlmapper.core.RowExtractor;
+import com.ajjpj.asqlmapper.core.SqlSnippet;
+import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
+import com.ajjpj.asqlmapper.core.provided.ProvidedProperties;
+import com.ajjpj.asqlmapper.core.provided.ProvidedValues;
 
 
 public class AQueryImpl<T> implements AQuery<T> {
@@ -31,15 +33,21 @@ public class AQueryImpl<T> implements AQuery<T> {
     private final RowExtractor rowExtractor;
     protected final AVector<SqlEngineEventListener> listeners;
     protected final AOption<Supplier<Connection>> defaultConnectionSupplier;
+    protected final ProvidedProperties providedValues;
 
     public AQueryImpl (Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, RowExtractor rowExtractor,
-                       AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier) {
+                       AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier, ProvidedProperties providedValues) {
         this.rowClass = cls;
         this.sql = sql;
         this.primTypes = primTypes;
         this.rowExtractor = rowExtractor;
         this.listeners = listeners;
         this.defaultConnectionSupplier = defaultConnectionSupplier;
+        this.providedValues = providedValues;
+    }
+
+    @Override public AQuery<T> withPropertyValues (String propName, String referencedPropertyName, ProvidedValues providedValues) {
+        return new AQueryImpl<>(rowClass, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, this.providedValues.with(propName, referencedPropertyName, providedValues));
     }
 
     @Override public T single () {
@@ -122,7 +130,7 @@ public class AQueryImpl<T> implements AQuery<T> {
     }
 
     protected T doExtract(Connection conn, ResultSet rs, Object memento) throws SQLException {
-        return rowExtractor.fromSql(conn, rowClass, primTypes, rs, memento);
+        return rowExtractor.fromSql(rowClass, primTypes, rs, memento, providedValues);
     }
 
     @Override public Stream<T> stream () {

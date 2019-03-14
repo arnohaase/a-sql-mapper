@@ -5,8 +5,8 @@ import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.impl.SqlHelper;
-import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
-import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
+import com.ajjpj.asqlmapper.core.provided.ProvidedProperties;
+import com.ajjpj.asqlmapper.core.provided.ProvidedValues;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

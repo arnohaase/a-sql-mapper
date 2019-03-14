@@ -1,11 +1,11 @@
 package com.ajjpj.asqlmapper.mapper.beans;
 
-import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.core.impl.CanHandle;
-
 import java.sql.Connection;
 
+import com.ajjpj.asqlmapper.core.impl.CanHandle;
+import com.ajjpj.asqlmapper.javabeans.BeanMetaDataRegistry;
+
 public interface BeanMappingRegistry extends CanHandle {
-    QueryMappingBeanMetaData getQueryMappingMetaData(Connection conn, Class<?> beanType);
-    TableAwareBeanMetaData getTableAwareMetaData(Connection conn, Class<?> beanType, AOption<String> providedTableName);
+    BeanMetaDataRegistry metaDataRegistry();
+    BeanMapping getBeanMapping(Connection conn, Class<?> beanType);
 }

@@ -1,8 +1,8 @@
 package com.ajjpj.asqlmapper.core;
 
 import com.ajjpj.asqlmapper.core.impl.CanHandle;
+import com.ajjpj.asqlmapper.core.provided.ProvidedProperties;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -13,5 +13,7 @@ public interface RowExtractor extends CanHandle {
     default Object mementoPerQuery(Class<?> cls, PrimitiveTypeRegistry primTypes, ResultSet rs) throws SQLException {
         return null;
     }
-    <T> T fromSql(Connection conn, Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) throws SQLException;
+//    <T> T fromSql(Connection conn, Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) throws SQLException;
+
+    <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedProperties providedProperties) throws SQLException;
 }
