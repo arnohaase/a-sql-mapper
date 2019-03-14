@@ -11,17 +11,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
-import com.ajjpj.asqlmapper.SqlEngine;
+import com.ajjpj.asqlmapper.SqlMapperBuilder;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
-import com.ajjpj.asqlmapper.javabeans.BeanMetaDataRegistryImpl;
-import com.ajjpj.asqlmapper.javabeans.columnnames.DirectColumnNameExtractor;
-import com.ajjpj.asqlmapper.javabeans.extractors.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
-import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistryImpl;
-import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
-import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
-import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 
 
 public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
@@ -31,18 +24,12 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
     void setUp() throws SQLException {
         conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
         conn.prepareStatement("create table person_permissions(person_id bigint references person, user_id bigint, primary key(person_id, user_id))").executeUpdate();
-        SqlEngine engine = SqlEngine
-                .create()
-                .withDefaultConnectionSupplier(() -> conn)
-                .withDefaultPkName("id");
 
-        //TODO simplify setup: convenience factory, defaults, ...
-        mapper = new SqlMapper(engine,
-                new BeanMappingRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
-                        new DefaultTableNameExtractor(),
-                        new GuessingPkStrategyDecider(),
-                        new BeanMetaDataRegistryImpl(new ImmutableWithBuilderMetaDataExtractor(new DirectColumnNameExtractor()))
-                ));
+        mapper = new SqlMapperBuilder()
+                .withDefaultConnectionSupplier(() -> conn)
+                .withDefaultPkName("id")
+                .withBeanStyle(SqlMapperBuilder.BeanStyle.immutables)
+                .build(DatabaseDialect.H2);
     }
 
     @AfterEach

@@ -16,7 +16,7 @@ import com.ajjpj.acollections.ASet;
 import com.ajjpj.acollections.immutable.AHashSet;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.SqlEngine;
+import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlBuilder;

@@ -9,43 +9,31 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.ajjpj.acollections.AMap;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
-import com.ajjpj.asqlmapper.SqlEngine;
+import com.ajjpj.asqlmapper.SqlMapperBuilder;
 import com.ajjpj.asqlmapper.core.AInsert;
 import com.ajjpj.asqlmapper.core.AQuery;
+import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.listener.LoggingListener;
-import com.ajjpj.asqlmapper.javabeans.BeanMetaDataRegistryImpl;
-import com.ajjpj.asqlmapper.javabeans.columnnames.DirectColumnNameExtractor;
-import com.ajjpj.asqlmapper.javabeans.extractors.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
-import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistryImpl;
-import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
-import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
-import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 
 
 class DemoTest extends AbstractDatabaseTest {
+    private SqlMapperBuilder builder = new SqlMapperBuilder()
+            .withDefaultPkName("id")
+            .withBeanStyle(SqlMapperBuilder.BeanStyle.immutables)
+            .withDefaultConnectionSupplier(() -> conn);
     private SqlEngine engine;
-    private LoggingListener loggingListener;
 
     @BeforeEach void setUp() throws SQLException {
         conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
-        loggingListener = LoggingListener.createWithStatistics(1000);
-        engine = SqlEngine
-                .create()
-                .withDefaultPkName("id")
-                .withRowExtractor(new BeanMetaDataRegistryImpl(new ImmutableWithBuilderMetaDataExtractor(new DirectColumnNameExtractor())).asRowExtractor())
-                .withListener(loggingListener)
-                .withDefaultConnectionSupplier(() -> conn)
-                ;
+        engine = builder.build(DatabaseDialect.H2).engine();
     }
 
     @AfterEach
     void tearDown() throws SQLException {
         conn.prepareStatement("drop table person").executeUpdate();
-        System.out.println(loggingListener.getStatistics());
-        System.out.println(loggingListener.getStatistics().getStatementStatistics().mkString("\n"));
         System.out.println(LoggingListener.getAllStatistics().mkString("\n"));
     }
 
@@ -65,16 +53,7 @@ class DemoTest extends AbstractDatabaseTest {
     }
 
     @Test void testMapper() {
-        //TODO simplify setup: convenience factory, defaults, ...
-
-
-
-        final SqlMapper mapper = new SqlMapper(engine, new BeanMappingRegistryImpl(
-                new SchemaRegistry(DatabaseDialect.H2),
-                new DefaultTableNameExtractor(),
-                new GuessingPkStrategyDecider(),
-                new BeanMetaDataRegistryImpl(new ImmutableWithBuilderMetaDataExtractor(new DirectColumnNameExtractor()))
-                ));
+        final SqlMapper mapper = builder.build(DatabaseDialect.H2);
 
         final Person inserted1 = mapper.insert(Person.of(0L, "Arno"));
         final Person inserted2 = mapper.insert(Person.of(0L, "Arno"));

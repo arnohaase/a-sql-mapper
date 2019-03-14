@@ -4,6 +4,8 @@ package com.ajjpj.asqlmapper.mapper;
 public interface DatabaseDialect {
     DatabaseDialect H2 = new H2Dialect();
     DatabaseDialect POSTGRESQL = new PostgresqlDialect();
+    DatabaseDialect ORACLE = new OracleDialect();
+    DatabaseDialect SQL_SERVER = new SqlServerDialect();
 
     default String normalizeSchemaName(String schemaName) {
         return schemaName;
@@ -13,6 +15,12 @@ public interface DatabaseDialect {
     }
 
     class PostgresqlDialect implements DatabaseDialect {
+    }
+
+    class OracleDialect implements DatabaseDialect {
+    }
+
+    class SqlServerDialect implements DatabaseDialect {
     }
 
     class H2Dialect implements DatabaseDialect {

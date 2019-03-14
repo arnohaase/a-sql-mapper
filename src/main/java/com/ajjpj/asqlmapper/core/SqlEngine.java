@@ -1,10 +1,9 @@
-package com.ajjpj.asqlmapper;
+package com.ajjpj.asqlmapper.core;
 
 import static com.ajjpj.asqlmapper.core.SqlSnippet.concat;
 
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.core.*;
 import com.ajjpj.asqlmapper.core.common.ScalarRowExtractor;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
 import com.ajjpj.asqlmapper.core.common.RawRowExtractor;
