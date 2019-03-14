@@ -12,11 +12,12 @@ import com.ajjpj.acollections.AList;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlEngine;
 import com.ajjpj.asqlmapper.demo.simple.Person;
+import com.ajjpj.asqlmapper.javabeans.BeanMetaDataRegistryImpl;
+import com.ajjpj.asqlmapper.javabeans.columnnames.DirectColumnNameExtractor;
+import com.ajjpj.asqlmapper.javabeans.extractors.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
-import com.ajjpj.asqlmapper.mapper.beans.BeanRegistryImpl;
-import com.ajjpj.asqlmapper.mapper.beans.javatypes.DirectColumnNameExtractor;
-import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataExtractor;
+import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistryImpl;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
 import com.ajjpj.asqlmapper.core.provided.ProvidedValues;
@@ -32,10 +33,10 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
 
         //TODO simplify setup: convenience factory, defaults, ...
         mapper = new SqlMapper(SqlEngine.create().withDefaultConnectionSupplier(() -> conn).withDefaultPkName("id"),
-                new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
+                new BeanMappingRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
                         new DefaultTableNameExtractor(),
                         new GuessingPkStrategyDecider(),
-                        new ImmutableWithBuilderMetaDataExtractor(new DirectColumnNameExtractor())
+                        new BeanMetaDataRegistryImpl(new ImmutableWithBuilderMetaDataExtractor(new DirectColumnNameExtractor()))
                 ));
     }
 
@@ -75,7 +76,7 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
                 .execute();
         final AList<PersonWithAddresses> persons =  mapper
                 .query(PersonWithAddresses.class, "select * from person where id in(?,?) order by id asc", 1, 2)
-                .withPropertyValues("addresses", addresses)
+                .withPropertyValues("addresses", "id", addresses)
                 .list();
         assertEquals(AList.of(
                 PersonWithAddresses.of(personId1, "Arno1", AList.of(Address.of("street13", "city13"),Address.of("street12", "city12"),Address.of("street11", "city11"))),

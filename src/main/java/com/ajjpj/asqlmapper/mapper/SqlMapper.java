@@ -17,6 +17,7 @@ import com.ajjpj.acollections.immutable.AHashSet;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.SqlEngine;
+import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlBuilder;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
@@ -45,6 +46,13 @@ public class SqlMapper {
     }
     public SqlSnippet tableName(Connection conn, Class<?> beanType) {
         return sql(mappingRegistry.getBeanMapping(conn, beanType).tableName());
+    }
+
+    public <T> AQuery<T> query(Class<T> beanType, SqlSnippet sql, SqlSnippet... moreSql) {
+        return engine().query(beanType, sql, moreSql);
+    }
+    public <T> AQuery<T> query(Class<T> beanType, String sql, Object... params) {
+        return engine().query(beanType, sql, params);
     }
 
     public <K,T> ToManyQuery<K, ASet<T>> queryForToManyASet(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql) {

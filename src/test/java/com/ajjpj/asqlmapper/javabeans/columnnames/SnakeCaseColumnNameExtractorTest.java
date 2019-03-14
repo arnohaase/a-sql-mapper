@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.mapper.beans.javatypes;
+package com.ajjpj.asqlmapper.javabeans.columnnames;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

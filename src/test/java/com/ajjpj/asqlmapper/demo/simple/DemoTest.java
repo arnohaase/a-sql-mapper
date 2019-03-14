@@ -14,12 +14,12 @@ import com.ajjpj.asqlmapper.core.AInsert;
 import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.listener.LoggingListener;
-import com.ajjpj.asqlmapper.mapper.BuilderBasedRowExtractor;
+import com.ajjpj.asqlmapper.javabeans.BeanMetaDataRegistryImpl;
+import com.ajjpj.asqlmapper.javabeans.columnnames.DirectColumnNameExtractor;
+import com.ajjpj.asqlmapper.javabeans.extractors.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
-import com.ajjpj.asqlmapper.mapper.beans.BeanRegistryImpl;
-import com.ajjpj.asqlmapper.mapper.beans.javatypes.DirectColumnNameExtractor;
-import com.ajjpj.asqlmapper.mapper.beans.javatypes.ImmutableWithBuilderMetaDataExtractor;
+import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistryImpl;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
@@ -35,7 +35,7 @@ class DemoTest extends AbstractDatabaseTest {
         engine = SqlEngine
                 .create()
                 .withDefaultPkName("id")
-                .withRowExtractor(new BuilderBasedRowExtractor()) //TODO provide this from the mapper
+                .withRowExtractor(new BeanMetaDataRegistryImpl(new ImmutableWithBuilderMetaDataExtractor(new DirectColumnNameExtractor())).asRowExtractor())
                 .withListener(loggingListener)
                 .withDefaultConnectionSupplier(() -> conn)
                 ;
@@ -66,10 +66,14 @@ class DemoTest extends AbstractDatabaseTest {
 
     @Test void testMapper() {
         //TODO simplify setup: convenience factory, defaults, ...
-        final SqlMapper mapper = new SqlMapper(engine, new BeanRegistryImpl(new SchemaRegistry(DatabaseDialect.H2),
+
+
+
+        final SqlMapper mapper = new SqlMapper(engine, new BeanMappingRegistryImpl(
+                new SchemaRegistry(DatabaseDialect.H2),
                 new DefaultTableNameExtractor(),
                 new GuessingPkStrategyDecider(),
-                new ImmutableWithBuilderMetaDataExtractor(new DirectColumnNameExtractor())
+                new BeanMetaDataRegistryImpl(new ImmutableWithBuilderMetaDataExtractor(new DirectColumnNameExtractor()))
                 ));
 
         final Person inserted1 = mapper.insert(Person.of(0L, "Arno"));
