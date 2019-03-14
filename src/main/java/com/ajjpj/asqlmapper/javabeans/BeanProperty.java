@@ -4,14 +4,11 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.lang.reflect.Method;
 
-import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
-
 
 public class BeanProperty {
     private final Class<?> propType;
     private final String name;
-    private final AOption<ColumnMetaData> columnMetaData;
+    private final String columnName;
 
     private final Method getterMethod;
     private final Method setterMethod;
@@ -19,10 +16,10 @@ public class BeanProperty {
 
     private final Method builderSetterMethod;
 
-    public BeanProperty (Class<?> propType, String name, AOption<ColumnMetaData> columnMetaData, Method getterMethod, Method setterMethod, boolean setterReturnsBean, Method builderSetterMethod) {
+    public BeanProperty (Class<?> propType, String name, String columnName, Method getterMethod, Method setterMethod, boolean setterReturnsBean, Method builderSetterMethod) {
         this.propType = propType;
         this.name = name;
-        this.columnMetaData = columnMetaData;
+        this.columnName = columnName;
         this.getterMethod = getterMethod;
         this.setterMethod = setterMethod;
         this.setterReturnsBean = setterReturnsBean;
@@ -32,11 +29,8 @@ public class BeanProperty {
     public Class<?> propType() {
         return propType;
     }
-    public AOption<ColumnMetaData> columnMetaData() {
-        return columnMetaData;
-    }
     public String columnName() {
-        return columnMetaData().map(ColumnMetaData::colName).orElse(name);
+        return columnName;
     }
 
     public Object get(Object bean) {
@@ -68,7 +62,7 @@ public class BeanProperty {
         return "BeanProperty{" +
                 "propType=" + propType +
                 ", name='" + name + '\'' +
-                ", columnMetaData=" + columnMetaData +
+                ", columnName=" + columnName +
                 ", getterMethod=" + getterMethod +
                 ", setterMethod=" + setterMethod +
                 ", setterReturnsBean=" + setterReturnsBean +

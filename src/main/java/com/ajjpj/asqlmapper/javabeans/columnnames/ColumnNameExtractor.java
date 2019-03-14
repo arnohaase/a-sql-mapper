@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.mapper.beans.javatypes;
+package com.ajjpj.asqlmapper.javabeans.columnnames;
 
 import java.lang.reflect.Method;
 

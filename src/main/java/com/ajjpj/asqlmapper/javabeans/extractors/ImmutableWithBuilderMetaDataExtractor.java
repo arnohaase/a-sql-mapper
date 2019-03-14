@@ -14,22 +14,32 @@ import org.slf4j.LoggerFactory;
 import com.ajjpj.acollections.ACollection;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
+import com.ajjpj.asqlmapper.javabeans.BeanProperty;
+import com.ajjpj.asqlmapper.javabeans.columnnames.ColumnNameExtractor;
 import com.ajjpj.asqlmapper.mapper.annotations.Ignore;
-import com.ajjpj.asqlmapper.mapper.beans.BeanProperty;
-import com.ajjpj.asqlmapper.mapper.beans.javatypes.BeanMetaDataExtractor;
-import com.ajjpj.asqlmapper.mapper.beans.javatypes.ColumnNameExtractor;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 import com.ajjpj.asqlmapper.mapper.schema.TableMetaData;
 import com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper;
-
 
 public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtractor {
     private static final Logger log = LoggerFactory.getLogger(ImmutableWithBuilderMetaDataExtractor.class);
 
     private final ColumnNameExtractor columnNameExtractor;
 
+    private final String builderFactoryName;
+    private final String builderFinalizeMethodName;
+    private final String setterPrefix;
+
+
     public ImmutableWithBuilderMetaDataExtractor (ColumnNameExtractor columnNameExtractor) {
+        this(columnNameExtractor, "builder", "build", "with");
+    }
+
+    public ImmutableWithBuilderMetaDataExtractor (ColumnNameExtractor columnNameExtractor, String builderFactoryName, String builderFinalizeMethodName, String setterPrefix) {
         this.columnNameExtractor = columnNameExtractor;
+        this.builderFactoryName = builderFactoryName;
+        this.builderFinalizeMethodName = builderFinalizeMethodName;
+        this.setterPrefix = setterPrefix;
     }
 
     private boolean hasIgnoreAnnotation(Class<?> beanType, Method mtd) {
@@ -62,7 +72,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
         }
     }
 
-    @Override public AVector<BeanProperty> beanProperties (Connection conn, Class<?> beanType, AOption<TableMetaData> tableMetaData) {
+    @Override public AVector<BeanProperty> beanProperties (Class<?> beanType) {
         return executeUnchecked(() -> {
             final AVector<Method> getters = wrap(beanType.getMethods())
                     .filterNot(m -> m.getName().equals("hashCode") || m.getName().equals("toString") || m.getName().equals("getClass"))
@@ -74,17 +84,12 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
 
             return getters
                     .filterNot(g -> hasIgnoreAnnotation(beanType, g))
-                    .flatMap(getter -> executeUnchecked(() -> {
-                        final Method setter = setterFor(beanType, "with" + toFirstUpper(getter.getName()), getter.getReturnType(), getter);
+                    .map(getter -> executeUnchecked(() -> {
+                        final Method setter = setterFor(beanType, setterPrefix + toFirstUpper(getter.getName()), getter.getReturnType(), getter);
                         final Method builderSetter = setterFor(builderClass, getter.getName(), getter.getReturnType(), getter);
 
                         final String columnName = columnNameExtractor.columnNameFor(beanType, getter, getter.getName());
-                        final AOption<ColumnMetaData> optColumnMetaData = tableMetaData.flatMap(m -> m.findColByName(columnName));
-                        if (tableMetaData.isPresent() && optColumnMetaData.isEmpty()) {
-                            log.debug("no database column {}.{} for property {} of bean {}", tableMetaData.get().tableName(), columnName, getter.getName(), beanType.getName());
-                        }
-
-                        return AOption.some(new BeanProperty(getter.getReturnType(), getter.getName(), optColumnMetaData, getter, setter, true, builderSetter));
+                        return new BeanProperty(getter.getReturnType(), getter.getName(), columnName, getter, setter, true, builderSetter);
                     }));
         });
     }
@@ -95,7 +100,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
 
     @Override public Supplier<Object> builderFactoryFor (Class<?> beanType) {
         return executeUnchecked(() -> {
-            final Method mtd = beanType.getMethod("builder");
+            final Method mtd = beanType.getMethod(builderFactoryName);
             return () -> executeUnchecked(() -> mtd.invoke(null));
         });
     }
@@ -103,7 +108,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
     @Override public Function<Object, Object> builderFinalizerFor (Class<?> beanType) {
         return executeUnchecked(() -> {
             final Class<?> builderClass = builderFactoryFor(beanType).get().getClass();
-            final Method mtd = builderClass.getMethod("build");
+            final Method mtd = builderClass.getMethod(builderFinalizeMethodName);
 
             return builder -> executeUnchecked(() -> mtd.invoke(builder));
         });
