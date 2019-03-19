@@ -2,7 +2,6 @@ package com.ajjpj.asqlmapper.javabeans;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import com.ajjpj.acollections.AMap;
 import com.ajjpj.acollections.immutable.AVector;

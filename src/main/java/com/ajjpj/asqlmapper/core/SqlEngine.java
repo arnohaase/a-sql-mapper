@@ -169,6 +169,8 @@ public class SqlEngine {
         return bigDecimalQuery(SqlSnippet.sql(sql, params));
     }
 
+    // TODO UUID query
+
     public AQuery<SqlRow> rawQuery(SqlSnippet sql, SqlSnippet... moreSql) {
         return new AQueryImpl<>(SqlRow.class, concat(sql, moreSql), primTypes, RawRowExtractor.INSTANCE, listeners, defaultConnectionSupplier, ProvidedProperties.empty());
     }

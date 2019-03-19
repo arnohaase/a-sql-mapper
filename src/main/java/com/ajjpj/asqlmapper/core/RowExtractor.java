@@ -13,7 +13,6 @@ public interface RowExtractor extends CanHandle {
     default Object mementoPerQuery(Class<?> cls, PrimitiveTypeRegistry primTypes, ResultSet rs) throws SQLException {
         return null;
     }
-//    <T> T fromSql(Connection conn, Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery) throws SQLException;
 
     <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedProperties providedProperties) throws SQLException;
 }
