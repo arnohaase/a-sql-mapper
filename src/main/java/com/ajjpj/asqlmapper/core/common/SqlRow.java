@@ -42,6 +42,27 @@ public class SqlRow {
         return get(columnNames.get(idx));
     }
 
+    public String getString(String columnName) {
+        return get(String.class, columnName);
+    }
+    public String getString(int idx) {
+        return get(String.class, idx);
+    }
+
+    public Integer getInt(String columnName) {
+        return get(Integer.class, columnName);
+    }
+    public Integer getInt(int idx) {
+        return get(Integer.class, idx);
+    }
+
+    public Long getLong(String columnName) {
+        return get(Long.class, columnName);
+    }
+    public Long getLong(int idx) {
+        return get(Long.class, idx);
+    }
+
     @Override public String toString () {
         return "SqlRow{" + byLowerCaseColumn.mkString(",") + "}";
     }
