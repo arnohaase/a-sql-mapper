@@ -14,6 +14,8 @@ todo
 
 * to one -> FK
 
+* optimized 'isStreaming=true' implementation for Java Beans extractor
+
 * 'getter' convention based column name strategy
 
 * unit tests

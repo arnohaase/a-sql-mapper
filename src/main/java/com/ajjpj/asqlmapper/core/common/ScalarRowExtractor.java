@@ -32,7 +32,8 @@ public class ScalarRowExtractor implements RowExtractor {
         return this.cls.isAssignableFrom(cls);
     }
 
-    @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedProperties providedProperties) throws SQLException {
+    @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, boolean isStreaming,
+                                    ProvidedProperties providedProperties) throws SQLException {
         if (providedProperties.nonEmpty()) {
             log.warn("provided properties ignored for scalar queries");
         }

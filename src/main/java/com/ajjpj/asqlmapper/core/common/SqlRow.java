@@ -1,69 +1,46 @@
 package com.ajjpj.asqlmapper.core.common;
 
-import com.ajjpj.acollections.AMap;
 import com.ajjpj.acollections.immutable.AVector;
-import com.ajjpj.acollections.util.AUnchecker;
-import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 
-import java.sql.ResultSet;
+public interface SqlRow {
+    /**
+     * @return a {@link DetachedSqlRow} with this SqlRow's data.
+     */
+    DetachedSqlRow detach();
 
+    default int numColumns() {
+        return columnNames().size();
+    }
+    AVector<String> columnNames();
 
-public class SqlRow {
-    private final AMap<String,Object> byLowerCaseColumn;
-    private final AVector<String> columnNames;
-    private final PrimitiveTypeRegistry primTypes;
+    <T> T get(Class<T> cls, String columnName);
+    Object get(String columnName);
 
-    public SqlRow (ResultSet rs, AVector<String> columnNames, PrimitiveTypeRegistry primTypes) {
-        this.byLowerCaseColumn = columnNames.fold(AMap.empty(),
-                (res, el) -> res.plus(el.toLowerCase(), AUnchecker.executeUnchecked(() -> rs.getObject(el))));
-        this.columnNames = columnNames;
-        this.primTypes = primTypes;
+    default <T> T get(Class<T> cls, int idx) {
+        return get(cls, columnNames().get(idx));
+    }
+    default Object get(int idx) {
+        return get(columnNames().get(idx));
     }
 
-    public int numColumns() {
-        return columnNames.size();
-    }
-
-    public AVector<String> columnNames() {
-        return columnNames;
-    }
-
-    public <T> T get(Class<T> cls, String columnName) {
-        return primTypes.fromSql(cls, byLowerCaseColumn.get(columnName.toLowerCase()));
-    }
-    public Object get(String columnName) {
-        return primTypes.fromSql(byLowerCaseColumn.get(columnName.toLowerCase()));
-    }
-
-    public <T> T get(Class<T> cls, int idx) {
-        return get(cls, columnNames.get(idx));
-    }
-    public Object get(int idx) {
-        return get(columnNames.get(idx));
-    }
-
-    public String getString(String columnName) {
+    default String getString(String columnName) {
         return get(String.class, columnName);
     }
-    public String getString(int idx) {
+    default String getString(int idx) {
         return get(String.class, idx);
     }
 
-    public Integer getInt(String columnName) {
+    default Integer getInt(String columnName) {
         return get(Integer.class, columnName);
     }
-    public Integer getInt(int idx) {
+    default Integer getInt(int idx) {
         return get(Integer.class, idx);
     }
 
-    public Long getLong(String columnName) {
+    default Long getLong(String columnName) {
         return get(Long.class, columnName);
     }
-    public Long getLong(int idx) {
+    default Long getLong(int idx) {
         return get(Long.class, idx);
-    }
-
-    @Override public String toString () {
-        return "SqlRow{" + byLowerCaseColumn.mkString(",") + "}";
     }
 }

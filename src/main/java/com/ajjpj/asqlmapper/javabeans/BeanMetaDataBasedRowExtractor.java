@@ -19,7 +19,8 @@ class BeanMetaDataBasedRowExtractor implements RowExtractor {
         return beanRegistry.canHandle(cls);
     }
 
-    @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedProperties providedProperties) throws SQLException {
+    @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, boolean isStreaming,
+                                    ProvidedProperties providedProperties) throws SQLException {
         final BeanMetaData beanMetaData = beanRegistry.getBeanMetaData(cls);
 
         Object builder = beanMetaData.newBuilder();

@@ -59,8 +59,8 @@ public class AQueryImpl<T> implements AQuery<T> {
     @Override public T single (Connection conn) {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             if (!rs.next()) throw new IllegalStateException("no result");
-            final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs);
-            final T result = doExtract(conn, rs, memento);
+            final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs, false);
+            final T result = doExtract(conn, rs, memento, false);
             if (rs.next()) throw new IllegalStateException("more than one result row");
             afterIteration(1);
             return result;
@@ -104,8 +104,8 @@ public class AQueryImpl<T> implements AQuery<T> {
                 afterIteration(0);
                 return AOption.empty();
             }
-            final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs);
-            final T result = doExtract(conn, rs, memento);
+            final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs, false);
+            final T result = doExtract(conn, rs, memento, false);
             if (rs.next()) throw new IllegalStateException("more than one result row");
             afterIteration(1);
             return AOption.some(result);
@@ -121,16 +121,16 @@ public class AQueryImpl<T> implements AQuery<T> {
     @Override public AList<T> list (Connection conn) {
         return doQuery(conn, rs -> executeUnchecked(() -> {
             final AVector.Builder<T> builder = AVector.builder();
-            final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs);
-            while (rs.next()) builder.add(doExtract(conn, rs, memento));
+            final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs, false);
+            while (rs.next()) builder.add(doExtract(conn, rs, memento, false));
             final AList<T> result = builder.build();
             afterIteration(result.size());
             return result;
         }));
     }
 
-    protected T doExtract(Connection conn, ResultSet rs, Object memento) throws SQLException {
-        return rowExtractor.fromSql(rowClass, primTypes, rs, memento, providedValues);
+    protected T doExtract(Connection conn, ResultSet rs, Object memento, boolean isStreaming) throws SQLException {
+        return rowExtractor.fromSql(rowClass, primTypes, rs, memento, isStreaming, providedValues);
     }
 
     @Override public Stream<T> stream () {
@@ -165,7 +165,7 @@ public class AQueryImpl<T> implements AQuery<T> {
                 SqlHelper.bindParameters(ps, sql.getParams(), primTypes);
                 rs = ps.executeQuery();
                 listeners.reverseIterator().forEachRemaining(SqlEngineEventListener::onAfterQueryExecution);
-                memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs);
+                memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs, true);
             }
             catch (Throwable th) {
                 SqlHelper.closeQuietly(ps);
@@ -183,7 +183,7 @@ public class AQueryImpl<T> implements AQuery<T> {
                     return false;
                 }
                 numRows += 1;
-                action.accept(doExtract(conn, rs, memento));
+                action.accept(doExtract(conn, rs, memento, true));
                 return true;
             }
             catch(Throwable th) {

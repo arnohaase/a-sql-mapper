@@ -10,9 +10,9 @@ import java.sql.SQLException;
 public interface RowExtractor extends CanHandle {
     boolean canHandle(Class<?> cls);
 
-    default Object mementoPerQuery(Class<?> cls, PrimitiveTypeRegistry primTypes, ResultSet rs) throws SQLException {
+    default Object mementoPerQuery(Class<?> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, boolean isStreaming) throws SQLException {
         return null;
     }
 
-    <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, ProvidedProperties providedProperties) throws SQLException;
+    <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, boolean isStreaming, ProvidedProperties providedProperties) throws SQLException;
 }

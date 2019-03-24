@@ -61,6 +61,30 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId3, "street32", "city32").execute();
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId3, "street33", "city33").execute();
 
+        //TODO move ToManyQuery to engine
+
+        // "select a.* from (##) as MASTER left join (select * from address where ... order by ...) as a on a.person_id = MASTER.id"
+        // --> does left relation in a LEFT JOIN determine overall row order?
+        // --> performance / efficiency?
+
+        // engine
+        //     .query("select * from person")
+        //     .withToMany("addresses", "person_id", "id", ???Long.class???, engine.query(Address.class, "select * from address where person_id in (##) order by id asc"))
+        //     .withToOne("department", "id", "department_id", Long.class, engine.query(Department.class, "select * from department where ???")
+        //     .withProvidedProperty("myProp", "id", Long.class, Map.of(25L, "yo", 77L, "whatever"))
+        //     .withProvidedProperty("myOtherProp", "id", Long.class, personId -> ??? )
+        //     .withDerivedProperty("verySpecial", sqlRow -> 2*sqlRow.getInt("yo") + sqlRow.getLong("yeah") )
+        //     .list();
+        // mapper
+        //     .query("select * from person")
+        //     .withToMany("addresses", "person_id"???, engine.query(Address.class, "select * from address where person_id in (##) order by id asc"))
+        //     .withToOne("department") // --> with and without explicit query
+        //     .withOneToMany("cars" (???, "owner_id" ???) )
+        //     .withManyToMany("organizations", "tbl_person_organizations" (???, "fk_person", "fk_org" ???) )
+        //     .list();
+
+        //TODO fk / m2n annotations?
+
         //TODO subselect using master query instead of copy&paste
         final ProvidedValues addresses = mapper
                 .queryForToManyAList(Address.class, "person_id", Long.class, sql("select * from address where person_id in (?,?) order by id desc", 1, 2))

@@ -61,11 +61,11 @@ class ToManyQueryImpl<K,T,R> implements ToManyQuery<K,R> {
             try {
                 SqlHelper.bindParameters(ps, sql.getParams(), primTypes);
                 final ResultSet rs = ps.executeQuery();
-                final Object memento = beanExtractor.mementoPerQuery(manyType, primTypes, rs);
+                final Object memento = beanExtractor.mementoPerQuery(manyType, primTypes, rs, false);
 
                 while(rs.next()) {
                     final K key = primTypes.fromSql(keyType, rs.getObject(keyColumn));
-                    final T value = beanExtractor.fromSql(manyType, primTypes, rs, memento, providedProperties);
+                    final T value = beanExtractor.fromSql(manyType, primTypes, rs, memento, false, providedProperties);
                     raw.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
                 }
             }
