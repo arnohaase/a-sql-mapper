@@ -1,15 +1,15 @@
 package com.ajjpj.asqlmapper.core.common;
 
 import java.math.BigDecimal;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.core.RowExtractor;
-import com.ajjpj.asqlmapper.core.provided.ProvidedProperties;
+
 
 public class ScalarRowExtractor implements RowExtractor {
     private static final Logger log = LoggerFactory.getLogger(ScalarRowExtractor.class);
@@ -32,11 +32,11 @@ public class ScalarRowExtractor implements RowExtractor {
         return this.cls.isAssignableFrom(cls);
     }
 
-    @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, ResultSet rs, Object mementoPerQuery, boolean isStreaming,
-                                    ProvidedProperties providedProperties) throws SQLException {
-        if (providedProperties.nonEmpty()) {
+    @Override public <T> T fromSql (Class<T> cls, PrimitiveTypeRegistry primTypes, SqlRow row, Object mementoPerQuery, boolean isStreaming,
+                                    Map<String,Object> injectedPropsValues) throws SQLException {
+        if (! injectedPropsValues.isEmpty()) {
             log.warn("provided properties ignored for scalar queries");
         }
-        return primTypes.fromSql(cls, rs.getObject(1));
+        return row.get(cls, 0);
     }
 }

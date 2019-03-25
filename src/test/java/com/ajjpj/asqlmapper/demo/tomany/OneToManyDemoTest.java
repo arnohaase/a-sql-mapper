@@ -1,6 +1,5 @@
 package com.ajjpj.asqlmapper.demo.tomany;
 
-import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.SQLException;
@@ -11,7 +10,8 @@ import org.junit.jupiter.api.Test;
 import com.ajjpj.acollections.AList;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlMapperBuilder;
-import com.ajjpj.asqlmapper.core.provided.ProvidedValues;
+import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
+import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToManyProperty;
 import com.ajjpj.asqlmapper.demo.simple.Person;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
@@ -61,14 +61,14 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId3, "street32", "city32").execute();
         mapper.engine().update("insert into address(person_id, street, city) values (?,?,?)", personId3, "street33", "city33").execute();
 
-        //TODO move ToManyQuery to engine
+        //TODO injected properties in SqlRow (?)
 
         // "select a.* from (##) as MASTER left join (select * from address where ... order by ...) as a on a.person_id = MASTER.id"
         // --> does left relation in a LEFT JOIN determine overall row order?
         // --> performance / efficiency?
 
         // engine
-        //     .query("select * from person")
+        //     .query(Person.class, "select * from person")
         //     .withToMany("addresses", "person_id", "id", ???Long.class???, engine.query(Address.class, "select * from address where person_id in (##) order by id asc"))
         //     .withToOne("department", "id", "department_id", Long.class, engine.query(Department.class, "select * from department where ???")
         //     .withProvidedProperty("myProp", "id", Long.class, Map.of(25L, "yo", 77L, "whatever"))
@@ -76,7 +76,7 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
         //     .withDerivedProperty("verySpecial", sqlRow -> 2*sqlRow.getInt("yo") + sqlRow.getLong("yeah") )
         //     .list();
         // mapper
-        //     .query("select * from person")
+        //     .query(Person.class, "select * from person")
         //     .withToMany("addresses", "person_id"???, engine.query(Address.class, "select * from address where person_id in (##) order by id asc"))
         //     .withToOne("department") // --> with and without explicit query
         //     .withOneToMany("cars" (???, "owner_id" ???) )
@@ -85,14 +85,14 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
 
         //TODO fk / m2n annotations?
 
-        //TODO subselect using master query instead of copy&paste
-        final ProvidedValues addresses = mapper
-                .queryForToManyAList(Address.class, "person_id", Long.class, sql("select * from address where person_id in (?,?) order by id desc", 1, 2))
-                .execute();
-        final AList<PersonWithAddresses> persons =  mapper
+        final AList<PersonWithAddresses> persons = mapper
                 .query(PersonWithAddresses.class, "select * from person where id in(?,?) order by id asc", 1, 2)
-                .withPropertyValues("addresses", "id", addresses)
+                .withInjectedProperty(new InjectedToManyProperty<>("addresses", "id", Long.class, "person_id",
+                        mapper.query(Address.class, "select * from address where person_id in (?,?) order by id desc", 1, 2),
+                        CollectionBuildStrategy.forAVector()))
                 .list();
+
+        //TODO subselect using master query instead of copy&paste
         assertEquals(AList.of(
                 PersonWithAddresses.of(personId1, "Arno1", AList.of(Address.of("street13", "city13"),Address.of("street12", "city12"),Address.of("street11", "city11"))),
                 PersonWithAddresses.of(personId2, "Arno2", AList.of(Address.of("street23", "city23"),Address.of("street22", "city22"),Address.of("street21", "city21")))

@@ -21,7 +21,6 @@ import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlBuilder;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
-import com.ajjpj.asqlmapper.core.provided.ProvidedProperties;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMapping;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistry;
@@ -53,24 +52,6 @@ public class SqlMapper {
     }
     public <T> AQuery<T> query(Class<T> beanType, String sql, Object... params) {
         return engine().query(beanType, sql, params);
-    }
-
-    public <K,T> ToManyQuery<K, ASet<T>> queryForToManyASet(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql) {
-        return queryForToMany(beanType, fkName, fkType, sql, AHashSet.streamCollector());
-    }
-    public <K,T> ToManyQuery<K, AList<T>> queryForToManyAList(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql) {
-        return queryForToMany(beanType, fkName, fkType, sql, AVector.streamCollector());
-    }
-    public <K,T> ToManyQuery<K, Set<T>> queryForToManySet(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql) {
-        return queryForToMany(beanType, fkName, fkType, sql, Collectors.toSet());
-    }
-    public <K,T> ToManyQuery<K, List<T>> queryForToManyList(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql) {
-        return queryForToMany(beanType, fkName, fkType, sql, Collectors.toList());
-    }
-    public <K,T,R> ToManyQuery<K, R> queryForToMany(Class<T> beanType, String fkName, Class<K> fkType, SqlSnippet sql, Collector<T,?,? extends R> collectorPerPk) {
-        final RowExtractor rowExtractor = engine().rowExtractorFor(beanType);
-        return new ToManyQueryImpl<>(rowExtractor, ProvidedProperties.empty(), fkType, fkName, beanType, sql, engine().primitiveTypeRegistry(), collectorPerPk,
-                engine().defaultConnectionSupplier());
     }
 
     public <T> AList<T> insertMany(List<T> os) {

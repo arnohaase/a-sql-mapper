@@ -3,8 +3,13 @@ package com.ajjpj.asqlmapper.core.common;
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 
@@ -21,24 +26,19 @@ import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 public class LiveSqlRow implements SqlRow {
     private final PrimitiveTypeRegistry primTypes;
     private final ResultSet rs;
-    private final AVector<String> columnNames;
+    private final List<String> columnNames;
 
     public LiveSqlRow (PrimitiveTypeRegistry primTypes, ResultSet rs) throws SQLException {
         this.primTypes = primTypes;
         this.rs = rs;
-
-        final AVector.Builder<String> colNames = AVector.builder();
-        for(int i=1; i<=rs.getMetaData().getColumnCount(); i+=1) {
-            colNames.add(rs.getMetaData().getColumnName(i));
-        }
-        this.columnNames = colNames.build();
+        this.columnNames = new LiveColumnNames(rs);
     }
 
     @Override public DetachedSqlRow detach () {
-        return new DetachedSqlRow(rs, columnNames(), primTypes);
+        return new DetachedSqlRow(rs, AList.from(columnNames()), primTypes);
     }
 
-    @Override public AVector<String> columnNames () {
+    @Override public List<String> columnNames () {
         return columnNames;
     }
 
@@ -51,10 +51,26 @@ public class LiveSqlRow implements SqlRow {
     }
 
     @Override public <T> T get (Class<T> cls, int idx) {
-        return executeUnchecked(() -> primTypes.fromSql(cls, rs.getObject(idx)));
+        return executeUnchecked(() -> primTypes.fromSql(cls, rs.getObject(idx+1)));
     }
 
     @Override public Object get (int idx) {
         return executeUnchecked(() -> primTypes.fromSql(rs.getObject(idx)));
+    }
+
+    static class LiveColumnNames extends AbstractList<String> {
+        private final ResultSetMetaData rsMeta;
+
+        LiveColumnNames (ResultSet rs) throws SQLException {
+            this.rsMeta = rs.getMetaData();
+        }
+
+        @Override public String get (int index) {
+            return executeUnchecked(() -> rsMeta.getColumnName(index+1));
+        }
+
+        @Override public int size () {
+            return executeUnchecked(rsMeta::getColumnCount);
+        }
     }
 }

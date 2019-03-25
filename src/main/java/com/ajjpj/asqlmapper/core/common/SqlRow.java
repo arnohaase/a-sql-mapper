@@ -1,5 +1,7 @@
 package com.ajjpj.asqlmapper.core.common;
 
+import java.util.List;
+
 import com.ajjpj.acollections.immutable.AVector;
 
 public interface SqlRow {
@@ -11,7 +13,7 @@ public interface SqlRow {
     default int numColumns() {
         return columnNames().size();
     }
-    AVector<String> columnNames();
+    List<String> columnNames();
 
     <T> T get(Class<T> cls, String columnName);
     Object get(String columnName);

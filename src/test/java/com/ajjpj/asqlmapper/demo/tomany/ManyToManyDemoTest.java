@@ -1,6 +1,5 @@
 package com.ajjpj.asqlmapper.demo.tomany;
 
-import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.SQLException;
@@ -11,7 +10,8 @@ import org.junit.jupiter.api.Test;
 import com.ajjpj.acollections.AList;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlMapperBuilder;
-import com.ajjpj.asqlmapper.core.provided.ProvidedValues;
+import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
+import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToManyProperty;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
 
@@ -64,13 +64,13 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest  {
         mapper.engine().update("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId32).execute();
         mapper.engine().update("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId33).execute();
 
-        final ProvidedValues addresses = mapper
-                .queryForToManyAList(Address.class, "person_id", Long.class, sql("select pa.person_id, a.* from address a inner join person_address pa on a.id=pa.address_id where pa.person_id in (?,?) order by id desc", 1, 2))
-                .execute();
-        final AList<PersonWithAddresses> persons =  mapper
+        final AList<PersonWithAddresses> persons = mapper
                 .query(PersonWithAddresses.class, "select * from person where id in(?,?) order by id asc", 1, 2)
-                .withPropertyValues("addresses", "id", addresses)
+                .withInjectedProperty(new InjectedToManyProperty<>("addresses", "id", Long.class, "person_id",
+                        mapper.query(Address.class, "select pa.person_id, a.* from address a inner join person_address pa on a.id=pa.address_id where pa.person_id in (?,?) order by id desc", 1, 2),
+                        CollectionBuildStrategy.forAVector()))
                 .list();
+
         assertEquals(AList.of(
                 PersonWithAddresses.of(personId1, "Arno1", AList.of(Address.of("street13", "city13"),Address.of("street12", "city12"),Address.of("street11", "city11"))),
                 PersonWithAddresses.of(personId2, "Arno2", AList.of(Address.of("street23", "city23"),Address.of("street22", "city22"),Address.of("street21", "city21")))

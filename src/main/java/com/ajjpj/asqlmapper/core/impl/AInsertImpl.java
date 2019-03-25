@@ -8,12 +8,14 @@ import com.ajjpj.asqlmapper.core.AInsert;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
+import com.ajjpj.asqlmapper.core.common.LiveSqlRow;
+import com.ajjpj.asqlmapper.core.common.SqlRow;
 import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
-import com.ajjpj.asqlmapper.core.provided.ProvidedProperties;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Collections;
 import java.util.function.Supplier;
 
 public class AInsertImpl<T> implements AInsert<T> {
@@ -51,7 +53,8 @@ public class AInsertImpl<T> implements AInsert<T> {
                 ps.executeUpdate();
                 final ResultSet rs = ps.getGeneratedKeys();
                 if (!rs.next()) throw new IllegalStateException("no result");
-                final T result = rowExtractor.fromSql(pkCls, primTypes, rs, rowExtractor.mementoPerQuery(pkCls, primTypes, rs, false), false, ProvidedProperties.empty());
+                final SqlRow row = new LiveSqlRow(primTypes, rs);
+                final T result = rowExtractor.fromSql(pkCls, primTypes, row, rowExtractor.mementoPerQuery(pkCls, primTypes, rs, false), false, Collections.emptyMap());
                 if (rs.next()) throw new IllegalStateException("more than one result row");
 
                 listeners.reverseIterator().forEachRemaining(l -> l.onAfterInsert(result));
@@ -85,7 +88,8 @@ public class AInsertImpl<T> implements AInsert<T> {
                 final AVector.Builder<T> builder = AVector.builder();
                 final ResultSet rs = ps.getGeneratedKeys();
                 final Object memento = rowExtractor.mementoPerQuery(pkCls, primTypes, rs, false);
-                while (rs.next()) builder.add(rowExtractor.fromSql(pkCls, primTypes, rs, memento, false, ProvidedProperties.empty()));
+                final SqlRow row = new LiveSqlRow(primTypes, rs);
+                while (rs.next()) builder.add(rowExtractor.fromSql(pkCls, primTypes, row, memento, false, Collections.emptyMap()));
                 final AList<T> result = builder.build();
                 listeners.reverseIterator().forEachRemaining(l -> l.onAfterInsert(result));
                 return result;

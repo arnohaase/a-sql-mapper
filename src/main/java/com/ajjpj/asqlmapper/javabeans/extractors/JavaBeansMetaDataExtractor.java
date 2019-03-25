@@ -3,16 +3,13 @@ package com.ajjpj.asqlmapper.javabeans.extractors;
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.lang.reflect.Method;
-import java.sql.Connection;
 import java.util.Arrays;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.ajjpj.acollections.immutable.AVector;
-import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.javabeans.columnnames.ColumnNameExtractor;
-import com.ajjpj.asqlmapper.mapper.schema.TableMetaData;
 
 public class JavaBeansMetaDataExtractor implements BeanMetaDataExtractor {
     private final ColumnNameExtractor columnNameExtractor;
@@ -85,7 +82,7 @@ public class JavaBeansMetaDataExtractor implements BeanMetaDataExtractor {
                     final String propertyName = propertyNameFor(getter);
                     final String columnName = columnNameExtractor.columnNameFor(beanType, getter, propertyName);
 
-                    result.add(new BeanProperty(getter.getReturnType(), propertyName, columnName, getter, setter, false, setter));
+                    result.add(new BeanProperty(getter.getReturnType(), propertyName, columnName, getter, setter, false, setter, false));
                 });
 
         return result.build();

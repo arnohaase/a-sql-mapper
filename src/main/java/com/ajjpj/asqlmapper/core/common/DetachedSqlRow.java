@@ -1,7 +1,9 @@
 package com.ajjpj.asqlmapper.core.common;
 
 import java.sql.ResultSet;
+import java.util.List;
 
+import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.AMap;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AUnchecker;
@@ -14,10 +16,10 @@ import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
  */
 public class DetachedSqlRow implements SqlRow {
     private final AMap<String,Object> byLowerCaseColumn;
-    private final AVector<String> columnNames;
+    private final List<String> columnNames;
     private final PrimitiveTypeRegistry primTypes;
 
-    public DetachedSqlRow (ResultSet rs, AVector<String> columnNames, PrimitiveTypeRegistry primTypes) {
+    public DetachedSqlRow (ResultSet rs, AList<String> columnNames, PrimitiveTypeRegistry primTypes) {
         this.byLowerCaseColumn = columnNames.fold(AMap.empty(),
                 (res, el) -> res.plus(el.toLowerCase(), AUnchecker.executeUnchecked(() -> rs.getObject(el))));
         this.columnNames = columnNames;
@@ -28,7 +30,7 @@ public class DetachedSqlRow implements SqlRow {
         return this;
     }
 
-    @Override public AVector<String> columnNames() {
+    @Override public List<String> columnNames() {
         return columnNames;
     }
 

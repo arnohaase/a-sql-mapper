@@ -5,7 +5,6 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.sql.Connection;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -13,12 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.ajjpj.acollections.ACollection;
 import com.ajjpj.acollections.immutable.AVector;
-import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.javabeans.columnnames.ColumnNameExtractor;
 import com.ajjpj.asqlmapper.mapper.annotations.Ignore;
-import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
-import com.ajjpj.asqlmapper.mapper.schema.TableMetaData;
 import com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper;
 
 public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtractor {
@@ -89,7 +85,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
                         final Method builderSetter = setterFor(builderClass, getter.getName(), getter.getReturnType(), getter);
 
                         final String columnName = columnNameExtractor.columnNameFor(beanType, getter, getter.getName());
-                        return new BeanProperty(getter.getReturnType(), getter.getName(), columnName, getter, setter, true, builderSetter);
+                        return new BeanProperty(getter.getReturnType(), getter.getName(), columnName, getter, setter, true, builderSetter, true);
                     }));
         });
     }

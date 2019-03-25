@@ -4,7 +4,6 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.lang.reflect.Method;
 
-
 public class BeanProperty {
     private final Class<?> propType;
     private final String name;
@@ -15,8 +14,10 @@ public class BeanProperty {
     private final boolean setterReturnsBean;
 
     private final Method builderSetterMethod;
+    private final boolean builderSetterReturnsBean;
 
-    public BeanProperty (Class<?> propType, String name, String columnName, Method getterMethod, Method setterMethod, boolean setterReturnsBean, Method builderSetterMethod) {
+    public BeanProperty (Class<?> propType, String name, String columnName, Method getterMethod, Method setterMethod, boolean setterReturnsBean,
+                         Method builderSetterMethod, boolean builderSetterReturnsBean) {
         this.propType = propType;
         this.name = name;
         this.columnName = columnName;
@@ -24,6 +25,7 @@ public class BeanProperty {
         this.setterMethod = setterMethod;
         this.setterReturnsBean = setterReturnsBean;
         this.builderSetterMethod = builderSetterMethod;
+        this.builderSetterReturnsBean = builderSetterReturnsBean;
     }
 
     public Class<?> propType() {
@@ -39,18 +41,16 @@ public class BeanProperty {
 
     public Object set(Object bean, Object value) {
         return executeUnchecked(() -> {
-            if (setterReturnsBean) {
-                return setterMethod.invoke(bean, value);
-            }
-            else {
-                setterMethod.invoke(bean, value);
-                return bean;
-            }
+            final Object result = setterMethod.invoke(bean, value);
+            return setterReturnsBean ? result : bean;
         });
     }
 
     public Object setOnBuilder(Object builder, Object value) {
-        return executeUnchecked(() -> builderSetterMethod.invoke(builder, value));
+        return executeUnchecked(() -> {
+            final Object result = builderSetterMethod.invoke(builder, value);
+            return builderSetterReturnsBean ? result : builder;
+        });
     }
 
     public String name() {
@@ -67,6 +67,7 @@ public class BeanProperty {
                 ", setterMethod=" + setterMethod +
                 ", setterReturnsBean=" + setterReturnsBean +
                 ", builderSetterMethod=" + builderSetterMethod +
+                ", builderSetterReturnsBean=" + builderSetterReturnsBean +
                 '}';
     }
 }
