@@ -48,6 +48,10 @@ public class BeanMapping {
         return tableMetaData.tableName();
     }
 
+    public TableMetaData tableMetaData() {
+        return tableMetaData;
+    }
+
     public BeanMetaData beanMetaData() {
         return this.beanMetaData;
     }

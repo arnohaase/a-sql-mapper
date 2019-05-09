@@ -82,7 +82,7 @@ public class JavaBeansMetaDataExtractor implements BeanMetaDataExtractor {
                     final String propertyName = propertyNameFor(getter);
                     final String columnName = columnNameExtractor.columnNameFor(beanType, getter, propertyName);
 
-                    result.add(new BeanProperty(getter.getReturnType(), propertyName, columnName, getter, setter, false, setter, false));
+                    result.add(new BeanProperty(getter.getReturnType(), getter.getGenericReturnType(), propertyName, columnName, getter, setter, false, setter, false));
                 });
 
         return result.build();

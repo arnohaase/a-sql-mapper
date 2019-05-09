@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import com.ajjpj.acollections.AList;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlMapperBuilder;
+import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToManyProperty;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
@@ -39,7 +40,7 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest  {
     }
 
     @Test
-    public void testOneToMany() throws SQLException {
+    public void testOneToMany() {
         final long personId1 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno1").executeSingle();
         final long personId2 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno2").executeSingle();
         final long personId3 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno3").executeSingle();
@@ -64,10 +65,12 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest  {
         mapper.engine().update("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId32).execute();
         mapper.engine().update("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId33).execute();
 
-        final AList<PersonWithAddresses> persons = mapper
+        final SqlEngine engine = mapper.engine();
+
+        final AList<PersonWithAddresses> persons = engine
                 .query(PersonWithAddresses.class, "select * from person where id in(?,?) order by id asc", 1, 2)
                 .withInjectedProperty(new InjectedToManyProperty<>("addresses", "id", Long.class, "person_id",
-                        mapper.query(Address.class, "select pa.person_id, a.* from address a inner join person_address pa on a.id=pa.address_id where pa.person_id in (?,?) order by id desc", 1, 2),
+                        engine.query(Address.class, "select pa.person_id, a.* from address a inner join person_address pa on a.id=pa.address_id where pa.person_id in (?,?) order by id desc", 1, 2),
                         CollectionBuildStrategy.forAVector()))
                 .list();
 

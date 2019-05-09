@@ -3,9 +3,11 @@ package com.ajjpj.asqlmapper.javabeans;
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 
 public class BeanProperty {
-    private final Class<?> propType;
+    private final Class<?> propClass;
+    private final Type propType;
     private final String name;
     private final String columnName;
 
@@ -16,8 +18,9 @@ public class BeanProperty {
     private final Method builderSetterMethod;
     private final boolean builderSetterReturnsBean;
 
-    public BeanProperty (Class<?> propType, String name, String columnName, Method getterMethod, Method setterMethod, boolean setterReturnsBean,
+    public BeanProperty (Class<?> propClass, Type propType, String name, String columnName, Method getterMethod, Method setterMethod, boolean setterReturnsBean,
                          Method builderSetterMethod, boolean builderSetterReturnsBean) {
+        this.propClass = propClass;
         this.propType = propType;
         this.name = name;
         this.columnName = columnName;
@@ -28,7 +31,10 @@ public class BeanProperty {
         this.builderSetterReturnsBean = builderSetterReturnsBean;
     }
 
-    public Class<?> propType() {
+    public Class<?> propClass() {
+        return propClass;
+    }
+    public Type propType() {
         return propType;
     }
     public String columnName() {

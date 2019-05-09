@@ -6,32 +6,33 @@ import static com.ajjpj.asqlmapper.core.SqlSnippet.*;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.AMap;
-import com.ajjpj.acollections.ASet;
-import com.ajjpj.acollections.immutable.AHashSet;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.AQuery;
-import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlBuilder;
+import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMapping;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistry;
+import com.ajjpj.asqlmapper.mapper.beans.tablename.TableNameExtractor;
+import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedOneToMany;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
+import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 
 
 public class SqlMapper {
     private final SqlEngine sqlEngine;
     private final BeanMappingRegistry mappingRegistry;
+    private final SchemaRegistry schemaRegistry;
+    private final TableNameExtractor tableNameExtractor;
 
-    public SqlMapper (SqlEngine sqlEngine, BeanMappingRegistry mappingRegistry) {
+    public SqlMapper (SqlEngine sqlEngine, BeanMappingRegistry mappingRegistry, SchemaRegistry schemaRegistry, TableNameExtractor tableNameExtractor) {
+        this.schemaRegistry = schemaRegistry;
+        this.tableNameExtractor = tableNameExtractor;
         this.sqlEngine = sqlEngine.withRowExtractor(mappingRegistry.metaDataRegistry().asRowExtractor());
         this.mappingRegistry = mappingRegistry;
     }
@@ -52,6 +53,11 @@ public class SqlMapper {
     }
     public <T> AQuery<T> query(Class<T> beanType, String sql, Object... params) {
         return engine().query(beanType, sql, params);
+    }
+
+    //TODO variants with table name, fk name, referenced pk name --> pass in ForeignKeySpec
+    public MappedOneToMany oneToMany(String propertyName) {
+        return new MappedOneToMany(propertyName, mappingRegistry, (cls, sql) -> query(cls, sql));
     }
 
     public <T> AList<T> insertMany(List<T> os) {
@@ -82,7 +88,7 @@ public class SqlMapper {
             }
 
             if (pkProperty != null) {
-                final List<?> pkValues = sqlEngine.insertSingleColPkInCol(pkProperty.columnName(), pkProperty.propType(), builder.build()).executeMulti(conn);
+                final List<?> pkValues = sqlEngine.insertSingleColPkInCol(pkProperty.columnName(), pkProperty.propClass(), builder.build()).executeMulti(conn);
                 if (pkValues.size() != os.size()) throw new IllegalStateException("inserting " + os.size() + " rows returned " + pkValues.size() + " - mismatch");
 
                 final AVector.Builder<T> result = AVector.builder();
@@ -151,7 +157,7 @@ public class SqlMapper {
             final SqlSnippet insertStmt = insertStatement(beanMapping, o, false);
 
             final BeanProperty pkProperty = beanMapping.pkProperty();
-            final Object pkValue = sqlEngine.insertSingleColPkInCol(pkProperty.columnName(), pkProperty.propType(), insertStmt).executeSingle(conn);
+            final Object pkValue = sqlEngine.insertSingleColPkInCol(pkProperty.columnName(), pkProperty.propClass(), insertStmt).executeSingle(conn);
             //noinspection unchecked
             return (T) pkProperty.set(o, pkValue);
         });

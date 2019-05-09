@@ -1,18 +1,19 @@
 package com.ajjpj.asqlmapper.mapper.schema;
 
-import com.ajjpj.acollections.ASet;
-import com.ajjpj.acollections.immutable.AVector;
-import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.core.impl.SqlHelper;
-import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.sql.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.ajjpj.acollections.AMap;
+import com.ajjpj.acollections.ASet;
+import com.ajjpj.acollections.immutable.AVector;
+import com.ajjpj.acollections.util.AOption;
+import com.ajjpj.asqlmapper.core.impl.SqlHelper;
+import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 
 public class SchemaRegistry {
     private static final Logger log = LoggerFactory.getLogger(SchemaRegistry.class);
@@ -55,11 +56,16 @@ public class SchemaRegistry {
                     final ResultSetMetaData rsMeta = ps.executeQuery().getMetaData();
 
                     final ASet<String> pkColumnNames;
-                    try (ResultSet rs = conn.getMetaData().getPrimaryKeys(null, dialect.normalizeSchemaName(conn.getSchema()), dialect.normalizeTableName(tableName))) {
+                    try (ResultSet rs = conn.getMetaData().getPrimaryKeys(dialect.normalizeCatalogName(conn.getCatalog()),
+                            dialect.normalizeSchemaName(conn.getSchema()), dialect.normalizeTableName(tableName))) {
                         pkColumnNames = pkColumnNames(rs);
                     }
 
-//TODO            conn.getMetaData().getImportedKeys()
+                    final AVector<ForeignKeySpec> foreignKeys;
+                    try (ResultSet rs = conn.getMetaData().getImportedKeys(dialect.normalizeCatalogName(conn.getCatalog()),
+                            dialect.normalizeSchemaName(conn.getSchema()), dialect.normalizeTableName(tableName))) {
+                        foreignKeys = fks(rs);
+                    }
 
                     for (int i = 1; i <= rsMeta.getColumnCount(); i++) {
                         final String colName = rsMeta.getColumnName(i);
@@ -75,7 +81,7 @@ public class SchemaRegistry {
 
                         columns.add(new ColumnMetaData(colName, colClass, colType, colTypeName, size, precision, scale, pkColumnNames.contains(colName.toUpperCase()), isAutoIncrement, isNullable));
                     }
-                    return AOption.of(new TableMetaData(tableName, columns.build()));
+                    return AOption.of(new TableMetaData(tableName, columns.build(), foreignKeys));
                 }
                 finally {
                     SqlHelper.closeQuietly(ps);
@@ -88,9 +94,33 @@ public class SchemaRegistry {
         }));
     }
 
-    private final ASet<String> pkColumnNames(ResultSet rs) throws SQLException {
+    private AVector<ForeignKeySpec> fks(ResultSet rs) throws SQLException {
+        AMap<String,ForeignKeySpec> result = AMap.empty();
+        while(rs.next()) {
+            final String fkName = rs.getString("FK_NAME");
+
+            final String fkColName = rs.getString("FKCOLUMN_NAME");
+            final String fkTableName = rs.getString("FKTABLE_NAME");
+            final String pkColName = rs.getString("PKCOLUMN_NAME");
+            final String pkTableName = rs.getString("PKTABLE_NAME");
+
+            if(result.containsKey(fkName)) {
+                result = result.minus(fkName);
+                log.warn("multi-column foreign key " + fkName + " in table " + fkTableName + " referencing table " + pkTableName + " -> ignored");
+                continue;
+            }
+
+            result = result.plus(fkName, new ForeignKeySpec(fkColName, fkTableName, pkColName, pkTableName));
+        }
+
+        return result.values().toVector();
+    }
+
+    private ASet<String> pkColumnNames(ResultSet rs) throws SQLException {
         ASet<String> result = ASet.empty();
-        while (rs.next()) result = result.plus(rs.getString("COLUMN_NAME").toUpperCase());
+        while (rs.next()) {
+            result = result.plus(rs.getString("COLUMN_NAME").toUpperCase());
+        }
         return result;
     }
 }

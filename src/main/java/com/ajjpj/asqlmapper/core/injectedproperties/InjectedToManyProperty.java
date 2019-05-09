@@ -6,7 +6,6 @@ import java.util.Map;
 
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.AQuery;
-import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
@@ -37,7 +36,7 @@ public class InjectedToManyProperty<T,C,B> implements InjectedProperty<Map<Objec
         return propertyName;
     }
 
-    @Override public Map<Object,C> mementoPerQuery (Connection conn, RowExtractor owningRowExtractor, SqlSnippet owningQuery) {
+    @Override public Map<Object,C> mementoPerQuery (Connection conn, Class<?> owningClass, SqlSnippet owningQuery) {
         final Map<Object,B> resultRaw = new HashMap<>();
 
         final SqlStream<T> stream = ((AQueryImpl<T>)detailQuery).streamWithRowAccess(conn);

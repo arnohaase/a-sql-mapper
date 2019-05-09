@@ -33,7 +33,7 @@ class BeanMetaDataBasedRowExtractor implements RowExtractor {
             if(injectedPropsValues.containsKey(prop.name()))
                 continue;
 
-            builder = prop.setOnBuilder(builder, row.get(prop.propType(), colName));
+            builder = prop.setOnBuilder(builder, row.get(prop.propClass(), colName));
         }
         //noinspection unchecked
         return (T) beanMetaData.finalizeBuilder(builder);

@@ -3,10 +3,9 @@ package com.ajjpj.asqlmapper.core.injectedproperties;
 import java.sql.Connection;
 
 import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.core.RowExtractor;
-import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
+
 
 /**
  * An 'injected' property is a property with values that are not retrieved from a ResultSet directly. There is
@@ -31,6 +30,6 @@ import com.ajjpj.asqlmapper.core.common.SqlRow;
  */
 public interface InjectedProperty<M> {
     String propertyName();
-    M mementoPerQuery(Connection conn, RowExtractor owningRowExtractor, SqlSnippet owningQuery);
+    M mementoPerQuery(Connection conn, Class<?> owningClass, SqlSnippet owningQuery);
     AOption<Object> value(Connection conn, SqlRow currentRow, M memento);
 }

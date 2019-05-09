@@ -3,6 +3,8 @@ package com.ajjpj.asqlmapper.mapper.util;
 import com.ajjpj.acollections.ASet;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 import static com.ajjpj.acollections.mutable.AMutableArrayWrapper.wrap;
 
@@ -39,5 +41,16 @@ public class BeanReflectionHelper {
                 .flatMap(c -> wrap(c.getMethods()))
                 .filter(m -> BeanReflectionHelper.mightOverride(mtd, m))
                 .toSet();
+    }
+
+    public static Class<?> elementType(Type collType) {
+        if (! (collType instanceof ParameterizedType))
+            throw new IllegalArgumentException("collection type " + collType + " has no element type from which to extract mapping information");
+
+        final Type elType = ((ParameterizedType) collType).getActualTypeArguments()[0];
+        if(! (elType instanceof Class<?>))
+            throw new IllegalArgumentException("element type " + elType + " is not a simple class - could not extract mapping information");
+
+        return (Class<?>) elType;
     }
 }

@@ -79,8 +79,8 @@ public class AQueryImpl<T> implements AQuery<T> {
             return Collections.emptyMap();
 
         final Map<String,Object> result = new HashMap<>();
-        for(InjectedProperty ip: injectedProperties) {
-            result.put(ip.propertyName(), ip.mementoPerQuery(conn, rowExtractor, sql));
+        for(InjectedProperty<?> ip: injectedProperties) {
+            result.put(ip.propertyName(), ip.mementoPerQuery(conn, rowClass, sql));
         }
         return result;
     }
@@ -155,6 +155,7 @@ public class AQueryImpl<T> implements AQuery<T> {
 
         final Map<String,Object> result = new HashMap<>();
         for(InjectedProperty ip: injectedProperties) {
+            //noinspection unchecked
             final AOption<Object> optValue = ip.value(conn, currentRow, injectedPropsMementos.get(ip.propertyName()));
             optValue.forEach(o -> result.put(ip.propertyName(), o));
         }

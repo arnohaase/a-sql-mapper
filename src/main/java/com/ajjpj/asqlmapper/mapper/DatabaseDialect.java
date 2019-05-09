@@ -7,6 +7,9 @@ public interface DatabaseDialect {
     DatabaseDialect ORACLE = new OracleDialect();
     DatabaseDialect SQL_SERVER = new SqlServerDialect();
 
+    default String normalizeCatalogName(String catalogName) {
+        return catalogName;
+    }
     default String normalizeSchemaName(String schemaName) {
         return schemaName;
     }
@@ -24,6 +27,9 @@ public interface DatabaseDialect {
     }
 
     class H2Dialect implements DatabaseDialect {
+        @Override public String normalizeCatalogName (String catalogName) {
+            return catalogName.toUpperCase();
+        }
         @Override public String normalizeSchemaName (String schemaName) {
             return schemaName.toUpperCase();
         }

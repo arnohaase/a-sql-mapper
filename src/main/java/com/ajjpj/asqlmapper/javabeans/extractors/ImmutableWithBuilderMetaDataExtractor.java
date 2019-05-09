@@ -85,7 +85,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
                         final Method builderSetter = setterFor(builderClass, getter.getName(), getter.getReturnType(), getter);
 
                         final String columnName = columnNameExtractor.columnNameFor(beanType, getter, getter.getName());
-                        return new BeanProperty(getter.getReturnType(), getter.getName(), columnName, getter, setter, true, builderSetter, true);
+                        return new BeanProperty(getter.getReturnType(), getter.getGenericReturnType(), getter.getName(), columnName, getter, setter, true, builderSetter, true);
                     }));
         });
     }

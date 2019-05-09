@@ -8,8 +8,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.ajjpj.acollections.AList;
+import com.ajjpj.acollections.ASet;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlMapperBuilder;
+import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToManyProperty;
 import com.ajjpj.asqlmapper.demo.simple.Person;
@@ -69,7 +71,6 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
 
         // engine
         //     .query(Person.class, "select * from person")
-        //     .withToMany("addresses", "person_id", "id", ???Long.class???, engine.query(Address.class, "select * from address where person_id in (##) order by id asc"))
         //     .withToOne("department", "id", "department_id", Long.class, engine.query(Department.class, "select * from department where ???")
         //     .withProvidedProperty("myProp", "id", Long.class, Map.of(25L, "yo", 77L, "whatever"))
         //     .withProvidedProperty("myOtherProp", "id", Long.class, personId -> ??? )
@@ -77,25 +78,37 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
         //     .list();
         // mapper
         //     .query(Person.class, "select * from person")
-        //     .withToMany("addresses", "person_id"???, engine.query(Address.class, "select * from address where person_id in (##) order by id asc"))
         //     .withToOne("department") // --> with and without explicit query
-        //     .withOneToMany("cars" (???, "owner_id" ???) )
         //     .withManyToMany("organizations", "tbl_person_organizations" (???, "fk_person", "fk_org" ???) )
         //     .list();
 
         //TODO fk / m2n annotations?
 
-        final AList<PersonWithAddresses> persons = mapper
-                .query(PersonWithAddresses.class, "select * from person where id in(?,?) order by id asc", 1, 2)
-                .withInjectedProperty(new InjectedToManyProperty<>("addresses", "id", Long.class, "person_id",
-                        mapper.query(Address.class, "select * from address where person_id in (?,?) order by id desc", 1, 2),
-                        CollectionBuildStrategy.forAVector()))
-                .list();
+        final SqlEngine engine = mapper.engine();
 
-        //TODO subselect using master query instead of copy&paste
-        assertEquals(AList.of(
-                PersonWithAddresses.of(personId1, "Arno1", AList.of(Address.of("street13", "city13"),Address.of("street12", "city12"),Address.of("street11", "city11"))),
-                PersonWithAddresses.of(personId2, "Arno2", AList.of(Address.of("street23", "city23"),Address.of("street22", "city22"),Address.of("street21", "city21")))
-        ), persons);
+        {
+            final AList<PersonWithAddresses> persons = engine
+                    .query(PersonWithAddresses.class, "select * from person where id in(?,?) order by id asc", 1, 2)
+                    .withInjectedProperty(new InjectedToManyProperty<>("addresses", "id", Long.class, "person_id",
+                            engine.query(Address.class, "select * from address where person_id in (?,?) order by id desc", 1, 2),
+                            CollectionBuildStrategy.forAVector()))
+                    .list();
+
+            assertEquals(AList.of(
+                    PersonWithAddresses.of(personId1, "Arno1", AList.of(Address.of("street13", "city13"), Address.of("street12", "city12"), Address.of("street11", "city11"))),
+                    PersonWithAddresses.of(personId2, "Arno2", AList.of(Address.of("street23", "city23"), Address.of("street22", "city22"), Address.of("street21", "city21")))
+            ), persons);
+        }
+
+        {
+            final AList<PersonWithAddresses> persons = engine
+                    .query(PersonWithAddresses.class, "select * from person where id in(?,?) order by id asc", 1, 2)
+                    .withInjectedProperty(mapper.oneToMany("addresses")) //TODO fk name explicit / annotation, target table name
+                    .list();
+
+            assertEquals(2, persons.size());
+            assertEquals(ASet.of(Address.of("street13", "city13"), Address.of("street12", "city12"), Address.of("street11", "city11")), persons.get(0).addresses().toSet());
+            assertEquals(ASet.of(Address.of("street23", "city23"), Address.of("street22", "city22"), Address.of("street21", "city21")), persons.get(1).addresses().toSet());
+        }
     }
 }

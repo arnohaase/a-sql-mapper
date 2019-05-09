@@ -6,6 +6,8 @@ todo
 * unit tests
 * javadoc
 
+* Update Batching
+
 * base
   * tuples
     * special handling, 'implicit' row extractor based on ptm

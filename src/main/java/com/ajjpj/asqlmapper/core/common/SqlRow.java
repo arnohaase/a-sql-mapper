@@ -2,8 +2,6 @@ package com.ajjpj.asqlmapper.core.common;
 
 import java.util.List;
 
-import com.ajjpj.acollections.immutable.AVector;
-
 public interface SqlRow {
     /**
      * @return a {@link DetachedSqlRow} with this SqlRow's data.

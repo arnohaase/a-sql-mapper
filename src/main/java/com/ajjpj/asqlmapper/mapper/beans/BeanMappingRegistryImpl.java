@@ -5,6 +5,8 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 import java.sql.Connection;
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ajjpj.acollections.AMap;
@@ -14,6 +16,9 @@ import com.ajjpj.asqlmapper.javabeans.BeanMetaDataRegistry;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.PkStrategy;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.PkStrategyDecider;
+import com.ajjpj.asqlmapper.mapper.beans.relations.DefaultOneToManyResolver;
+import com.ajjpj.asqlmapper.mapper.beans.relations.ManyToManySpec;
+import com.ajjpj.asqlmapper.mapper.beans.relations.OneToManySpec;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.TableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
@@ -26,6 +31,8 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
     private final BeanMetaDataRegistry metaDataRegistry;
 
     private final Map<Class<?>, BeanMapping> cache = new ConcurrentHashMap<>();
+    private final Map<ToManyMapKey, OneToManySpec> oneToManyCache = new ConcurrentHashMap<>();
+    private final Map<ToManyMapKey, ManyToManySpec> manyToManyCache = new ConcurrentHashMap<>();
 
     public BeanMappingRegistryImpl (SchemaRegistry schemaRegistry, TableNameExtractor tableNameExtractor, PkStrategyDecider pkStrategyDecider, BeanMetaDataRegistry metaDataRegistry) {
         this.schemaRegistry = schemaRegistry;
@@ -76,5 +83,65 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
                             mappedProperties);
                 })
         );
+    }
+
+    //TODO variant with explicitly passed in detail table / fk
+    @Override public OneToManySpec resolveOneToMany (Connection conn, Class<?> ownerClass, String propertyName) {
+        return oneToManyCache.computeIfAbsent(new ToManyMapKey(ownerClass, propertyName), k -> {
+            final BeanMapping ownerMapping = getBeanMapping(conn, ownerClass);
+
+            //TODO make this configurable
+            return new DefaultOneToManyResolver().resolve(conn, ownerMapping, propertyName, tableNameExtractor, schemaRegistry,
+                    Optional.empty(), Optional.empty(), Optional.empty());
+        });
+    }
+
+    //TODO variant with passed-in manyManyTable and (optionally?) fks
+
+    @Override public ManyToManySpec resolveManyToMany (Connection conn, Class<?> ownerClass, String propertyName) {
+        return manyToManyCache.computeIfAbsent(new ToManyMapKey(ownerClass, propertyName), k -> {
+            final BeanMapping ownerMapping = getBeanMapping(conn, ownerClass);
+            final BeanProperty toManyProp = ownerMapping.beanMetaData().beanProperties().get(propertyName);
+            if(toManyProp == null)
+                throw new IllegalArgumentException(ownerClass + " has no mapped property " + propertyName);
+
+//            toManyProp.
+//
+//
+//            return new ManyToManySpec(manyManyTable, fkToOwner, fkToCollection, ownerPk, collTable, collPk, elementClass, collectionBuildStrategy, keyType);
+            return null;
+        });
+    }
+
+    private static class ToManyMapKey {
+        final Class<?> ownerClass;
+        final String propertyName;
+
+        public ToManyMapKey (Class<?> ownerClass, String propertyName) {
+            this.ownerClass = ownerClass;
+            this.propertyName = propertyName;
+        }
+
+        @Override
+        public String toString () {
+            return "FkMapKey{" +
+                    "ownerClass=" + ownerClass +
+                    ", propertyName='" + propertyName + '\'' +
+                    '}';
+        }
+
+        @Override
+        public boolean equals (Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ToManyMapKey fkMapKey = (ToManyMapKey) o;
+            return Objects.equals(ownerClass, fkMapKey.ownerClass) &&
+                    Objects.equals(propertyName, fkMapKey.propertyName);
+        }
+
+        @Override
+        public int hashCode () {
+            return Objects.hash(ownerClass, propertyName);
+        }
     }
 }

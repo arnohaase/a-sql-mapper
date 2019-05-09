@@ -124,11 +124,12 @@ public class SqlMapperBuilder {
     }
 
     public SqlMapper build(DatabaseDialect databaseDialect) {
+        final SchemaRegistry schemaRegistry = new SchemaRegistry(databaseDialect);
         return new SqlMapper(buildEngine(), new BeanMappingRegistryImpl(
-                new SchemaRegistry(databaseDialect),
+                schemaRegistry,
                 tableNameExtractor,
                 pkStrategyDecider,
                 beanMetaDataRegistry
-        ));
+        ), schemaRegistry, tableNameExtractor);
     }
 }

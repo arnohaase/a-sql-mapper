@@ -2,7 +2,11 @@ package com.ajjpj.asqlmapper.core.common;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import com.ajjpj.acollections.AList;
+import com.ajjpj.acollections.ASet;
 import com.ajjpj.acollections.immutable.AHashSet;
 import com.ajjpj.acollections.immutable.ALinkedList;
 import com.ajjpj.acollections.immutable.AVector;
@@ -16,6 +20,19 @@ public interface CollectionBuildStrategy<T,B,C> {
     void addElement(B builder, T el);
     boolean requiresFinalization();
     C finalizeBuilder(B builder);
+
+    static <T,C> CollectionBuildStrategy<T,?,C> get(Class<C> collectionClass) {
+        final CollectionBuildStrategy result = Registry.registry.get(collectionClass);
+        if(result == null)
+            throw new IllegalArgumentException("no collection build strategy is registered for collection class " + collectionClass.getName() +
+                    " - you can call CollectionBuildStrategy.register() to register it");
+        //noinspection unchecked
+        return result;
+    }
+
+    static void register(Class<?> collectionClass, CollectionBuildStrategy strategy) {
+        Registry.registry.put(collectionClass, strategy);
+    }
 
     static <T> JavaHashSetStrategy<T> forJavaUtilSet() {
         //noinspection unchecked
@@ -139,6 +156,24 @@ public interface CollectionBuildStrategy<T,B,C> {
 
         @Override public AHashSet<T> finalizeBuilder (AHashSet.Builder<T> builder) {
             return builder.build();
+        }
+    }
+
+    class Registry {
+        private static final Map<Class<?>, CollectionBuildStrategy> registry = new ConcurrentHashMap<>();
+        static {
+            registry.put(java.util.List.class, forJavaUtilList());
+            registry.put(java.util.ArrayList.class, forJavaUtilList());
+
+            registry.put(java.util.Set.class, forJavaUtilSet());
+            registry.put(java.util.HashSet.class, forJavaUtilSet());
+
+            registry.put(AList.class, forAVector());
+            registry.put(AVector.class, forAVector());
+            registry.put(ALinkedList.class, forALinkedList());
+
+            registry.put(ASet.class, forAHashSet());
+            registry.put(AHashSet.class, forAHashSet());
         }
     }
 }

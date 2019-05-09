@@ -8,14 +8,20 @@ import java.util.Objects;
 public class TableMetaData {
     private final String tableName;
     private final AVector<ColumnMetaData> columns;
+    private final AVector<ForeignKeySpec> foreignKeys;
 
-    public TableMetaData (String tableName, AVector<ColumnMetaData> columns) {
+    public TableMetaData (String tableName, AVector<ColumnMetaData> columns, AVector<ForeignKeySpec> foreignKeys) {
         this.tableName = tableName;
         this.columns = columns;
+        this.foreignKeys = foreignKeys;
     }
 
     public String tableName () {
         return tableName;
+    }
+
+    public AVector<ForeignKeySpec> foreignKeys() {
+        return foreignKeys;
     }
 
     public AVector<ColumnMetaData> columns () {
