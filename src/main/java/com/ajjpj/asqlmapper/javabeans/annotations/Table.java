@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.mapper.annotations;
+package com.ajjpj.asqlmapper.javabeans.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

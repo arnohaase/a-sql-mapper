@@ -7,15 +7,15 @@ todo
 * javadoc
 
 * Update Batching
+* to one -> FK
+* test with Lombok
+* to-one, to-many: annotations
 
 * base
   * tuples
     * special handling, 'implicit' row extractor based on ptm
     * queries
     * for insert?
-
-* to one -> FK
-
 
 * optimized 'isStreaming=true' implementation for Java Beans extractor
 

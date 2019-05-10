@@ -1,19 +1,20 @@
 package com.ajjpj.asqlmapper.demo.tomany;
 
-import com.ajjpj.acollections.AList;
-import com.ajjpj.asqlmapper.javabeans.annotations.Table;
-import com.google.common.base.MoreObjects;
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import com.google.errorprone.annotations.Var;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.NotThreadSafe;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+
+import com.ajjpj.acollections.AList;
+import com.ajjpj.asqlmapper.javabeans.annotations.ManyToMany;
+import com.ajjpj.asqlmapper.javabeans.annotations.Table;
+import com.google.common.base.MoreObjects;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.Var;
 
 /**
  * Immutable implementation of {@link AbstractPersonWithAddresses}.
@@ -28,19 +29,19 @@ import java.util.Objects;
 @Immutable
 @CheckReturnValue
 @Table("person")
-public final class PersonWithAddresses implements AbstractPersonWithAddresses {
+public final class PersonWithAddressesManyToMany implements AbstractPersonWithAddressesManyToMany {
   private final Long id;
   private final String name;
   private final AList<Address> addresses;
 
-  private PersonWithAddresses(Long id, String name, AList<Address> addresses) {
+  private PersonWithAddressesManyToMany(Long id, String name, AList<Address> addresses) {
     this.id = Objects.requireNonNull(id, "id");
     this.name = Objects.requireNonNull(name, "name");
     this.addresses = Objects.requireNonNull(addresses, "addresses");
   }
 
-  private PersonWithAddresses(
-      PersonWithAddresses original,
+  private PersonWithAddressesManyToMany(
+      PersonWithAddressesManyToMany original,
       Long id,
       String name,
       AList<Address> addresses) {
@@ -69,6 +70,7 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
    * @return The value of the {@code addresses} attribute
    */
   @Override
+  @ManyToMany(manyManyTable = "person_address")
   public AList<Address> addresses() {
     return addresses;
   }
@@ -79,10 +81,10 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
    * @param value A new value for id
    * @return A modified copy of the {@code this} object
    */
-  public final PersonWithAddresses withId(Long value) {
+  public final PersonWithAddressesManyToMany withId(Long value) {
     Long newValue = Objects.requireNonNull(value, "id");
     if (this.id.equals(newValue)) return this;
-    return new PersonWithAddresses(this, newValue, this.name, this.addresses);
+    return new PersonWithAddressesManyToMany(this, newValue, this.name, this.addresses);
   }
 
   /**
@@ -91,10 +93,10 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
    * @param value A new value for name
    * @return A modified copy of the {@code this} object
    */
-  public final PersonWithAddresses withName(String value) {
+  public final PersonWithAddressesManyToMany withName(String value) {
     String newValue = Objects.requireNonNull(value, "name");
     if (this.name.equals(newValue)) return this;
-    return new PersonWithAddresses(this, this.id, newValue, this.addresses);
+    return new PersonWithAddressesManyToMany(this, this.id, newValue, this.addresses);
   }
 
   /**
@@ -103,10 +105,10 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
    * @param value A new value for addresses
    * @return A modified copy of the {@code this} object
    */
-  public final PersonWithAddresses withAddresses(AList<Address> value) {
+  public final PersonWithAddressesManyToMany withAddresses(AList<Address> value) {
     if (this.addresses == value) return this;
     AList<Address> newValue = Objects.requireNonNull(value, "addresses");
-    return new PersonWithAddresses(this, this.id, this.name, newValue);
+    return new PersonWithAddressesManyToMany(this, this.id, this.name, newValue);
   }
 
   /**
@@ -116,11 +118,11 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
   @Override
   public boolean equals(@Nullable Object another) {
     if (this == another) return true;
-    return another instanceof PersonWithAddresses
-        && equalTo((PersonWithAddresses) another);
+    return another instanceof PersonWithAddressesManyToMany
+        && equalTo((PersonWithAddressesManyToMany) another);
   }
 
-  private boolean equalTo(PersonWithAddresses another) {
+  private boolean equalTo(PersonWithAddressesManyToMany another) {
     return id.equals(another.id)
         && name.equals(another.name)
         && addresses.equals(another.addresses);
@@ -160,8 +162,8 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
    * @param addresses The value for the {@code addresses} attribute
    * @return An immutable PersonWithAddresses instance
    */
-  public static PersonWithAddresses of(Long id, String name, AList<Address> addresses) {
-    return new PersonWithAddresses(id, name, addresses);
+  public static PersonWithAddressesManyToMany of(Long id, String name, AList<Address> addresses) {
+    return new PersonWithAddressesManyToMany(id, name, addresses);
   }
 
   /**
@@ -171,17 +173,17 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
    * @param instance The instance to copy
    * @return A copied immutable PersonWithAddresses instance
    */
-  public static PersonWithAddresses copyOf(AbstractPersonWithAddresses instance) {
-    if (instance instanceof PersonWithAddresses) {
-      return (PersonWithAddresses) instance;
+  public static PersonWithAddressesManyToMany copyOf(AbstractPersonWithAddressesManyToMany instance) {
+    if (instance instanceof PersonWithAddressesManyToMany) {
+      return (PersonWithAddressesManyToMany) instance;
     }
-    return PersonWithAddresses.builder()
+    return PersonWithAddressesManyToMany.builder()
         .from(instance)
         .build();
   }
 
   /**
-   * Creates a builder for {@link PersonWithAddresses PersonWithAddresses}.
+   * Creates a builder for {@link PersonWithAddressesManyToMany PersonWithAddresses}.
    * <pre>
    * PersonWithAddresses.builder()
    *    .id(Long) // required {@link AbstractPersonWithAddresses#id() id}
@@ -191,12 +193,12 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
    * </pre>
    * @return A new PersonWithAddresses builder
    */
-  public static PersonWithAddresses.Builder builder() {
-    return new PersonWithAddresses.Builder();
+  public static PersonWithAddressesManyToMany.Builder builder() {
+    return new PersonWithAddressesManyToMany.Builder();
   }
 
   /**
-   * Builds instances of type {@link PersonWithAddresses PersonWithAddresses}.
+   * Builds instances of type {@link PersonWithAddressesManyToMany PersonWithAddresses}.
    * Initialize attributes and then invoke the {@link #build()} method to create an
    * immutable instance.
    * <p><em>{@code Builder} is not thread-safe and generally should not be stored in a field or collection,
@@ -227,7 +229,7 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
      * @return {@code this} builder for use in a chained invocation
      */
     @CanIgnoreReturnValue
-    public final Builder from(AbstractPersonWithAddresses instance) {
+    public final Builder from(AbstractPersonWithAddressesManyToMany  instance) {
       Objects.requireNonNull(instance, "instance");
       id(instance.id());
       name(instance.name());
@@ -272,15 +274,15 @@ public final class PersonWithAddresses implements AbstractPersonWithAddresses {
     }
 
     /**
-     * Builds a new {@link PersonWithAddresses PersonWithAddresses}.
+     * Builds a new {@link PersonWithAddressesManyToMany PersonWithAddresses}.
      * @return An immutable instance of PersonWithAddresses
      * @throws IllegalStateException if any required attributes are missing
      */
-    public PersonWithAddresses build() {
+    public PersonWithAddressesManyToMany build() {
       if (initBits != 0) {
         throw new IllegalStateException(formatRequiredAttributesMessage());
       }
-      return new PersonWithAddresses(null, id, name, addresses);
+      return new PersonWithAddressesManyToMany(null, id, name, addresses);
     }
 
     private String formatRequiredAttributesMessage() {

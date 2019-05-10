@@ -2,7 +2,7 @@ package com.ajjpj.asqlmapper.mapper.beans.tablename;
 
 import com.ajjpj.acollections.ASet;
 import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.mapper.annotations.Table;
+import com.ajjpj.asqlmapper.javabeans.annotations.Table;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 import com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper;
 

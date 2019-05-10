@@ -8,13 +8,13 @@ import java.lang.reflect.Modifier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.ajjpj.asqlmapper.javabeans.annotations.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.ajjpj.acollections.ACollection;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.javabeans.columnnames.ColumnNameExtractor;
-import com.ajjpj.asqlmapper.mapper.annotations.Ignore;
 import com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper;
 
 public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtractor {

@@ -1,5 +1,6 @@
 package com.ajjpj.asqlmapper.mapper.injectedproperties;
 
+import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 import static com.ajjpj.asqlmapper.core.SqlSnippet.concat;
 import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
 
@@ -10,9 +11,11 @@ import java.util.function.BiFunction;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
+import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToManyProperty;
+import com.ajjpj.asqlmapper.mapper.beans.BeanMapping;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistry;
 import com.ajjpj.asqlmapper.mapper.beans.relations.ManyToManySpec;
 
@@ -39,22 +42,20 @@ public class MappedManyToMany implements InjectedProperty {
     public Object mementoPerQuery (Connection conn, Class owningClass, SqlSnippet owningQuery) {
         //TODO injectable rel --> public API in BeanMappingRegistry, 'with' methods
 
-        final ManyToManySpec rel = null; //???;
+        final ManyToManySpec rel = beanMappingRegistry.resolveManyToMany(conn, owningClass, propertyName);
 
         /*
 
          select b.person_id AS "$$person_id", a.* from address a inner join person_address b on a.id=b.address_id where b.person_id in (select id from (select * from person where id < 3) x)
-
-
 
          */
 
         final String fkToOwnerAlias = "$$" + rel.fkToOwner();
 
         final SqlSnippet detailSql = concat(
-                sql("SELECT b." + rel.fkToOwner() + " AS \"" + fkToOwnerAlias + "\", a.* FROM " + rel.collTable() + " a INNER JOIN " +
-                        rel.manyManyTable() + " b ON a." + rel.collPk() + "=b." + rel.fkToCollection() +
-                        "WHERE b." + rel.fkToOwner() + " IN (SELECT " + rel.ownerPk() + " FROM ("),
+                sql("SELECT b." + rel.fkToOwner() + " AS \"" + fkToOwnerAlias + "\", a.*"),
+                sql("FROM " + rel.collTable() + " a INNER JOIN " + rel.manyManyTable() + " b ON a." + rel.collPk() + "=b." + rel.fkToCollection()),
+                sql("WHERE b." + rel.fkToOwner() + " IN (SELECT " + rel.ownerPk() + " FROM ("),
                 owningQuery,
                 sql(") x)")
         );

@@ -19,6 +19,7 @@ import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMapping;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistry;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.TableNameExtractor;
+import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedManyToMany;
 import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedOneToMany;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
@@ -58,6 +59,10 @@ public class SqlMapper {
     //TODO variants with table name, fk name, referenced pk name --> pass in ForeignKeySpec
     public MappedOneToMany oneToMany(String propertyName) {
         return new MappedOneToMany(propertyName, mappingRegistry, (cls, sql) -> query(cls, sql));
+    }
+
+    public MappedManyToMany manyToMany(String propertyName) {
+        return new MappedManyToMany(propertyName, mappingRegistry, (cls, sql) -> query(cls, sql));
     }
 
     public <T> AList<T> insertMany(List<T> os) {

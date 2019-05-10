@@ -12,7 +12,6 @@ import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.util.Collections;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -67,6 +66,22 @@ public class SqlEngine {
     public AUpdate update(String sql, Object... params) {
         return new AUpdateImpl(SqlSnippet.sql(sql, params), primTypes, listeners, defaultConnectionSupplier);
     }
+
+    public int execute(SqlSnippet sql, SqlSnippet... moreSql) {
+        return update(sql, moreSql).execute();
+    }
+    public int execute(Connection conn, SqlSnippet sql, SqlSnippet... moreSql) {
+        return update(sql, moreSql).execute(conn);
+    }
+
+    public int execute(String sql, Object... params) {
+        return update(sql, params).execute();
+    }
+    public int execute(Connection conn, String sql, Object... params) {
+        return update(sql, params).execute(conn);
+    }
+
+    //TODO expected number, expected 1
 
     //--------------------------- insert statements, i.e. statements returning a generated primary key
 

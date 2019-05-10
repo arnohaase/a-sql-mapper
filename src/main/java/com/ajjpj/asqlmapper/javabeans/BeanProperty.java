@@ -2,8 +2,11 @@ package com.ajjpj.asqlmapper.javabeans;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Optional;
 
 public class BeanProperty {
     private final Class<?> propClass;
@@ -39,6 +42,10 @@ public class BeanProperty {
     }
     public String columnName() {
         return columnName;
+    }
+
+    public <T extends Annotation> Optional<T> getAnnotation(Class<T> annotationClass) {
+        return Optional.ofNullable(getterMethod.getAnnotation(annotationClass));
     }
 
     public Object get(Object bean) {

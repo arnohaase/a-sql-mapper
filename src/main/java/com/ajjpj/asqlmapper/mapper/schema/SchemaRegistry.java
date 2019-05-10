@@ -1,6 +1,6 @@
 package com.ajjpj.asqlmapper.mapper.schema;
 
-import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
+import static com.ajjpj.acollections.util.AUnchecker.*;
 
 import java.sql.*;
 import java.util.Map;
@@ -45,6 +45,12 @@ public class SchemaRegistry {
         catch (Exception e) {
             return AOption.empty();
         }
+    }
+
+    public TableMetaData getRequiredTableMetaData(Connection conn, String tableName) {
+        return getTableMetaData(conn, tableName)
+                .orElseThrow(() ->
+                        executeUnchecked(() -> new IllegalArgumentException("table " + tableName + " does not exist (in schema " + conn.getSchema() + ")")));
     }
 
     public AOption<TableMetaData> getTableMetaData(Connection conn, String tableName) {
