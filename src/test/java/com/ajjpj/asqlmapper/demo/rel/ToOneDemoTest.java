@@ -6,21 +6,17 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.ajjpj.acollections.AList;
-import com.ajjpj.acollections.ASet;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlMapperBuilder;
 import com.ajjpj.asqlmapper.core.SqlEngine;
-import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
-import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToManyProperty;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToOneProperty;
-import com.ajjpj.asqlmapper.demo.simple.Person;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ToOneDemoTest extends AbstractDatabaseTest {
+class ToOneDemoTest extends AbstractDatabaseTest {
     private SqlMapper mapper;
 
     @BeforeEach
