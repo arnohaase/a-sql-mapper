@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.demo.tomany;
+package com.ajjpj.asqlmapper.demo.rel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,45 +9,43 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.ajjpj.acollections.AList;
-import com.ajjpj.asqlmapper.javabeans.annotations.ManyToMany;
 import com.ajjpj.asqlmapper.javabeans.annotations.Table;
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.Var;
 
 /**
- * Immutable implementation of {@link AbstractPersonWithAddresses}.
+ * Immutable implementation of {@link AbstractPersonWithAddress}.
  * <p>
  * Use the builder to create immutable instances:
- * {@code PersonWithAddresses.builder()}.
+ * {@code PersonWithAddress.builder()}.
  * Use the static factory method to create immutable instances:
- * {@code PersonWithAddresses.of()}.
+ * {@code PersonWithAddress.of()}.
  */
 @SuppressWarnings({"all"})
 @ParametersAreNonnullByDefault
 @Immutable
 @CheckReturnValue
 @Table("person")
-public final class PersonWithAddressesManyToMany implements AbstractPersonWithAddressesManyToMany {
+public final class PersonWithAddress implements AbstractPersonWithAddress {
   private final Long id;
   private final String name;
-  private final AList<Address> addresses;
+  private final Address address;
 
-  private PersonWithAddressesManyToMany(Long id, String name, AList<Address> addresses) {
+  private PersonWithAddress(Long id, String name, Address address) {
     this.id = Objects.requireNonNull(id, "id");
     this.name = Objects.requireNonNull(name, "name");
-    this.addresses = Objects.requireNonNull(addresses, "addresses");
+    this.address = Objects.requireNonNull(address, "address");
   }
 
-  private PersonWithAddressesManyToMany(
-      PersonWithAddressesManyToMany original,
+  private PersonWithAddress(
+      PersonWithAddress original,
       Long id,
       String name,
-      AList<Address> addresses) {
+      Address address) {
     this.id = id;
     this.name = name;
-    this.addresses = addresses;
+    this.address = address;
   }
 
   /**
@@ -67,69 +65,68 @@ public final class PersonWithAddressesManyToMany implements AbstractPersonWithAd
   }
 
   /**
-   * @return The value of the {@code addresses} attribute
+   * @return The value of the {@code address} attribute
    */
   @Override
-  @ManyToMany(manyManyTable = "person_address")
-  public AList<Address> addresses() {
-    return addresses;
+  public Address address() {
+    return address;
   }
 
   /**
-   * Copy the current immutable object by setting a value for the {@link AbstractPersonWithAddresses#id() id} attribute.
+   * Copy the current immutable object by setting a value for the {@link AbstractPersonWithAddress#id() id} attribute.
    * An equals check used to prevent copying of the same value by returning {@code this}.
    * @param value A new value for id
    * @return A modified copy of the {@code this} object
    */
-  public final PersonWithAddressesManyToMany withId(Long value) {
+  public final PersonWithAddress withId(Long value) {
     Long newValue = Objects.requireNonNull(value, "id");
     if (this.id.equals(newValue)) return this;
-    return new PersonWithAddressesManyToMany(this, newValue, this.name, this.addresses);
+    return new PersonWithAddress(this, newValue, this.name, this.address);
   }
 
   /**
-   * Copy the current immutable object by setting a value for the {@link AbstractPersonWithAddresses#name() name} attribute.
+   * Copy the current immutable object by setting a value for the {@link AbstractPersonWithAddress#name() name} attribute.
    * An equals check used to prevent copying of the same value by returning {@code this}.
    * @param value A new value for name
    * @return A modified copy of the {@code this} object
    */
-  public final PersonWithAddressesManyToMany withName(String value) {
+  public final PersonWithAddress withName(String value) {
     String newValue = Objects.requireNonNull(value, "name");
     if (this.name.equals(newValue)) return this;
-    return new PersonWithAddressesManyToMany(this, this.id, newValue, this.addresses);
+    return new PersonWithAddress(this, this.id, newValue, this.address);
   }
 
   /**
-   * Copy the current immutable object by setting a value for the {@link AbstractPersonWithAddresses#addresses() addresses} attribute.
+   * Copy the current immutable object by setting a value for the {@link AbstractPersonWithAddress#address() address} attribute.
    * A shallow reference equality check is used to prevent copying of the same value by returning {@code this}.
-   * @param value A new value for addresses
+   * @param value A new value for address
    * @return A modified copy of the {@code this} object
    */
-  public final PersonWithAddressesManyToMany withAddresses(AList<Address> value) {
-    if (this.addresses == value) return this;
-    AList<Address> newValue = Objects.requireNonNull(value, "addresses");
-    return new PersonWithAddressesManyToMany(this, this.id, this.name, newValue);
+  public final PersonWithAddress withAddress(Address value) {
+    if (this.address == value) return this;
+    Address newValue = Objects.requireNonNull(value, "address");
+    return new PersonWithAddress(this, this.id, this.name, newValue);
   }
 
   /**
-   * This instance is equal to all instances of {@code PersonWithAddresses} that have equal attribute values.
+   * This instance is equal to all instances of {@code PersonWithAddress} that have equal attribute values.
    * @return {@code true} if {@code this} is equal to {@code another} instance
    */
   @Override
   public boolean equals(@Nullable Object another) {
     if (this == another) return true;
-    return another instanceof PersonWithAddressesManyToMany
-        && equalTo((PersonWithAddressesManyToMany) another);
+    return another instanceof PersonWithAddress
+        && equalTo((PersonWithAddress) another);
   }
 
-  private boolean equalTo(PersonWithAddressesManyToMany another) {
+  private boolean equalTo(PersonWithAddress another) {
     return id.equals(another.id)
         && name.equals(another.name)
-        && addresses.equals(another.addresses);
+        && address.equals(another.address);
   }
 
   /**
-   * Computes a hash code from attributes: {@code id}, {@code name}, {@code addresses}.
+   * Computes a hash code from attributes: {@code id}, {@code name}, {@code address}.
    * @return hashCode value
    */
   @Override
@@ -137,68 +134,68 @@ public final class PersonWithAddressesManyToMany implements AbstractPersonWithAd
     @Var int h = 5381;
     h += (h << 5) + id.hashCode();
     h += (h << 5) + name.hashCode();
-    h += (h << 5) + addresses.hashCode();
+    h += (h << 5) + address.hashCode();
     return h;
   }
 
   /**
-   * Prints the immutable value {@code PersonWithAddresses} with attribute values.
+   * Prints the immutable value {@code PersonWithAddress} with attribute values.
    * @return A string representation of the value
    */
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper("PersonWithAddresses")
+    return MoreObjects.toStringHelper("PersonWithAddress")
         .omitNullValues()
         .add("id", id)
         .add("name", name)
-        .add("addresses", addresses)
+        .add("address", address)
         .toString();
   }
 
   /**
-   * Construct a new immutable {@code PersonWithAddresses} instance.
+   * Construct a new immutable {@code PersonWithAddress} instance.
    * @param id The value for the {@code id} attribute
    * @param name The value for the {@code name} attribute
-   * @param addresses The value for the {@code addresses} attribute
-   * @return An immutable PersonWithAddresses instance
+   * @param address The value for the {@code address} attribute
+   * @return An immutable PersonWithAddress instance
    */
-  public static PersonWithAddressesManyToMany of(Long id, String name, AList<Address> addresses) {
-    return new PersonWithAddressesManyToMany(id, name, addresses);
+  public static PersonWithAddress of(Long id, String name, Address address) {
+    return new PersonWithAddress(id, name, address);
   }
 
   /**
-   * Creates an immutable copy of a {@link AbstractPersonWithAddresses} value.
+   * Creates an immutable copy of a {@link AbstractPersonWithAddress} value.
    * Uses accessors to get values to initialize the new immutable instance.
    * If an instance is already immutable, it is returned as is.
    * @param instance The instance to copy
-   * @return A copied immutable PersonWithAddresses instance
+   * @return A copied immutable PersonWithAddress instance
    */
-  public static PersonWithAddressesManyToMany copyOf(AbstractPersonWithAddressesManyToMany instance) {
-    if (instance instanceof PersonWithAddressesManyToMany) {
-      return (PersonWithAddressesManyToMany) instance;
+  public static PersonWithAddress copyOf(AbstractPersonWithAddress instance) {
+    if (instance instanceof PersonWithAddress) {
+      return (PersonWithAddress) instance;
     }
-    return PersonWithAddressesManyToMany.builder()
+    return PersonWithAddress.builder()
         .from(instance)
         .build();
   }
 
   /**
-   * Creates a builder for {@link PersonWithAddressesManyToMany PersonWithAddresses}.
+   * Creates a builder for {@link PersonWithAddress PersonWithAddress}.
    * <pre>
-   * PersonWithAddresses.builder()
-   *    .id(Long) // required {@link AbstractPersonWithAddresses#id() id}
-   *    .name(String) // required {@link AbstractPersonWithAddresses#name() name}
-   *    .addresses(com.ajjpj.acollections.AList&amp;lt;de.Address&amp;gt;) // required {@link AbstractPersonWithAddresses#addresses() addresses}
+   * PersonWithAddress.builder()
+   *    .id(Long) // required {@link AbstractPersonWithAddress#id() id}
+   *    .name(String) // required {@link AbstractPersonWithAddress#name() name}
+   *    .address(com.ajjpj.acollections.AList&amp;lt;de.Address&amp;gt;) // required {@link AbstractPersonWithAddress#address() address}
    *    .build();
    * </pre>
-   * @return A new PersonWithAddresses builder
+   * @return A new PersonWithAddress builder
    */
-  public static PersonWithAddressesManyToMany.Builder builder() {
-    return new PersonWithAddressesManyToMany.Builder();
+  public static PersonWithAddress.Builder builder() {
+    return new PersonWithAddress.Builder();
   }
 
   /**
-   * Builds instances of type {@link PersonWithAddressesManyToMany PersonWithAddresses}.
+   * Builds instances of type {@link PersonWithAddress PersonWithAddress}.
    * Initialize attributes and then invoke the {@link #build()} method to create an
    * immutable instance.
    * <p><em>{@code Builder} is not thread-safe and generally should not be stored in a field or collection,
@@ -208,7 +205,7 @@ public final class PersonWithAddressesManyToMany implements AbstractPersonWithAd
   public static final class Builder {
     private static final long INIT_BIT_ID = 0x1L;
     private static final long INIT_BIT_NAME = 0x2L;
-    private static final long INIT_BIT_ADDRESSES = 0x4L;
+    private static final long INIT_BIT_ADDRESS = 0x4L;
     private long initBits = 0x7L;
 
     private @Nullable
@@ -216,29 +213,29 @@ public final class PersonWithAddressesManyToMany implements AbstractPersonWithAd
     private @Nullable
     String name;
     private @Nullable
-    AList<Address> addresses;
+    Address address;
 
     private Builder() {
     }
 
     /**
-     * Fill a builder with attribute values from the provided {@code AbstractPersonWithAddresses} instance.
+     * Fill a builder with attribute values from the provided {@code AbstractPersonWithAddress} instance.
      * Regular attribute values will be replaced with those from the given instance.
      * Absent optional values will not replace present values.
      * @param instance The instance from which to copy values
      * @return {@code this} builder for use in a chained invocation
      */
     @CanIgnoreReturnValue
-    public final Builder from(AbstractPersonWithAddressesManyToMany  instance) {
+    public final Builder from(AbstractPersonWithAddress instance) {
       Objects.requireNonNull(instance, "instance");
       id(instance.id());
       name(instance.name());
-      addresses(instance.addresses());
+      address(instance.address());
       return this;
     }
 
     /**
-     * Initializes the value for the {@link AbstractPersonWithAddresses#id() id} attribute.
+     * Initializes the value for the {@link AbstractPersonWithAddress#id() id} attribute.
      * @param id The value for id
      * @return {@code this} builder for use in a chained invocation
      */
@@ -250,7 +247,7 @@ public final class PersonWithAddressesManyToMany implements AbstractPersonWithAd
     }
 
     /**
-     * Initializes the value for the {@link AbstractPersonWithAddresses#name() name} attribute.
+     * Initializes the value for the {@link AbstractPersonWithAddress#name() name} attribute.
      * @param name The value for name
      * @return {@code this} builder for use in a chained invocation
      */
@@ -262,34 +259,34 @@ public final class PersonWithAddressesManyToMany implements AbstractPersonWithAd
     }
 
     /**
-     * Initializes the value for the {@link AbstractPersonWithAddresses#addresses() addresses} attribute.
-     * @param addresses The value for addresses
+     * Initializes the value for the {@link AbstractPersonWithAddress#address() address} attribute.
+     * @param address The value for address
      * @return {@code this} builder for use in a chained invocation
      */
     @CanIgnoreReturnValue
-    public final Builder addresses(AList<Address> addresses) {
-      this.addresses = Objects.requireNonNull(addresses, "addresses");
-      initBits &= ~INIT_BIT_ADDRESSES;
+    public final Builder address(Address address) {
+      this.address = Objects.requireNonNull(address, "address");
+      initBits &= ~INIT_BIT_ADDRESS;
       return this;
     }
 
     /**
-     * Builds a new {@link PersonWithAddressesManyToMany PersonWithAddresses}.
+     * Builds a new {@link PersonWithAddress PersonWithAddresses}.
      * @return An immutable instance of PersonWithAddresses
      * @throws IllegalStateException if any required attributes are missing
      */
-    public PersonWithAddressesManyToMany build() {
+    public PersonWithAddress build() {
       if (initBits != 0) {
         throw new IllegalStateException(formatRequiredAttributesMessage());
       }
-      return new PersonWithAddressesManyToMany(null, id, name, addresses);
+      return new PersonWithAddress(null, id, name, address);
     }
 
     private String formatRequiredAttributesMessage() {
       List<String> attributes = new ArrayList<>();
       if ((initBits & INIT_BIT_ID) != 0) attributes.add("id");
       if ((initBits & INIT_BIT_NAME) != 0) attributes.add("name");
-      if ((initBits & INIT_BIT_ADDRESSES) != 0) attributes.add("addresses");
+      if ((initBits & INIT_BIT_ADDRESS) != 0) attributes.add("address");
       return "Cannot build PersonWithAddresses, some of required attributes are not set " + attributes;
     }
   }

@@ -3,7 +3,10 @@ package com.ajjpj.asqlmapper.mapper.beans;
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.sql.Connection;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ajjpj.acollections.AMap;
@@ -18,8 +21,10 @@ import com.ajjpj.asqlmapper.mapper.beans.primarykey.PkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.relations.DefaultOneToManyResolver;
 import com.ajjpj.asqlmapper.mapper.beans.relations.ManyToManySpec;
 import com.ajjpj.asqlmapper.mapper.beans.relations.OneToManySpec;
+import com.ajjpj.asqlmapper.mapper.beans.relations.ToOneSpec;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.TableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
+import com.ajjpj.asqlmapper.mapper.schema.ForeignKeySpec;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 import com.ajjpj.asqlmapper.mapper.schema.TableMetaData;
 import com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper;
@@ -31,8 +36,9 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
     private final BeanMetaDataRegistry metaDataRegistry;
 
     private final Map<Class<?>, BeanMapping> cache = new ConcurrentHashMap<>();
-    private final Map<ToManyMapKey, OneToManySpec> oneToManyCache = new ConcurrentHashMap<>();
-    private final Map<ToManyMapKey, ManyToManySpec> manyToManyCache = new ConcurrentHashMap<>();
+    private final Map<RelMapKey, OneToManySpec> oneToManyCache = new ConcurrentHashMap<>();
+    private final Map<RelMapKey, ManyToManySpec> manyToManyCache = new ConcurrentHashMap<>();
+    private final Map<RelMapKey, ToOneSpec> toOneCache = new ConcurrentHashMap<>();
 
     public BeanMappingRegistryImpl(SchemaRegistry schemaRegistry, TableNameExtractor tableNameExtractor, PkStrategyDecider pkStrategyDecider,
                                    BeanMetaDataRegistry metaDataRegistry) {
@@ -93,7 +99,7 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
     //TODO variant with explicitly passed in detail table / fk
     @Override
     public OneToManySpec resolveOneToMany(Connection conn, Class<?> ownerClass, String propertyName) {
-        return oneToManyCache.computeIfAbsent(new ToManyMapKey(ownerClass, propertyName), k -> {
+        return oneToManyCache.computeIfAbsent(new RelMapKey(ownerClass, propertyName), k -> {
             final BeanMapping ownerMapping = getBeanMapping(conn, ownerClass);
 
             //TODO make this configurable
@@ -106,7 +112,7 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
 
     @Override
     public ManyToManySpec resolveManyToMany(Connection conn, Class<?> ownerClass, String propertyName) {
-        return manyToManyCache.computeIfAbsent(new ToManyMapKey(ownerClass, propertyName), k -> {
+        return manyToManyCache.computeIfAbsent(new RelMapKey(ownerClass, propertyName), k -> {
             //TODO extract DefaultManyToManyResolver
 
             final BeanMapping ownerMapping = getBeanMapping(conn, ownerClass);
@@ -162,11 +168,35 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
         });
     }
 
-    private static class ToManyMapKey {
+    @Override
+    public ToOneSpec resolveToOne(Connection conn, Class owningClass, String propertyName) {
+        return toOneCache.computeIfAbsent(new RelMapKey(owningClass, propertyName), k -> {
+            //TODO extract to default strategy
+
+            final BeanMapping ownerMapping = getBeanMapping(conn, owningClass);
+            final BeanProperty refProp = ownerMapping.beanMetaData().beanProperties().get(propertyName); //TODO getRequiredProperty
+            if (refProp == null) {
+                throw new IllegalArgumentException(owningClass + " has no mapped property " + propertyName);
+            }
+
+            final String referencedTable = tableNameExtractor.tableNameForBean(conn, refProp.propClass(), schemaRegistry);
+            final ForeignKeySpec foreignKeySpec = ownerMapping.tableMetaData().uniqueFkTo(referencedTable);
+
+            final Class<?> keyType = schemaRegistry
+                    .getRequiredTableMetaData(conn, foreignKeySpec.pkTableName())
+                    .findColByName(foreignKeySpec.pkColumnName())
+                    .get()
+                    .colClass()
+                    .get();
+
+            return new ToOneSpec(foreignKeySpec, refProp.propClass(), keyType);
+        });
+    }
+    private static class RelMapKey {
         final Class<?> ownerClass;
         final String propertyName;
 
-        public ToManyMapKey(Class<?> ownerClass, String propertyName) {
+        RelMapKey(Class<?> ownerClass, String propertyName) {
             this.ownerClass = ownerClass;
             this.propertyName = propertyName;
         }
@@ -187,7 +217,7 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            ToManyMapKey fkMapKey = (ToManyMapKey) o;
+            RelMapKey fkMapKey = (RelMapKey) o;
             return Objects.equals(ownerClass, fkMapKey.ownerClass) &&
                     Objects.equals(propertyName, fkMapKey.propertyName);
         }

@@ -11,6 +11,17 @@ todo
 * test with Lombok
 * to-one, to-many: annotations
 
+* spec, annotations, defaults
+  * --> strategy with default implementation
+
+* comprehensive tests
+
+* mapper queries mit snippets --> how to do this best?
+  * filter
+  * pagination
+  * order by
+  * ...
+
 * base
   * tuples
     * special handling, 'implicit' row extractor based on ptm

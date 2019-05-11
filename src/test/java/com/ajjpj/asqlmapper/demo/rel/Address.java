@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.demo.tomany;
+package com.ajjpj.asqlmapper.demo.rel;
 
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;

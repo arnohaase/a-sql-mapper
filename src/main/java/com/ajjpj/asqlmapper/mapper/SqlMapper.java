@@ -15,12 +15,14 @@ import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlBuilder;
 import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
+import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMapping;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistry;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.TableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedManyToMany;
 import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedOneToMany;
+import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedToOne;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 
@@ -63,6 +65,10 @@ public class SqlMapper {
 
     public MappedManyToMany manyToMany(String propertyName) {
         return new MappedManyToMany(propertyName, mappingRegistry, (cls, sql) -> query(cls, sql));
+    }
+
+    public InjectedProperty toOne(String propertyName) {
+        return new MappedToOne(propertyName, mappingRegistry, (cls, sql) -> query(cls, sql));
     }
 
     public <T> AList<T> insertMany(List<T> os) {

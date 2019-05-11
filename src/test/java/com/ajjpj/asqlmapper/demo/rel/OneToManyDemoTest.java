@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.demo.tomany;
+package com.ajjpj.asqlmapper.demo.rel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

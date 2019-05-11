@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.demo.tomany;
+package com.ajjpj.asqlmapper.demo.rel;
 
 import com.ajjpj.acollections.AList;
 

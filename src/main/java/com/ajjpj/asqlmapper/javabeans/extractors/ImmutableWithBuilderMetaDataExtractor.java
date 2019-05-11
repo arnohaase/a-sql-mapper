@@ -107,6 +107,7 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
             final Method mtd = builderClass.getMethod(builderFinalizeMethodName);
 
             return builder -> executeUnchecked(() -> mtd.invoke(builder));
+            //TODO InvocationTargetException
         });
     }
 }

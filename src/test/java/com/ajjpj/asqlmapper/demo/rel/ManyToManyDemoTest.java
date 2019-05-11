@@ -1,12 +1,10 @@
-package com.ajjpj.asqlmapper.demo.tomany;
+package com.ajjpj.asqlmapper.demo.rel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.lang.reflect.Method;
 import java.sql.SQLException;
 
 import com.ajjpj.acollections.ASet;
-import com.ajjpj.asqlmapper.javabeans.annotations.ManyToMany;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

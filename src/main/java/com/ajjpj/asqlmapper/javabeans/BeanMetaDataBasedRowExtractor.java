@@ -24,6 +24,7 @@ class BeanMetaDataBasedRowExtractor implements RowExtractor {
         Object builder = beanMetaData.newBuilder();
         for(String injectedPropName: injectedPropsValues.keySet()) {
             builder = beanMetaData.beanProperties().get(injectedPropName).setOnBuilder(builder, injectedPropsValues.get(injectedPropName));
+            //TODO better reporting for "not found"
         }
 
         for(String colName: row.columnNames()) {

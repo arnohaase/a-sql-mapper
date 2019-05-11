@@ -6,6 +6,7 @@ import com.ajjpj.asqlmapper.core.impl.CanHandle;
 import com.ajjpj.asqlmapper.javabeans.BeanMetaDataRegistry;
 import com.ajjpj.asqlmapper.mapper.beans.relations.ManyToManySpec;
 import com.ajjpj.asqlmapper.mapper.beans.relations.OneToManySpec;
+import com.ajjpj.asqlmapper.mapper.beans.relations.ToOneSpec;
 
 public interface BeanMappingRegistry extends CanHandle {
     BeanMetaDataRegistry metaDataRegistry();
@@ -13,4 +14,5 @@ public interface BeanMappingRegistry extends CanHandle {
 
     OneToManySpec resolveOneToMany(Connection conn, Class<?> ownerClass, String propertyName);
     ManyToManySpec resolveManyToMany(Connection conn, Class<?> ownerClass, String propertyName);
+    ToOneSpec resolveToOne(Connection conn, Class owningClass, String propertyName);
 }
