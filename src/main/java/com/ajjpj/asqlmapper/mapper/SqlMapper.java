@@ -4,6 +4,7 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 import static com.ajjpj.asqlmapper.core.SqlSnippet.*;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -240,23 +241,22 @@ public class SqlMapper {
     /**
      * all beans must have the same type for JDBC batching to work
      */
-    public boolean batchUpdate(List<Object> beans) {
+    public List<Boolean> batchUpdate(List<Object> beans) {
         return batchUpdate(engine().defaultConnection(), beans);
     }
     /**
      * all beans must have the same type for JDBC batching to work
      */
-    public boolean batchUpdate(Connection conn, List<Object> beans) {
+    public List<Boolean> batchUpdate(Connection conn, List<Object> beans) {
         final List<SqlSnippet> snippets = AMutableListWrapper
                 .wrap(beans)
                 .map(b -> updateSnippet(conn, b));
         final int[] results = sqlEngine.executeBatch(conn, snippets);
-        for (int r : results) {
-            if (r != 1) {
-                return false;
-            }
+        final List<Boolean> result = new ArrayList<>(results.length);
+        for(int r: results) {
+            result.add(r == 1);
         }
-        return false;
+        return result;
     }
 
     public boolean delete(Object bean) {
