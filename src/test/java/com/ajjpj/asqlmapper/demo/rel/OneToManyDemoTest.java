@@ -14,7 +14,6 @@ import com.ajjpj.asqlmapper.SqlMapperBuilder;
 import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToManyProperty;
-import com.ajjpj.asqlmapper.demo.simple.Person;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
 

@@ -16,6 +16,7 @@ import com.ajjpj.asqlmapper.javabeans.columnnames.DirectColumnNameExtractor;
 import com.ajjpj.asqlmapper.javabeans.extractors.BeanMetaDataExtractor;
 import com.ajjpj.asqlmapper.javabeans.extractors.ImmutableWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.javabeans.extractors.JavaBeansMetaDataExtractor;
+import com.ajjpj.asqlmapper.javabeans.extractors.LombokWithBuilderMetaDataExtractor;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistryImpl;
@@ -41,7 +42,7 @@ import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
  */
 public class SqlMapperBuilder {
     public enum BeanStyle {
-        javaBeans, immutables
+        javaBeans, immutables, lombok
     }
 
     private AOption<String> defaultPkName = AOption.empty();
@@ -85,6 +86,11 @@ public class SqlMapperBuilder {
             case immutables:
                 beanMetaDataRegistry = new BeanMetaDataRegistryImpl(new ImmutableWithBuilderMetaDataExtractor(columnNameExtractor));
                 break;
+            case lombok:
+                beanMetaDataRegistry = new BeanMetaDataRegistryImpl(new LombokWithBuilderMetaDataExtractor(columnNameExtractor));
+                break;
+            default:
+                throw new IllegalArgumentException("unsupported bean style " + beanStyle + " - this is a bug");
         }
         return this;
     }
