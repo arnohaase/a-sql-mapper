@@ -6,6 +6,7 @@ import static com.ajjpj.asqlmapper.core.SqlSnippet.*;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.AMap;
@@ -19,6 +20,7 @@ import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMapping;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistry;
+import com.ajjpj.asqlmapper.mapper.beans.relations.OneToManySpec;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.TableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedManyToMany;
 import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedOneToMany;
@@ -60,7 +62,10 @@ public class SqlMapper {
 
     //TODO variants with table name, fk name, referenced pk name --> pass in ForeignKeySpec
     public MappedOneToMany oneToMany(String propertyName) {
-        return new MappedOneToMany(propertyName, mappingRegistry, (cls, sql) -> query(cls, sql));
+        return new MappedOneToMany(propertyName, mappingRegistry, (cls, sql) -> query(cls, sql), Optional.empty());
+    }
+    public MappedOneToMany oneToMany(String propertyName, OneToManySpec spec) {
+        return new MappedOneToMany(propertyName, mappingRegistry, (cls, sql) -> query(cls, sql), Optional.ofNullable(spec));
     }
 
     public MappedManyToMany manyToMany(String propertyName) {

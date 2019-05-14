@@ -5,6 +5,7 @@ import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
 
 import java.sql.Connection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import com.ajjpj.acollections.util.AOption;
@@ -23,12 +24,16 @@ public class MappedOneToMany implements InjectedProperty {
     private final BeanMappingRegistry beanMappingRegistry;
     private final BiFunction<Class<?>, SqlSnippet, AQuery<?>> queryFactory;
 
+    private final Optional<OneToManySpec> spec;
+
     private InjectedToManyProperty inner;
 
-    public MappedOneToMany (String propertyName, BeanMappingRegistry beanMappingRegistry, BiFunction<Class<?>, SqlSnippet, AQuery<?>> queryFactory) {
+    public MappedOneToMany(String propertyName, BeanMappingRegistry beanMappingRegistry, BiFunction<Class<?>, SqlSnippet, AQuery<?>> queryFactory,
+                           Optional<OneToManySpec> spec) {
         this.propertyName = propertyName;
         this.beanMappingRegistry = beanMappingRegistry;
         this.queryFactory = queryFactory;
+        this.spec = spec;
     }
 
     @Override public String propertyName () {
@@ -37,7 +42,7 @@ public class MappedOneToMany implements InjectedProperty {
 
     @Override
     public Object mementoPerQuery (Connection conn, Class owningClass, SqlSnippet owningQuery) {
-        final OneToManySpec rel = beanMappingRegistry.resolveOneToMany(conn, owningClass, propertyName);
+        final OneToManySpec rel = spec.orElse(beanMappingRegistry.resolveOneToMany(conn, owningClass, propertyName));
 
         final SqlSnippet detailSql = concat(
                 sql("SELECT * FROM " + rel.foreignKeySpec().fkTableName() + " WHERE " + rel.foreignKeySpec().fkColumnName() + " IN (SELECT " + rel.foreignKeySpec().pkColumnName() + " FROM ("),

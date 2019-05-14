@@ -18,10 +18,7 @@ import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.javabeans.annotations.ManyToMany;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.PkStrategy;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.PkStrategyDecider;
-import com.ajjpj.asqlmapper.mapper.beans.relations.DefaultOneToManyResolver;
-import com.ajjpj.asqlmapper.mapper.beans.relations.ManyToManySpec;
-import com.ajjpj.asqlmapper.mapper.beans.relations.OneToManySpec;
-import com.ajjpj.asqlmapper.mapper.beans.relations.ToOneSpec;
+import com.ajjpj.asqlmapper.mapper.beans.relations.*;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.TableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 import com.ajjpj.asqlmapper.mapper.schema.ForeignKeySpec;
@@ -34,6 +31,8 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
     private final TableNameExtractor tableNameExtractor;
     private final PkStrategyDecider pkStrategyDecider;
     private final BeanMetaDataRegistry metaDataRegistry;
+
+    private final OneToManyResolver oneToManyResolver = new DefaultOneToManyResolver(); //TODO make this configurable
 
     private final Map<Class<?>, BeanMapping> cache = new ConcurrentHashMap<>();
     private final Map<RelMapKey, OneToManySpec> oneToManyCache = new ConcurrentHashMap<>();
@@ -102,9 +101,7 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
         return oneToManyCache.computeIfAbsent(new RelMapKey(ownerClass, propertyName), k -> {
             final BeanMapping ownerMapping = getBeanMapping(conn, ownerClass);
 
-            //TODO make this configurable
-            return new DefaultOneToManyResolver().resolve(conn, ownerMapping, propertyName, tableNameExtractor, schemaRegistry,
-                    Optional.empty(), Optional.empty(), Optional.empty());
+            return oneToManyResolver.resolve(conn, ownerMapping, propertyName, tableNameExtractor, schemaRegistry);
         });
     }
 

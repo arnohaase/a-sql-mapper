@@ -10,6 +10,5 @@ import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 public interface OneToManyResolver {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     OneToManySpec resolve(Connection conn, BeanMapping ownerMapping, String propertyName,
-                                 TableNameExtractor tableNameExtractor, SchemaRegistry schemaRegistry,
-                                 Optional<String> optDetailTable, Optional<String> optFk, Optional<String> optPk);
+                                 TableNameExtractor tableNameExtractor, SchemaRegistry schemaRegistry);
 }
