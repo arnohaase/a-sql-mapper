@@ -3,9 +3,9 @@ package com.ajjpj.asqlmapper.javabeans;
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Optional;
 
 public class BeanProperty {
@@ -15,14 +15,18 @@ public class BeanProperty {
     private final String columnName;
 
     private final Method getterMethod;
-    private final Method setterMethod;
+    private final Optional<Method> setterMethod;
     private final boolean setterReturnsBean;
+    private final Optional<Field> field;
 
     private final Method builderSetterMethod;
     private final boolean builderSetterReturnsBean;
 
-    public BeanProperty (Class<?> propClass, Type propType, String name, String columnName, Method getterMethod, Method setterMethod, boolean setterReturnsBean,
-                         Method builderSetterMethod, boolean builderSetterReturnsBean) {
+    public BeanProperty(Class<?> propClass, Type propType,
+                        String name, String columnName, Method getterMethod, Optional<Method> setterMethod,
+                        boolean setterReturnsBean,
+                        Optional<Field> field,
+                        Method builderSetterMethod, boolean builderSetterReturnsBean) {
         this.propClass = propClass;
         this.propType = propType;
         this.name = name;
@@ -30,6 +34,7 @@ public class BeanProperty {
         this.getterMethod = getterMethod;
         this.setterMethod = setterMethod;
         this.setterReturnsBean = setterReturnsBean;
+        this.field = field;
         this.builderSetterMethod = builderSetterMethod;
         this.builderSetterReturnsBean = builderSetterReturnsBean;
     }
@@ -45,7 +50,12 @@ public class BeanProperty {
     }
 
     public <T extends Annotation> Optional<T> getAnnotation(Class<T> annotationClass) {
-        return Optional.ofNullable(getterMethod.getAnnotation(annotationClass));
+        T mtdAnnotation = getterMethod.getAnnotation(annotationClass);
+        if (mtdAnnotation != null || !field.isPresent()) {
+            return Optional.ofNullable(mtdAnnotation);
+        }
+
+        return Optional.ofNullable(field.get().getAnnotation(annotationClass));
     }
 
     public Object get(Object bean) {
@@ -53,8 +63,11 @@ public class BeanProperty {
     }
 
     public Object set(Object bean, Object value) {
+        final Method mtd = setterMethod
+                .orElseThrow(() -> new IllegalArgumentException("no setter for property " + name + " in bean " + getterMethod.getDeclaringClass().getName()));
+
         return executeUnchecked(() -> {
-            final Object result = setterMethod.invoke(bean, value);
+            final Object result = mtd.invoke(bean, value);
             return setterReturnsBean ? result : bean;
         });
     }
@@ -71,7 +84,7 @@ public class BeanProperty {
     }
 
     @Override
-    public String toString () {
+    public String toString() {
         return "BeanProperty{" +
                 "propType=" + propType +
                 ", name='" + name + '\'' +
