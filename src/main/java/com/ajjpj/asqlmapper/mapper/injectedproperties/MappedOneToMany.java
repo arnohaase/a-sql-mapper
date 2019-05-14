@@ -42,7 +42,7 @@ public class MappedOneToMany implements InjectedProperty {
 
     @Override
     public Object mementoPerQuery (Connection conn, Class owningClass, SqlSnippet owningQuery) {
-        final OneToManySpec rel = spec.orElse(beanMappingRegistry.resolveOneToMany(conn, owningClass, propertyName));
+        final OneToManySpec rel = spec.orElseGet(() -> beanMappingRegistry.resolveOneToMany(conn, owningClass, propertyName));
 
         final SqlSnippet detailSql = concat(
                 sql("SELECT * FROM " + rel.foreignKeySpec().fkTableName() + " WHERE " + rel.foreignKeySpec().fkColumnName() + " IN (SELECT " + rel.foreignKeySpec().pkColumnName() + " FROM ("),

@@ -22,6 +22,7 @@ import com.ajjpj.asqlmapper.mapper.SqlMapper;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistryImpl;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.GuessingPkStrategyDecider;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.PkStrategyDecider;
+import com.ajjpj.asqlmapper.mapper.beans.relations.*;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.DefaultTableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.beans.tablename.TableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
@@ -41,6 +42,7 @@ import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
  *  on the result and discard the mapper.
  */
 public class SqlMapperBuilder {
+
     public enum BeanStyle {
         javaBeans, immutables, lombok
     }
@@ -54,6 +56,10 @@ public class SqlMapperBuilder {
     private BeanMetaDataRegistry beanMetaDataRegistry = new BeanMetaDataRegistryImpl(new JavaBeansMetaDataExtractor(columnNameExtractor));
 
     private AVector<PrimitiveTypeHandler> primitiveTypeHandlers = AVector.empty();
+
+    private OneToManyResolver oneToManyResolver = new DefaultOneToManyResolver();
+    private ManyToManyResolver manyToManyResolver = new DefaultManyToManyResolver();
+    private ToOneResolver toOneResolver = new DefaultToOneResolver();
 
     private TableNameExtractor tableNameExtractor = new DefaultTableNameExtractor();
     private PkStrategyDecider pkStrategyDecider = new GuessingPkStrategyDecider();
@@ -113,6 +119,19 @@ public class SqlMapperBuilder {
         return this;
     }
 
+    public SqlMapperBuilder withOneToManyResolver(OneToManyResolver resolver) {
+        this.oneToManyResolver = resolver;
+        return this;
+    }
+    public SqlMapperBuilder withManyToManyResolver(ManyToManyResolver resolver) {
+        this.manyToManyResolver = resolver;
+        return this;
+    }
+    public SqlMapperBuilder withToOneResolver(ToOneResolver resolver) {
+        this.toOneResolver = resolver;
+        return this;
+    }
+
     private SqlEngine buildEngine() {
         SqlEngine result = SqlEngine.create();
 
@@ -135,7 +154,10 @@ public class SqlMapperBuilder {
                 schemaRegistry,
                 tableNameExtractor,
                 pkStrategyDecider,
-                beanMetaDataRegistry
-        ), schemaRegistry, tableNameExtractor);
+                beanMetaDataRegistry,
+                oneToManyResolver,
+                manyToManyResolver,
+                toOneResolver),
+                schemaRegistry, tableNameExtractor);
     }
 }

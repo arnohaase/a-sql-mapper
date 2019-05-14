@@ -53,8 +53,6 @@ class ToOneDemoTest extends AbstractDatabaseTest {
                 .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno3", addressIds.get(2))
                 .executeSingle();
 
-        //TODO annotation?
-
         final SqlEngine engine = mapper.engine();
 
         {
@@ -73,7 +71,7 @@ class ToOneDemoTest extends AbstractDatabaseTest {
         {
             final AList<PersonWithAddress> persons = engine
                     .query(PersonWithAddress.class, "select * from person where id in(?,?) order by id asc", 1, 2)
-                    .withInjectedProperty(mapper.toOne("address")) //TODO fk name explicit / annotation, target table name
+                    .withInjectedProperty(mapper.toOne("address"))
                     .list();
 
             assertEquals(AList.of(

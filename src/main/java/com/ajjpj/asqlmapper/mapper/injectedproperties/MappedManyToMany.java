@@ -6,6 +6,7 @@ import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
 
 import java.sql.Connection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import com.ajjpj.acollections.util.AOption;
@@ -18,7 +19,7 @@ import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToManyProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMapping;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMappingRegistry;
 import com.ajjpj.asqlmapper.mapper.beans.relations.ManyToManySpec;
-
+import com.ajjpj.asqlmapper.mapper.beans.relations.OneToManySpec;
 
 @SuppressWarnings("unchecked")
 public class MappedManyToMany implements InjectedProperty {
@@ -26,29 +27,25 @@ public class MappedManyToMany implements InjectedProperty {
     private final BeanMappingRegistry beanMappingRegistry;
     private final BiFunction<Class<?>, SqlSnippet, AQuery<?>> queryFactory;
 
+    private final Optional<ManyToManySpec> spec;
+
     private InjectedToManyProperty inner;
 
-    public MappedManyToMany (String propertyName, BeanMappingRegistry beanMappingRegistry, BiFunction<Class<?>, SqlSnippet, AQuery<?>> queryFactory) {
+    public MappedManyToMany(String propertyName, BeanMappingRegistry beanMappingRegistry, BiFunction<Class<?>, SqlSnippet, AQuery<?>> queryFactory,
+                            Optional<ManyToManySpec> spec) {
         this.propertyName = propertyName;
         this.beanMappingRegistry = beanMappingRegistry;
         this.queryFactory = queryFactory;
+        this.spec = spec;
     }
 
-    @Override public String propertyName () {
+    @Override public String propertyName() {
         return propertyName;
     }
 
     @Override
-    public Object mementoPerQuery (Connection conn, Class owningClass, SqlSnippet owningQuery) {
-        //TODO injectable rel --> public API in BeanMappingRegistry, 'with' methods
-
-        final ManyToManySpec rel = beanMappingRegistry.resolveManyToMany(conn, owningClass, propertyName);
-
-        /*
-
-         select b.person_id AS "$$person_id", a.* from address a inner join person_address b on a.id=b.address_id where b.person_id in (select id from (select * from person where id < 3) x)
-
-         */
+    public Object mementoPerQuery(Connection conn, Class owningClass, SqlSnippet owningQuery) {
+        final ManyToManySpec rel = spec.orElseGet(() -> beanMappingRegistry.resolveManyToMany(conn, owningClass, propertyName));
 
         final String fkToOwnerAlias = "$$" + rel.fkToOwner();
 
@@ -65,7 +62,7 @@ public class MappedManyToMany implements InjectedProperty {
         return inner.mementoPerQuery(conn, owningClass, owningQuery);
     }
 
-    @Override public AOption<Object> value (Connection conn, SqlRow currentRow, Object memento) {
+    @Override public AOption<Object> value(Connection conn, SqlRow currentRow, Object memento) {
         return inner.value(conn, currentRow, (Map) memento);
     }
 }

@@ -34,6 +34,11 @@ public class BeanMetaData {
         return beanPropertiesByColumnName.get(columnName.toUpperCase());
     }
 
+    public BeanProperty getRequiredProperty(String propertyName) {
+        return beanProperties().getOptional(propertyName)
+                .orElseThrow(() -> new IllegalArgumentException(beanType() + " has no mapped property " + propertyName));
+    }
+
     public Object newBuilder() {
         return builderFactory.get();
     }

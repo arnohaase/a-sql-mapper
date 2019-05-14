@@ -64,25 +64,6 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
 
         //TODO injected properties in SqlRow (?)
 
-        // "select a.* from (##) as MASTER left join (select * from address where ... order by ...) as a on a.person_id = MASTER.id"
-        // --> does left relation in a LEFT JOIN determine overall row order?
-        // --> performance / efficiency?
-
-        // engine
-        //     .query(Person.class, "select * from person")
-        //     .withToOne("department", "id", "department_id", Long.class, engine.query(Department.class, "select * from department where ???")
-        //     .withProvidedProperty("myProp", "id", Long.class, Map.of(25L, "yo", 77L, "whatever"))
-        //     .withProvidedProperty("myOtherProp", "id", Long.class, personId -> ??? )
-        //     .withDerivedProperty("verySpecial", sqlRow -> 2*sqlRow.getInt("yo") + sqlRow.getLong("yeah") )
-        //     .list();
-        // mapper
-        //     .query(Person.class, "select * from person")
-        //     .withToOne("department") // --> with and without explicit query
-        //     .withManyToMany("organizations", "tbl_person_organizations" (???, "fk_person", "fk_org" ???) )
-        //     .list();
-
-        //TODO fk / m2n annotations?
-
         final SqlEngine engine = mapper.engine();
 
         {
@@ -102,7 +83,7 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
         {
             final AList<PersonWithAddresses> persons = engine
                     .query(PersonWithAddresses.class, "select * from person where id in(?,?) order by id asc", 1, 2)
-                    .withInjectedProperty(mapper.oneToMany("addresses")) //TODO fk name explicit / annotation, target table name
+                    .withInjectedProperty(mapper.oneToMany("addresses"))
                     .list();
 
             assertEquals(2, persons.size());
