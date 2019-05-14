@@ -9,4 +9,6 @@ import java.sql.SQLException;
 public interface AUpdate {
     int execute(Connection conn);
     int execute();
+    long executeLarge(Connection conn);
+    long executeLarge();
 }

@@ -41,9 +41,9 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
     @Test void testSnippetBuildingBlocks() {
         for (int i=0; i<1000; i++) {
             long personId = mapper.insert(Person.of(0L, String.format("%04d", i))).id();
-            mapper.engine().update("insert into person_permissions(person_id, user_id) values(?,?)", personId, 1L).execute();
+            mapper.engine().executeUpdate("insert into person_permissions(person_id, user_id) values(?,?)", personId, 1L);
             if (i%10 == 0)
-                mapper.engine().update("insert into person_permissions(person_id, user_id) values(?,?)", personId, 5L).execute();
+                mapper.engine().executeUpdate("insert into person_permissions(person_id, user_id) values(?,?)", personId, 5L);
         }
 
         final Snippets snippets = new Snippets();

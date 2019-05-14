@@ -52,15 +52,15 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
         //TODO mapper.insertMultiWithExplicitFields(conn, person.addresses(), AMap.of("person_id", person.id()));
         // -> ignore 'missing' primary key columns - check that all PK columns missing from bean are autoincrement(?)
 
-        mapper.engine().execute("insert into address(person_id, street, city) values (?,?,?)", personId1, "street11", "city11");
-        mapper.engine().execute("insert into address(person_id, street, city) values (?,?,?)", personId1, "street12", "city12");
-        mapper.engine().execute("insert into address(person_id, street, city) values (?,?,?)", personId1, "street13", "city13");
-        mapper.engine().execute("insert into address(person_id, street, city) values (?,?,?)", personId2, "street21", "city21");
-        mapper.engine().execute("insert into address(person_id, street, city) values (?,?,?)", personId2, "street22", "city22");
-        mapper.engine().execute("insert into address(person_id, street, city) values (?,?,?)", personId2, "street23", "city23");
-        mapper.engine().execute("insert into address(person_id, street, city) values (?,?,?)", personId3, "street31", "city31");
-        mapper.engine().execute("insert into address(person_id, street, city) values (?,?,?)", personId3, "street32", "city32");
-        mapper.engine().execute("insert into address(person_id, street, city) values (?,?,?)", personId3, "street33", "city33");
+        mapper.engine().executeUpdate("insert into address(person_id, street, city) values (?,?,?)", personId1, "street11", "city11");
+        mapper.engine().executeUpdate("insert into address(person_id, street, city) values (?,?,?)", personId1, "street12", "city12");
+        mapper.engine().executeUpdate("insert into address(person_id, street, city) values (?,?,?)", personId1, "street13", "city13");
+        mapper.engine().executeUpdate("insert into address(person_id, street, city) values (?,?,?)", personId2, "street21", "city21");
+        mapper.engine().executeUpdate("insert into address(person_id, street, city) values (?,?,?)", personId2, "street22", "city22");
+        mapper.engine().executeUpdate("insert into address(person_id, street, city) values (?,?,?)", personId2, "street23", "city23");
+        mapper.engine().executeUpdate("insert into address(person_id, street, city) values (?,?,?)", personId3, "street31", "city31");
+        mapper.engine().executeUpdate("insert into address(person_id, street, city) values (?,?,?)", personId3, "street32", "city32");
+        mapper.engine().executeUpdate("insert into address(person_id, street, city) values (?,?,?)", personId3, "street33", "city33");
 
         //TODO injected properties in SqlRow (?)
 

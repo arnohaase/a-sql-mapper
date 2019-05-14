@@ -2,19 +2,20 @@ package com.ajjpj.asqlmapper.core;
 
 import static com.ajjpj.asqlmapper.core.SqlSnippet.concat;
 
-import com.ajjpj.acollections.immutable.AVector;
-import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.core.common.ScalarRowExtractor;
-import com.ajjpj.asqlmapper.core.common.SqlRow;
-import com.ajjpj.asqlmapper.core.common.RawRowExtractor;
-import com.ajjpj.asqlmapper.core.impl.*;
-import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
-
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import com.ajjpj.acollections.immutable.AVector;
+import com.ajjpj.acollections.util.AOption;
+import com.ajjpj.asqlmapper.core.common.RawRowExtractor;
+import com.ajjpj.asqlmapper.core.common.ScalarRowExtractor;
+import com.ajjpj.asqlmapper.core.common.SqlRow;
+import com.ajjpj.asqlmapper.core.impl.*;
+import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
 
 /**
  * not necessary but convenient
@@ -28,15 +29,15 @@ public class SqlEngine {
     private final AOption<Supplier<Connection>> defaultConnectionSupplier;
 
     public static SqlEngine create() {
-        return create (PrimitiveTypeRegistry.defaults());
+        return create(PrimitiveTypeRegistry.defaults());
     }
 
     public static SqlEngine create(PrimitiveTypeRegistry primTypes) {
         return new SqlEngine(primTypes, AOption.none(), CanHandleRegistry.empty(), AVector.empty(), AOption.empty());
     }
 
-    private SqlEngine (PrimitiveTypeRegistry primTypes, AOption<String> optDefaultPkName, CanHandleRegistry<RowExtractor> rowExtractorRegistry,
-                       AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier) {
+    private SqlEngine(PrimitiveTypeRegistry primTypes, AOption<String> optDefaultPkName, CanHandleRegistry<RowExtractor> rowExtractorRegistry,
+                      AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier) {
         this.primTypes = primTypes;
         this.optDefaultPkName = optDefaultPkName;
         this.rowExtractorRegistry = rowExtractorRegistry;
@@ -48,45 +49,93 @@ public class SqlEngine {
         return primTypes;
     }
 
-    public RowExtractor rowExtractorFor (Class<?> cls) {
+    public RowExtractor rowExtractorFor(Class<?> cls) {
         final AOption<RowExtractor> registered = rowExtractorRegistry.handlerFor(cls);
-        if (registered.isDefined()) return registered.get();
+        if (registered.isDefined()) {
+            return registered.get();
+        }
 
-        if (primTypes.isPrimitiveType(cls)) return new ScalarRowExtractor(cls);
+        if (primTypes.isPrimitiveType(cls)) {
+            return new ScalarRowExtractor(cls);
+        }
 
         throw new IllegalArgumentException("no row extractor registered for " + cls + " - pass in a RowExtractor instance explicitly or register it");
     }
 
     //--------------------------- generic update statements, i.e. statements not returning a result set
 
-    public AUpdate update(SqlSnippet sql, SqlSnippet... moreSql) {
+    private AUpdate update(SqlSnippet sql, SqlSnippet... moreSql) {
         return new AUpdateImpl(concat(sql, moreSql), primTypes, listeners, defaultConnectionSupplier);
     }
 
-    public AUpdate update(String sql, Object... params) {
+    private AUpdate update(String sql, Object... params) {
         return new AUpdateImpl(SqlSnippet.sql(sql, params), primTypes, listeners, defaultConnectionSupplier);
     }
 
-    public int execute(SqlSnippet sql, SqlSnippet... moreSql) {
+    public int executeUpdate(SqlSnippet sql, SqlSnippet... moreSql) {
         return update(sql, moreSql).execute();
     }
-    public int execute(Connection conn, SqlSnippet sql, SqlSnippet... moreSql) {
+    public int executeUpdate(Connection conn, SqlSnippet sql, SqlSnippet... moreSql) {
         return update(sql, moreSql).execute(conn);
     }
 
-    public int execute(String sql, Object... params) {
+    public int executeUpdate(String sql, Object... params) {
         return update(sql, params).execute();
     }
-    public int execute(Connection conn, String sql, Object... params) {
+    public int executeUpdate(Connection conn, String sql, Object... params) {
         return update(sql, params).execute(conn);
     }
 
-    //TODO expected number, expected 1
+    public long executeLargeUpdate(SqlSnippet sql, SqlSnippet... moreSql) {
+        return update(sql, moreSql).executeLarge();
+    }
+    public long executeLargeUpdate(Connection conn, SqlSnippet sql, SqlSnippet... moreSql) {
+        return update(sql, moreSql).executeLarge(conn);
+    }
+
+    public long executeLargeUpdate(String sql, Object... params) {
+        return update(sql, params).executeLarge();
+    }
+    public long executeLargeUpdate(Connection conn, String sql, Object... params) {
+        return update(sql, params).executeLarge(conn);
+    }
+
+    //TODO expected 1 row
+
+    //--------------------------- batch updates
+
+    public int[] executeBatch(String sql, List<List<?>> params) {
+        return new ABatchUpdate(sql, params, primTypes, listeners, defaultConnectionSupplier).execute();
+    }
+    public int[] executeBatch(Connection conn, String sql, List<List<?>> params) {
+        return new ABatchUpdate(sql, params, primTypes, listeners, defaultConnectionSupplier).execute(conn);
+    }
+
+    public long[] executeLargeBatch(String sql, List<List<?>> params) {
+        return new ABatchUpdate(sql, params, primTypes, listeners, defaultConnectionSupplier).executeLarge();
+    }
+    public long[] executeLargeBatch(Connection conn, String sql, List<List<?>> params) {
+        return new ABatchUpdate(sql, params, primTypes, listeners, defaultConnectionSupplier).executeLarge(conn);
+    }
+
+    public int[] executeBatch(List<SqlSnippet> items) {
+        return new ABatchUpdate(items, primTypes, listeners, defaultConnectionSupplier).execute();
+    }
+    public int[] executeBatch(Connection conn, List<SqlSnippet> items) {
+        return new ABatchUpdate(items, primTypes, listeners, defaultConnectionSupplier).execute(conn);
+    }
+    public long[] executeLargeBatch(List<SqlSnippet> items) {
+        return new ABatchUpdate(items, primTypes, listeners, defaultConnectionSupplier).executeLarge();
+    }
+    public long[] executeLargeBatch(Connection conn, List<SqlSnippet> items) {
+        return new ABatchUpdate(items, primTypes, listeners, defaultConnectionSupplier).executeLarge(conn);
+    }
 
     //--------------------------- insert statements, i.e. statements returning a generated primary key
 
     private String defaultPkName() {
-        return optDefaultPkName.orElseThrow(() -> new IllegalStateException("no default PK name was defined - call 'ASqlEngine.withDefaultPkName()' to set it"));
+        return optDefaultPkName
+                .orElseThrow(() -> new IllegalStateException("no default PK name was defined - call 'ASqlEngine.withDefaultPkName()' to set it"));
     }
 
     public AInsert<UUID> insertUuidPk(String sql, Object... params) {
@@ -101,7 +150,7 @@ public class SqlEngine {
     public AInsert<Long> insertLongPk(String sql, Object... params) {
         return insertLongPk(SqlSnippet.sql(sql, params));
     }
-    public <T> AInsert<T> insertSingleColPk (Class<T> pkType, String sql, Object... params) {
+    public <T> AInsert<T> insertSingleColPk(Class<T> pkType, String sql, Object... params) {
         return insertSingleColPk(pkType, SqlSnippet.sql(sql, params));
     }
 
@@ -117,7 +166,7 @@ public class SqlEngine {
     public AInsert<Long> insertLongPk(SqlSnippet sql, SqlSnippet... moreSql) {
         return insertLongPkInCol(defaultPkName(), sql, moreSql);
     }
-    public <T> AInsert<T> insertSingleColPk (Class<T> pkType, SqlSnippet sql, SqlSnippet... moreSql) {
+    public <T> AInsert<T> insertSingleColPk(Class<T> pkType, SqlSnippet sql, SqlSnippet... moreSql) {
         return insertSingleColPkInCol(defaultPkName(), pkType, sql, moreSql);
     }
 
@@ -147,40 +196,46 @@ public class SqlEngine {
     // -------------------------- select statements
 
     public <T> AQuery<T> scalarQuery(Class<T> columnType, SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(columnType, concat(sql, moreSql), primTypes, new ScalarRowExtractor(columnType), listeners, defaultConnectionSupplier, AVector.empty());
+        return new AQueryImpl<>(columnType, concat(sql, moreSql), primTypes, new ScalarRowExtractor(columnType), listeners, defaultConnectionSupplier,
+                AVector.empty());
     }
     public <T> AQuery<T> scalarQuery(Class<T> columnType, String sql, Object... params) {
         return scalarQuery(columnType, SqlSnippet.sql(sql, params));
     }
 
     public AQuery<Long> longQuery(SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(Long.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.LONG_EXTRACTOR, listeners, defaultConnectionSupplier, AVector.empty());
+        return new AQueryImpl<>(Long.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.LONG_EXTRACTOR, listeners, defaultConnectionSupplier,
+                AVector.empty());
     }
     public AQuery<Long> longQuery(String sql, Object... params) {
         return longQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<Integer> intQuery(SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(Integer.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.INT_EXTRACTOR, listeners, defaultConnectionSupplier, AVector.empty());
+        return new AQueryImpl<>(Integer.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.INT_EXTRACTOR, listeners, defaultConnectionSupplier,
+                AVector.empty());
     }
     public AQuery<Integer> intQuery(String sql, Object... params) {
         return intQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<String> stringQuery(SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(String.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.STRING_EXTRACTOR, listeners, defaultConnectionSupplier, AVector.empty());
+        return new AQueryImpl<>(String.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.STRING_EXTRACTOR, listeners, defaultConnectionSupplier,
+                AVector.empty());
     }
     public AQuery<String> stringQuery(String sql, Object... params) {
         return stringQuery(SqlSnippet.sql(sql, params));
     }
     public AQuery<Double> doubleQuery(SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(Double.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.DOUBLE_EXTRACTOR, listeners, defaultConnectionSupplier, AVector.empty());
+        return new AQueryImpl<>(Double.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.DOUBLE_EXTRACTOR, listeners, defaultConnectionSupplier,
+                AVector.empty());
     }
     public AQuery<Double> doubleQuery(String sql, Object... params) {
         return doubleQuery(SqlSnippet.sql(sql, params));
     }
-    public AQuery<BigDecimal> bigDecimalQuery (SqlSnippet sql, SqlSnippet... moreSql) {
-        return new AQueryImpl<>(BigDecimal.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.BIG_DECIMAL_EXTRACTOR, listeners, defaultConnectionSupplier, AVector.empty());
+    public AQuery<BigDecimal> bigDecimalQuery(SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(BigDecimal.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.BIG_DECIMAL_EXTRACTOR, listeners,
+                defaultConnectionSupplier, AVector.empty());
     }
-    public AQuery<BigDecimal> bigDecimalQuery (String sql, Object... params) {
+    public AQuery<BigDecimal> bigDecimalQuery(String sql, Object... params) {
         return bigDecimalQuery(SqlSnippet.sql(sql, params));
     }
 
@@ -190,7 +245,8 @@ public class SqlEngine {
         return new AQueryImpl<>(SqlRow.class, concat(sql, moreSql), primTypes, RawRowExtractor.INSTANCE, listeners, defaultConnectionSupplier, AVector.empty());
     }
     public AQuery<SqlRow> rawQuery(String sql, Object... params) {
-        return new AQueryImpl<>(SqlRow.class, SqlSnippet.sql(sql, params), primTypes, RawRowExtractor.INSTANCE, listeners, defaultConnectionSupplier, AVector.empty());
+        return new AQueryImpl<>(SqlRow.class, SqlSnippet.sql(sql, params), primTypes, RawRowExtractor.INSTANCE, listeners, defaultConnectionSupplier,
+                AVector.empty());
     }
 
     public <T> AQuery<T> query(Class<T> targetType, SqlSnippet sql, SqlSnippet... moreSql) {
@@ -206,7 +262,6 @@ public class SqlEngine {
     }
 
     //TODO tuples as query results
-
 
     //--------------------------- configuration
 
@@ -244,8 +299,8 @@ public class SqlEngine {
 
     /**
      * This is for using a connection from e.g. a ThreadLocal rather than requiring it to be passed in explicitly. It
-     *  does <em>not</em> do any resource handling, so it should <em>not</em> be used to pull a new connection from
-     *  a thread pool or data source - that would cause a resource leak because the connection would never be closed.
+     * does <em>not</em> do any resource handling, so it should <em>not</em> be used to pull a new connection from
+     * a thread pool or data source - that would cause a resource leak because the connection would never be closed.
      */
     public SqlEngine withDefaultConnectionSupplier(Supplier<Connection> supp) {
         return new SqlEngine(primTypes, optDefaultPkName, rowExtractorRegistry, listeners, AOption.some(supp));

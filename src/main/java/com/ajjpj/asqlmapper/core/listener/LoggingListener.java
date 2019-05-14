@@ -20,7 +20,7 @@ public class LoggingListener implements SqlEngineEventListener {
     private static final Logger log = LoggerFactory.getLogger(LoggingListener.class);
 
     private final ThreadLocal<Instant> start = new ThreadLocal<>();
-    private final ThreadLocal<String> sqlString = new ThreadLocal<>();
+    private final ThreadLocal<SqlSnippet> curSnippet = new ThreadLocal<>();
 
     private final SqlStatisticsTracker statisticsTracker;
 
@@ -40,7 +40,7 @@ public class LoggingListener implements SqlEngineEventListener {
 
     @Override public void onBeforeQuery (SqlSnippet sql, Class<?> rowClass) {
         start.set(Instant.now());
-        sqlString.set(sql.getSql());
+        curSnippet.set(sql);
         log.debug("executing query {}, mapping results to {}", sql, rowClass);
     }
 
@@ -48,9 +48,9 @@ public class LoggingListener implements SqlEngineEventListener {
         final Instant now = Instant.now();
         final long duration = start.get().until(now, ChronoUnit.MILLIS);
         log.debug("executed query (ResultSet not yet processed), took {}ms", duration);
-        if (statisticsTracker != null) statisticsTracker.registerQuery(sqlString.get(), duration);
+        if (statisticsTracker != null) statisticsTracker.registerQuery(curSnippet.get().getSql(), duration);
         start.remove();
-        sqlString.remove();
+        curSnippet.remove();
     }
 
     @Override public void onAfterQueryIteration (int numRows) {
@@ -59,42 +59,46 @@ public class LoggingListener implements SqlEngineEventListener {
 
     @Override public void onBeforeInsert (SqlSnippet sql, Class<?> pkCls, AVector<String> columnNames) {
         start.set(Instant.now());
-        sqlString.set(sql.getSql());
+        curSnippet.set(sql);
         log.debug("executing insert {}, mapping generated PK values from columns {} as {}", sql, columnNames.mkString("[", ",", "]"), pkCls);
     }
 
     @Override public void onAfterInsert (Object result) {
         final long duration = start.get().until(Instant.now(), ChronoUnit.MILLIS);
         log.debug("finished inserting, took {}ms", duration);
-        if (statisticsTracker != null) statisticsTracker.registerInsert(sqlString.get(), duration);
+        if (statisticsTracker != null) statisticsTracker.registerInsert(curSnippet.get().getSql(), duration);
         start.remove();
-        sqlString.remove();
+        curSnippet.remove();
     }
 
     @Override public void onBeforeUpdate (SqlSnippet sql) {
         start.set(Instant.now());
-        sqlString.set(sql.getSql());
+        curSnippet.set(sql);
         log.debug("executing update {}", sql);
     }
 
-    @Override public void onAfterUpdate (int result) {
+    @Override public void onAfterUpdate (long result) {
         final long duration = start.get().until(Instant.now(), ChronoUnit.MILLIS);
         log.debug("finished updating, took {}ms", duration);
-        if (statisticsTracker != null) statisticsTracker.registerUpdate(sqlString.get(), duration);
+        if (statisticsTracker != null) statisticsTracker.registerUpdate(curSnippet.get().getSql(), duration);
         start.remove();
-        sqlString.remove();
+        curSnippet.remove();
     }
 
     @Override public void onFailed (Throwable th) {
         final Instant startInstant = start.get();
 
         if (startInstant != null) {
-            final long duration = start.get().until(Instant.now(), ChronoUnit.MILLIS);
-            log.debug("failed SQL after " + duration + "ms", th);
+            final long durationMillis = start.get().until(Instant.now(), ChronoUnit.MILLIS);
+            logFailed(th, curSnippet.get(), durationMillis);
             //TODO add to statistics?
         }
         start.remove();
-        sqlString.remove();
+        curSnippet.remove();
+    }
+
+    protected void logFailed(Throwable th, SqlSnippet snippet, long durationMillis) {
+        log.debug("failed SQL after " + durationMillis + "ms: " + snippet.getSql(), th);
     }
 
     public SqlStatistics getStatistics () {

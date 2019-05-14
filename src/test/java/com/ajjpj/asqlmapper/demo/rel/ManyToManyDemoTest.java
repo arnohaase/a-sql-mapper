@@ -4,11 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.SQLException;
 
-import com.ajjpj.acollections.ASet;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import com.ajjpj.acollections.AList;
+import com.ajjpj.acollections.ASet;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlMapperBuilder;
 import com.ajjpj.asqlmapper.core.SqlEngine;
@@ -16,6 +13,9 @@ import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedToManyProperty;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ManyToManyDemoTest extends AbstractDatabaseTest {
     private SqlMapper mapper;
@@ -56,15 +56,15 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest {
         final long addrId32 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street32", "city32").executeSingle();
         final long addrId33 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street33", "city33").executeSingle();
 
-        mapper.engine().execute("insert into person_address (person_id, address_id) values(?,?)", personId1, addrId11);
-        mapper.engine().execute("insert into person_address (person_id, address_id) values(?,?)", personId1, addrId12);
-        mapper.engine().execute("insert into person_address (person_id, address_id) values(?,?)", personId1, addrId13);
-        mapper.engine().execute("insert into person_address (person_id, address_id) values(?,?)", personId2, addrId21);
-        mapper.engine().execute("insert into person_address (person_id, address_id) values(?,?)", personId2, addrId22);
-        mapper.engine().execute("insert into person_address (person_id, address_id) values(?,?)", personId2, addrId23);
-        mapper.engine().execute("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId31);
-        mapper.engine().execute("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId32);
-        mapper.engine().execute("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId33);
+        mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId1, addrId11);
+        mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId1, addrId12);
+        mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId1, addrId13);
+        mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId2, addrId21);
+        mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId2, addrId22);
+        mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId2, addrId23);
+        mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId31);
+        mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId32);
+        mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId3, addrId33);
 
         final SqlEngine engine = mapper.engine();
 

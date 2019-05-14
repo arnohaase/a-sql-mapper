@@ -122,7 +122,7 @@ public class SqlMapper {
                 return result.build();
             }
             else {
-                sqlEngine.update(builder.build()).execute(conn);
+                sqlEngine.executeUpdate(conn, builder.build());
                 return AVector.from(os);
             }
         });
@@ -158,7 +158,7 @@ public class SqlMapper {
                 first=false;
             }
 
-            sqlEngine.update(builder.build()).execute(conn);
+            sqlEngine.executeUpdate(conn, builder.build());
             return result.build();
         });
     }
@@ -206,7 +206,7 @@ public class SqlMapper {
 
             final SqlSnippet insertStmt = insertStatement(beanMapping, beanWithPk, true);
 
-            sqlEngine.update(insertStmt).execute(conn);
+            sqlEngine.executeUpdate(conn, insertStmt);
             //noinspection unchecked
             return (T) beanWithPk;
         });
@@ -230,7 +230,7 @@ public class SqlMapper {
                     sql("WHERE " + beanMapping.pkProperty().columnName() + "=?", beanMapping.pkProperty().get(bean))
             );
 
-            return sqlEngine.update(stmt).execute(conn) == 1;
+            return sqlEngine.executeUpdate(conn, stmt) == 1;
         });
     }
 
@@ -242,7 +242,7 @@ public class SqlMapper {
         final BeanProperty pkProperty = beanMapping.pkProperty();
 
         return executeUnchecked(() ->
-            sqlEngine.update("DELETE FROM " + beanMapping.tableName() + " WHERE " + pkProperty.columnName() + "=?", pkProperty.get(bean)).execute(conn) == 1
+            sqlEngine.executeUpdate(conn, "DELETE FROM " + beanMapping.tableName() + " WHERE " + pkProperty.columnName() + "=?", pkProperty.get(bean)) == 1
         );
     }
     public boolean delete(Class<?> beanType, Object pk) {
@@ -253,7 +253,7 @@ public class SqlMapper {
         final BeanProperty pkProperty = beanMapping.pkProperty();
 
         return executeUnchecked(() ->
-                sqlEngine.update("DELETE FROM " + beanMapping.tableName() + " WHERE " + pkProperty.columnName() + "=?", pk).execute(conn) == 1
+                sqlEngine.executeUpdate(conn, "DELETE FROM " + beanMapping.tableName() + " WHERE " + pkProperty.columnName() + "=?", pk) == 1
         );
     }
 
@@ -289,7 +289,7 @@ public class SqlMapper {
         builder.append("WHERE " + pkProperty.columnName() + "=?", pk);
 
         return executeUnchecked(() ->
-            sqlEngine.update(builder.build()).execute(conn) == 1
+            sqlEngine.executeUpdate(conn, builder.build()) == 1
         );
     }
 }
