@@ -2,17 +2,8 @@ todo
 ----
 * Setup / initialization: builder with "guessing" defaults
 * Java Bean support
-* Tx Support / Thread Local, ...
 * unit tests
 * javadoc
-
-* Update Batching
-* to one -> FK
-* test with Lombok
-* to-one, to-many: annotations
-
-* spec, annotations, defaults
-  * --> strategy with default implementation
 
 * comprehensive tests
 
@@ -36,7 +27,6 @@ todo
 * documentation
 
 * "derived" columns -> ?
-* generify ProvidedValues?
 
 * SQL snippets
   * "query by example": fields -> optional -> and
