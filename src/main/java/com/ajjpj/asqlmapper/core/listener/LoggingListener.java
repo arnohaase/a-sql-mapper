@@ -85,6 +85,18 @@ public class LoggingListener implements SqlEngineEventListener {
         curSnippet.remove();
     }
 
+    @Override public void onBeforeBatchUpdate(String sql, int size) {
+        start.set(Instant.now());
+        curSnippet.set(SqlSnippet.sql(sql));
+        log.debug("executing batch update {} ({} batch items)", sql, size);
+    }
+    @Override public void onAfterBatchUpdate() {
+        final long duration = start.get().until(Instant.now(), ChronoUnit.MILLIS);
+        log.debug("finished batch update, took {}ms", duration);
+        if (statisticsTracker != null) statisticsTracker.registerUpdate(curSnippet.get().getSql(), duration);
+        start.remove();
+        curSnippet.remove();
+    }
     @Override public void onFailed (Throwable th) {
         final Instant startInstant = start.get();
 

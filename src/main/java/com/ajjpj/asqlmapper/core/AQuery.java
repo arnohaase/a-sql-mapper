@@ -12,6 +12,14 @@ import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
  * represents a SELECT statement
  */
 public interface AQuery<T> {
+    /**
+     * This method adds values to the result that do not come from this query but from an external source,
+     * hence the name 'injected'. One typical source of injected properties is separate queries for to-one
+     * or to-many queries; {@link com.ajjpj.asqlmapper.mapper.SqlMapper} has methods to create them
+     * conveniently ({@link com.ajjpj.asqlmapper.mapper.SqlMapper#toOne(String)},
+     * {@link com.ajjpj.asqlmapper.mapper.SqlMapper#oneToMany(String)},
+     * {@link com.ajjpj.asqlmapper.mapper.SqlMapper#manyToMany(String)}).
+     */
     AQuery<T> withInjectedProperty(InjectedProperty injectedProperty);
 
     T single(Connection conn);

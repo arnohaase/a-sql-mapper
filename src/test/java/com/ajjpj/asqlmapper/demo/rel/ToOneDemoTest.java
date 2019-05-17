@@ -70,7 +70,7 @@ class ToOneDemoTest extends AbstractDatabaseTest {
 
         {
             final AList<PersonWithAddress> persons = engine
-                    .query(PersonWithAddress.class, "select * from person where id in(?,?) order by id asc", 1, 2)
+                    .query(PersonWithAddress.class, "select * from person where id in (?,?) order by id asc", 1, 2)
                     .withInjectedProperty(mapper.toOne("address"))
                     .list();
 

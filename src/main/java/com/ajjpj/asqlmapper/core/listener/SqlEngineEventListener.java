@@ -18,6 +18,10 @@ public interface SqlEngineEventListener {
     }
     default void onAfterUpdate(long result) {
     }
+    default void onBeforeBatchUpdate(String sql, int size) {
+    }
+    default void onAfterBatchUpdate() {
+    }
 
     default void onFailed(Throwable th) {
     }

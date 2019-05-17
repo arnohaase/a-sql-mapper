@@ -8,10 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -54,6 +51,10 @@ public class AQueryImpl<T> implements AQuery<T> {
     }
 
     @Override public AQuery<T> withInjectedProperty (InjectedProperty injectedProperty) {
+        if (injectedProperties.exists(p -> p.propertyName().equals(injectedProperty.propertyName()))) {
+            throw new IllegalArgumentException("attempted to add a second injected property with name " + injectedProperty.propertyName());
+        }
+
         return new AQueryImpl<>(rowClass, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties.append(injectedProperty));
     }
 
@@ -65,7 +66,7 @@ public class AQueryImpl<T> implements AQuery<T> {
 
     @Override public T single (Connection conn) {
         return doQuery(conn, rs -> executeUnchecked(() -> {
-            if (!rs.next()) throw new IllegalStateException("no result");
+            if (!rs.next()) throw new NoSuchElementException("no result");
             final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs, false);
             final T result = doExtract(conn, new LiveSqlRow(primTypes, rs), memento, false, injectedPropertyMementos(conn));
             if (rs.next()) throw new IllegalStateException("more than one result row");

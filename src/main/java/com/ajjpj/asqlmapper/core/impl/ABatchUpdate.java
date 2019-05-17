@@ -65,7 +65,7 @@ public class ABatchUpdate {
     }
 
     private <T> T doExecute(Connection conn, PsExecutor<T> executor) {
-//TODO        listeners.forEach(l -> l.onBeforeUpdate(sql));
+        listeners.forEach(l -> l.onBeforeBatchUpdate(sql, params.size()));
         try {
             final PreparedStatement ps = conn.prepareStatement(sql);
             try {
@@ -76,7 +76,7 @@ public class ABatchUpdate {
 
                 final T result = executor.execute(ps);
 
-//TODO                listeners.reverseIterator().forEachRemaining(l -> l.onAfterUpdate(((Number)result).longValue()));
+                listeners.reverseIterator().forEachRemaining(SqlEngineEventListener::onAfterBatchUpdate);
                 return result;
             }
             finally {
@@ -84,7 +84,7 @@ public class ABatchUpdate {
             }
         }
         catch (Throwable th) {
-//TODO            listeners.reverseIterator().forEachRemaining(l -> l.onFailed(th));
+            listeners.reverseIterator().forEachRemaining(l -> l.onFailed(th));
             AUnchecker.throwUnchecked(th);
             return null;  // for the compiler
         }
