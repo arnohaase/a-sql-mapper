@@ -1,47 +1,46 @@
 package com.ajjpj.asqlmapper.mapper.beans;
 
-import java.util.Map;
-
 import com.ajjpj.acollections.ACollection;
-import com.ajjpj.acollections.AMap;
+import com.ajjpj.acollections.AList;
 import com.ajjpj.asqlmapper.javabeans.BeanMetaData;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.primarykey.PkStrategy;
-import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 import com.ajjpj.asqlmapper.mapper.schema.TableMetaData;
-
 
 public class BeanMapping {
     private final BeanMetaData beanMetaData;
     private final TableMetaData tableMetaData;
     private final PkStrategy pkStrategy;
 
-    private final AMap<BeanProperty, ColumnMetaData> mappedProperties;
-    private final AMap<BeanProperty, ColumnMetaData> mappedPropertiesWithoutPk;
+    private final AList<String> mappedProperties;
+    private final AList<String> mappedPropertiesWithoutPk;
 
     private BeanProperty pkProperty;
 
-    public BeanMapping (BeanMetaData beanMetaData, TableMetaData tableMetaData, PkStrategy pkStrategy,
-                        AMap<BeanProperty, ColumnMetaData> mappedProperties) {
+    public BeanMapping(BeanMetaData beanMetaData, TableMetaData tableMetaData, PkStrategy pkStrategy) {
         this.beanMetaData = beanMetaData;
         this.tableMetaData = tableMetaData;
         this.pkStrategy = pkStrategy;
-        this.mappedProperties = mappedProperties;
-        this.mappedPropertiesWithoutPk = mappedProperties.filterNot(e -> e.getValue().isPrimaryKey());
+        this.mappedProperties = beanMetaData.beanProperties().values()
+                .filter(p -> tableMetaData.findColByName(p.columnName()).isDefined())
+                .map(BeanProperty::name)
+                .toVector()
+                .sorted(); // sort to ensure a well-defined ordering across restarts / across JVMs
 
-        final ACollection<BeanProperty> pks = mappedProperties
-                .filter(p -> p.getValue().isPrimaryKey())
-                .map(Map.Entry::getKey)
-                .toVector();
-        switch(pks.size()) {
+        final ACollection<String> pks = mappedProperties.filter(p -> tableMetaData.findColByName(beanProperty(p).columnName()).get().isPrimaryKey());
+        switch (pks.size()) {
             case 0:
                 throw new IllegalArgumentException("table " + tableName() + " associated with " + beanMetaData.beanType() + " has no mapped primary key");
             case 1:
-                this.pkProperty = pks.head();
+                this.pkProperty = beanProperty(pks.head());
                 break;
             default:
-                throw new IllegalArgumentException("table " + tableName() + " associated with " + beanMetaData.beanType() + " has a primary key consisting of more than one column: " + pks);
+                throw new IllegalArgumentException(
+                        "table " + tableName() + " associated with " + beanMetaData.beanType() + " has a primary key consisting of more than one column: " +
+                                pks);
         }
+
+        this.mappedPropertiesWithoutPk = mappedProperties.filterNot(p -> p.equals(pkProperty.name()));
     }
 
     public String tableName() {
@@ -60,12 +59,15 @@ public class BeanMapping {
         return this.pkStrategy;
     }
 
-    public AMap<BeanProperty, ColumnMetaData> mappedProperties () {
+    public AList<String> mappedProperties() {
         return mappedProperties;
     }
-
-    public AMap<BeanProperty, ColumnMetaData> mappedPropertiesWithoutPk () {
+    public AList<String> mappedPropertiesWithoutPk() {
         return mappedPropertiesWithoutPk;
+    }
+
+    public BeanProperty beanProperty(String propertyName) {
+        return beanMetaData.beanProperties().get(propertyName);
     }
 
     public BeanProperty pkProperty() {

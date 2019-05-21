@@ -143,11 +143,11 @@ public class SqlMapper {
         if (first) {
             builder.append(insertStatement(beanMapping, o, includePkColumn));
         } else {
-            final AMap<BeanProperty, ColumnMetaData> columns = includePkColumn ? beanMapping.mappedProperties() : beanMapping.mappedPropertiesWithoutPk();
+            final AList<String> properties = includePkColumn ? beanMapping.mappedProperties() : beanMapping.mappedPropertiesWithoutPk();
 
             builder
                     .append(",(")
-                    .append(params(columns.keySet().map(p -> p.get(o))))
+                    .append(params(properties.map(p -> beanMapping.beanProperty(p).get(o))))
                     .append(")")
             ;
         }
@@ -196,10 +196,10 @@ public class SqlMapper {
         });
     }
     private SqlSnippet insertStatement(BeanMapping beanMapping, Object bean, boolean withPk) {
-        final AMap<BeanProperty, ColumnMetaData> columns = withPk ? beanMapping.mappedProperties() : beanMapping.mappedPropertiesWithoutPk();
+        final AList<String> properties = withPk ? beanMapping.mappedProperties() : beanMapping.mappedPropertiesWithoutPk();
 
-        final SqlSnippet into = commaSeparated(columns.keySet().map(p -> sql(p.columnName())));
-        final SqlSnippet values = params(columns.keySet().map(p -> p.get(bean)));
+        final SqlSnippet into = commaSeparated(properties.map(p -> sql(beanMapping.beanProperty(p).columnName())));
+        final SqlSnippet values = params(properties.map(p -> beanMapping.beanProperty(p).get(bean)));
 
         return concat(
                 sql("INSERT INTO " + beanMapping.tableName() + "("),
@@ -230,8 +230,8 @@ public class SqlMapper {
         final BeanMapping beanMapping = mappingRegistry.getBeanMapping(conn, bean.getClass());
 
         final SqlSnippet updates = commaSeparated(
-                beanMapping.mappedPropertiesWithoutPk().keySet()
-                        .map(p -> sql(p.columnName() + "=?", p.get(bean)))
+                beanMapping.mappedPropertiesWithoutPk()
+                        .map(p -> sql(beanMapping.beanProperty(p).columnName() + "=?", beanMapping.beanProperty(p).get(bean)))
         );
 
         return concat(
@@ -304,12 +304,12 @@ public class SqlMapper {
         builder.append("UPDATE " + beanMapping.tableName() + " SET");
 
         for (String propName : newValues.keySet()) {
-            final AOption<BeanProperty> optProp = beanMapping.mappedProperties().keySet().find(p -> p.name().equals(propName));
+            final AOption<String> optProp = beanMapping.mappedProperties().find(p -> p.equals(propName));
             if (optProp.isEmpty()) {
                 continue;
             }
 
-            final BeanProperty prop = optProp.get();
+            final BeanProperty prop = beanMapping.beanProperty(optProp.get());
 
             if (first) {
                 first = false;

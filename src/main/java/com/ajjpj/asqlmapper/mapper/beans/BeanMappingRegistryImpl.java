@@ -69,12 +69,10 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
                     final BeanMetaData beanMetaData = metaDataRegistry.getBeanMetaData(beanType);
 
                     final String tableName = tableNameExtractor.tableNameForBean(conn, beanType, schemaRegistry);
-                    final AOption<TableMetaData> optTableMetaData = schemaRegistry.getTableMetaData(conn, tableName);
-                    if (optTableMetaData.isEmpty()) {
-                        throw new IllegalArgumentException(beanType + " is associated with table " + tableName + " which does not exist");
-                    }
 
-                    final TableMetaData tableMetaData = optTableMetaData.get();
+                    final TableMetaData tableMetaData = schemaRegistry
+                            .getTableMetaData(conn, tableName)
+                            .orElseThrow(() -> new IllegalArgumentException(beanType + " is associated with table " + tableName + " which does not exist"));
 
                     final PkStrategy pkStrategy = pkStrategyDecider.pkStrategy(conn, beanType, tableMetaData);
 
@@ -90,8 +88,7 @@ public class BeanMappingRegistryImpl implements BeanMappingRegistry {
                     return new BeanMapping(
                             beanMetaData,
                             tableMetaData,
-                            pkStrategy,
-                            mappedProperties);
+                            pkStrategy);
                 })
         );
     }
