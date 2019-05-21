@@ -6,10 +6,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.ajjpj.acollections.ASet;
@@ -111,25 +113,34 @@ public class BeanExtractorUtils {
                 .orElse(propertyName);
 
         try {
-            final Method result = beanClass.getMethod(mtdName, propertyType);
-            if (!beanClass.isAssignableFrom(result.getReturnType())) {
-                log.warn("method " + result + " is a candidate for a 'wither' method, but its return type does not match bean type " + beanClass);
-                return Optional.empty();
-            }
+            final List<Method> candidates = Arrays.stream(beanClass.getMethods())
+                    .filter(m -> m.getName().equals(mtdName) && m.getParameterCount() == 1 && m.getParameterTypes()[0].isAssignableFrom(propertyType))
+                    .collect(Collectors.toList());
 
-            if (Modifier.isStatic(result.getModifiers())) {
-                log.warn("method " + result + " is a candidate for a 'wither' method, but it is static");
-                return Optional.empty();
-            }
+            switch(candidates.size()) {
+                case 0:
+                    return Optional.empty();
+                case 1:
+                    final Method result = candidates.get(0);
+                    if (!beanClass.isAssignableFrom(result.getReturnType())) {
+                        log.warn("method " + result + " is a candidate for a 'wither' method, but its return type does not match bean type " + beanClass);
+                        return Optional.empty();
+                    }
 
-            return Optional.of(result);
-        }
-        catch (NoSuchMethodException exc) {
-            return Optional.empty();
+                    if (Modifier.isStatic(result.getModifiers())) {
+                        log.warn("method " + result + " is a candidate for a 'wither' method, but it is static");
+                        return Optional.empty();
+                    }
+
+                    return Optional.of(result);
+                default:
+                    log.warn("more than one candidate 'wither' method " + propertyName + " on class " + beanClass.getName() + ": " + candidates);
+                    return Optional.empty();
+            }
         }
         catch (Exception exc) {
             AUnchecker.throwUnchecked(exc);
-            return Optional.empty(); // fot the compiler
+            return Optional.empty(); // for the compiler
         }
     }
 
