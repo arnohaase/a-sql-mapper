@@ -10,7 +10,7 @@ import com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper;
 public abstract class AnnotationBasedColumnNameExtractor implements ColumnNameExtractor {
     @Override
     public String columnNameFor(Class<?> beanType, Method getter, String propertyName) {
-        return columnNameFromAnnotation(beanType, getter).orElse(propertyName);
+        return columnNameFromAnnotation(beanType, getter).orElse(propertyNameToColumnName(beanType, propertyName));
     }
 
     protected abstract String propertyNameToColumnName(Class<?> beanType, String propertyName);

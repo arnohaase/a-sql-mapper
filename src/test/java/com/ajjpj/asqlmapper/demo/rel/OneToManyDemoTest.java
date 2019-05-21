@@ -90,5 +90,16 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
             assertEquals(ASet.of(Address.of("street13", "city13"), Address.of("street12", "city12"), Address.of("street11", "city11")), persons.get(0).addresses().toSet());
             assertEquals(ASet.of(Address.of("street23", "city23"), Address.of("street22", "city22"), Address.of("street21", "city21")), persons.get(1).addresses().toSet());
         }
+
+        {
+            final AList<PersonWithAddresses> persons = mapper
+                    .query(PersonWithAddresses.class, "select * from person where id in(?,?) order by id asc", 1, 2)
+                    .withOneToMany("addresses")
+                    .list();
+
+            assertEquals(2, persons.size());
+            assertEquals(ASet.of(Address.of("street13", "city13"), Address.of("street12", "city12"), Address.of("street11", "city11")), persons.get(0).addresses().toSet());
+            assertEquals(ASet.of(Address.of("street23", "city23"), Address.of("street22", "city22"), Address.of("street21", "city21")), persons.get(1).addresses().toSet());
+        }
     }
 }

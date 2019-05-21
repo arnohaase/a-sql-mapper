@@ -79,5 +79,17 @@ class ToOneDemoTest extends AbstractDatabaseTest {
                     PersonWithAddress.of(personId2, "Arno2", Address.of("s2", "c2"))
             ), persons);
         }
+
+        {
+            final AList<PersonWithAddress> persons = mapper
+                    .query(PersonWithAddress.class, "select * from person where id in (?,?) order by id asc", 1, 2)
+                    .withToOne("address")
+                    .list();
+
+            assertEquals(AList.of(
+                    PersonWithAddress.of(personId1, "Arno1", Address.of("s1", "c1")),
+                    PersonWithAddress.of(personId2, "Arno2", Address.of("s2", "c2"))
+            ), persons);
+        }
     }
 }

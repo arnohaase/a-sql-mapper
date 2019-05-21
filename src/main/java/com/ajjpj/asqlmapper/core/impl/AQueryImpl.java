@@ -50,12 +50,18 @@ public class AQueryImpl<T> implements AQuery<T> {
         this.injectedProperties = injectedProperties;
     }
 
+    protected AQueryImpl<T> build(Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, RowExtractor rowExtractor,
+                      AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier, AVector<InjectedProperty> injectedProperties) {
+        return new AQueryImpl<>(cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties);
+    }
+
+
     @Override public AQuery<T> withInjectedProperty (InjectedProperty injectedProperty) {
         if (injectedProperties.exists(p -> p.propertyName().equals(injectedProperty.propertyName()))) {
             throw new IllegalArgumentException("attempted to add a second injected property with name " + injectedProperty.propertyName());
         }
 
-        return new AQueryImpl<>(rowClass, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties.append(injectedProperty));
+        return build(rowClass, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties.append(injectedProperty));
     }
 
     @Override public T single () {

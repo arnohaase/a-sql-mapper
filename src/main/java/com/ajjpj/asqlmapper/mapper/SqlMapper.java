@@ -18,6 +18,7 @@ import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlBuilder;
 import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
+import com.ajjpj.asqlmapper.core.impl.AQueryImpl;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMapping;
@@ -49,6 +50,10 @@ public class SqlMapper {
         return sqlEngine;
     }
 
+    public BeanMappingRegistry getBeanMappingRegistry() {
+        return mappingRegistry;
+    }
+
     public SqlSnippet tableName(Class<?> beanType) {
         return tableName(engine().defaultConnection(), beanType);
     }
@@ -56,11 +61,13 @@ public class SqlMapper {
         return sql(mappingRegistry.getBeanMapping(conn, beanType).tableName());
     }
 
-    public <T> AQuery<T> query(Class<T> beanType, SqlSnippet sql, SqlSnippet... moreSql) {
-        return engine().query(beanType, sql, moreSql);
+    public <T> AMapperQuery<T> query(Class<T> beanType, SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AMapperQueryImpl<>(this, beanType, concat(sql, moreSql), engine().primitiveTypeRegistry(), engine().rowExtractorFor(beanType),
+                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty());
     }
-    public <T> AQuery<T> query(Class<T> beanType, String sql, Object... params) {
-        return engine().query(beanType, sql, params);
+    public <T> AMapperQuery<T> query(Class<T> beanType, String sql, Object... params) {
+        return new AMapperQueryImpl<>(this, beanType, sql(sql, params), engine().primitiveTypeRegistry(), engine().rowExtractorFor(beanType),
+                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty());
     }
 
     public MappedOneToMany oneToMany(String propertyName) {
