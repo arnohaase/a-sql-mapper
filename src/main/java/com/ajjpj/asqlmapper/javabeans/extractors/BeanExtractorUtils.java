@@ -1,6 +1,7 @@
 package com.ajjpj.asqlmapper.javabeans.extractors;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
+import static com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper.unchecked;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -37,6 +38,7 @@ public class BeanExtractorUtils {
         return Arrays.stream(beanClass.getMethods())
                 .filter(m -> m.getName().startsWith("get") &&
                         !specialMethodNames.contains(m.getName()) &&
+                        !m.isSynthetic() &&
                         m.getParameterCount() == 0 &&
                         !Modifier.isStatic(m.getModifiers()) &&
                         m.getName().length() > 3);
@@ -46,6 +48,7 @@ public class BeanExtractorUtils {
         return Arrays.stream(beanClass.getMethods())
                 .filter(m -> !specialMethodNames.contains(m.getName()) &&
                         !Modifier.isStatic(m.getModifiers()) &&
+                        !m.isSynthetic() &&
                         m.getParameterCount() == 0);
     }
 
@@ -112,12 +115,12 @@ public class BeanExtractorUtils {
                 .map(x -> x + toFirstUpper(propertyName))
                 .orElse(propertyName);
 
-        try {
+        return unchecked(() -> {
             final List<Method> candidates = Arrays.stream(beanClass.getMethods())
                     .filter(m -> m.getName().equals(mtdName) && m.getParameterCount() == 1 && m.getParameterTypes()[0].isAssignableFrom(propertyType))
                     .collect(Collectors.toList());
 
-            switch(candidates.size()) {
+            switch (candidates.size()) {
                 case 0:
                     return Optional.empty();
                 case 1:
@@ -137,11 +140,7 @@ public class BeanExtractorUtils {
                     log.warn("more than one candidate 'wither' method " + propertyName + " on class " + beanClass.getName() + ": " + candidates);
                     return Optional.empty();
             }
-        }
-        catch (Exception exc) {
-            AUnchecker.throwUnchecked(exc);
-            return Optional.empty(); // for the compiler
-        }
+        });
     }
 
     public static Optional<Field> propField(Class<?> beanType, String propertyName) {
@@ -166,7 +165,7 @@ public class BeanExtractorUtils {
                 throw new IllegalArgumentException("method " + mtd + " is a candidate for a builder method, but it is not static");
             }
 
-            return () -> executeUnchecked(() -> mtd.invoke(null));
+            return () -> unchecked(() -> mtd.invoke(null));
         });
     }
 
@@ -184,8 +183,7 @@ public class BeanExtractorUtils {
                     throw new IllegalArgumentException("builder finalizer method " + mtd + " is static");
                 }
 
-                return builder -> executeUnchecked(() -> mtd.invoke(builder));
-                //TODO InvocationTargetException
+                return builder -> unchecked(() -> mtd.invoke(builder));
             }
             catch (NoSuchMethodException exc) {
                 throw new IllegalArgumentException(

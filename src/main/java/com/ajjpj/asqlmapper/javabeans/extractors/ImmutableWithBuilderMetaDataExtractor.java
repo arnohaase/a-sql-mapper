@@ -67,13 +67,14 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
                             .wither(beanType, Optional.ofNullable(setterPrefix), getter.getName(), getter.getReturnType());
                     final Method builderSetter = BeanExtractorUtils
                             .wither(builderClass, Optional.empty(), getter.getName(), getter.getReturnType())
-                            .orElseThrow(() -> new IllegalArgumentException("no setter on builder " + builderClass + " for property " + getter.getName()));
+                            .orElseThrow(() -> new IllegalStateException("no setter on builder " + builderClass + " for property " + getter.getName()));
 
                     final String columnName = columnNameExtractor.columnNameFor(beanType, getter, getter.getName());
 
                     if (!BeanExtractorUtils.hasIgnoreAnnotation(beanType, getter, Optional.empty())) {
-                        result.add(new BeanProperty(getter.getReturnType(), getter.getGenericReturnType(), getter.getName(), columnName, getter, setter, true,
-                                Optional.empty(), builderSetter, true));
+                        result.add(
+                                new BeanProperty(beanType, builderSetter.getParameterTypes()[0], getter.getGenericReturnType(), getter.getName(), columnName, getter, setter,
+                                        true, Optional.empty(), builderSetter, true));
                     }
                 });
 

@@ -81,7 +81,7 @@ public class LombokWithBuilderMetaDataExtractor implements BeanMetaDataExtractor
                         final String columnName = columnNameExtractor.columnNameFor(beanType, getter, propertyName);
 
                         if (!BeanExtractorUtils.hasIgnoreAnnotation(beanType, getter, field)) {
-                            result.add(new BeanProperty(propertyType, getter.getGenericReturnType(), propertyName, columnName, getter, setter, true,
+                            result.add(new BeanProperty(beanType, propertyType, builderSetter.getParameterTypes()[0], propertyName, columnName, getter, setter, true,
                                     field, builderSetter, true));
                         }
                     });

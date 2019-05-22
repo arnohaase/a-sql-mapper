@@ -8,8 +8,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
+import com.ajjpj.acollections.ASet;
+import com.ajjpj.acollections.util.AOption;
+import com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper;
+
 public class BeanProperty {
-    private final Class<?> propClass;
+    private final Class<?> beanClass;
+    private final Class<?> settablePropClass;
     private final Type propType;
     private final String name;
     private final String columnName;
@@ -22,12 +27,13 @@ public class BeanProperty {
     private final Method builderSetterMethod;
     private final boolean builderSetterReturnsBean;
 
-    public BeanProperty(Class<?> propClass, Type propType,
+    public BeanProperty(Class<?> beanClass, Class<?> settablePropClass, Type propType,
                         String name, String columnName, Method getterMethod, Optional<Method> setterMethod,
                         boolean setterReturnsBean,
                         Optional<Field> field,
                         Method builderSetterMethod, boolean builderSetterReturnsBean) {
-        this.propClass = propClass;
+        this.beanClass = beanClass;
+        this.settablePropClass = settablePropClass;
         this.propType = propType;
         this.name = name;
         this.columnName = columnName;
@@ -40,7 +46,7 @@ public class BeanProperty {
     }
 
     public Class<?> propClass() {
-        return propClass;
+        return settablePropClass;
     }
     public Type propType() {
         return propType;
@@ -51,11 +57,29 @@ public class BeanProperty {
 
     public <T extends Annotation> Optional<T> getAnnotation(Class<T> annotationClass) {
         T mtdAnnotation = getterMethod.getAnnotation(annotationClass);
-        if (mtdAnnotation != null || !field.isPresent()) {
-            return Optional.ofNullable(mtdAnnotation);
+        if (mtdAnnotation != null) {
+            return Optional.of(mtdAnnotation);
+        }
+        if (field.isPresent()) {
+            T fieldAnnotation = field.get().getAnnotation(annotationClass);
+            if (fieldAnnotation != null) {
+                return Optional.of(fieldAnnotation);
+            }
         }
 
-        return Optional.ofNullable(field.get().getAnnotation(annotationClass));
+        final ASet<T> superAnnotations = BeanReflectionHelper
+                .allSuperMethods(beanClass, getterMethod)
+                .flatMap(m -> AOption.of(m.getAnnotation(annotationClass)));
+
+        switch (superAnnotations.size()) {
+            case 0:
+                return Optional.empty();
+            case 1:
+                return Optional.of(superAnnotations.head());
+            default:
+                throw new IllegalStateException("no annotation " + annotationClass.getName() + " on method " + getterMethod +
+                        " but on more than one super methods - this is not supported");
+        }
     }
 
     public Object get(Object bean) {
@@ -64,7 +88,7 @@ public class BeanProperty {
 
     public Object set(Object bean, Object value) {
         final Method mtd = setterMethod
-                .orElseThrow(() -> new IllegalArgumentException("no setter for property " + name + " in bean " + getterMethod.getDeclaringClass().getName()));
+                .orElseThrow(() -> new IllegalStateException("no setter for property " + name + " in bean " + getterMethod.getDeclaringClass().getName()));
 
         return executeUnchecked(() -> {
             final Object result = mtd.invoke(bean, value);

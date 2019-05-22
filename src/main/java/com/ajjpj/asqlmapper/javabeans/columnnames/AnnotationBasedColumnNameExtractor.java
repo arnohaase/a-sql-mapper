@@ -20,7 +20,7 @@ public abstract class AnnotationBasedColumnNameExtractor implements ColumnNameEx
                 BeanReflectionHelper.allSuperMethods(beanType, mtd).flatMap(m -> AOption.of(m.getAnnotation(Column.class)).map(Column::value)).toSet();
         switch (all.size()) {
             case 0: return AOption.empty();
-            case 1: return AOption.of(propertyNameToColumnName(beanType, all.head()));
+            case 1: return AOption.of(all.head());
             default: throw new IllegalArgumentException("there are conflicting @Column annotations on overridden methods of " + mtd + " in " + beanType);
         }
     }

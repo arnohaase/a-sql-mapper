@@ -1,10 +1,14 @@
 package com.ajjpj.asqlmapper.mapper.util;
 
 import com.ajjpj.acollections.ASet;
+import com.ajjpj.acollections.util.AThrowingRunnable;
+import com.ajjpj.acollections.util.AUnchecker;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.concurrent.Callable;
 
 import static com.ajjpj.acollections.mutable.AMutableArrayWrapper.wrap;
 
@@ -52,5 +56,30 @@ public class BeanReflectionHelper {
             throw new IllegalArgumentException("element type " + elType + " is not a simple class - could not extract mapping information");
 
         return (Class<?>) elType;
+    }
+
+    public static <T> T unchecked(Callable<T> c) {
+        try {
+            return c.call();
+        }
+        catch(InvocationTargetException exc) {
+            AUnchecker.throwUnchecked(exc.getTargetException());
+        }
+        catch(Throwable exc) {
+            AUnchecker.throwUnchecked(exc);
+        }
+        return null; // for the compiler
+    }
+
+    public static void uncheckedVoid(AThrowingRunnable r) {
+        try {
+            r.run();
+        }
+        catch(InvocationTargetException exc) {
+            AUnchecker.throwUnchecked(exc.getTargetException());
+        }
+        catch(Throwable exc) {
+            AUnchecker.throwUnchecked(exc);
+        }
     }
 }

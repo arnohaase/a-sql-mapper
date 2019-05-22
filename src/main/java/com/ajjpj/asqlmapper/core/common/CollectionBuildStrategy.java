@@ -162,6 +162,8 @@ public interface CollectionBuildStrategy<T,B,C> {
     class Registry {
         private static final Map<Class<?>, CollectionBuildStrategy> registry = new ConcurrentHashMap<>();
         static {
+            registry.put(java.lang.Iterable.class, forJavaUtilList());
+            registry.put(java.util.Collection.class, forJavaUtilList());
             registry.put(java.util.List.class, forJavaUtilList());
             registry.put(java.util.ArrayList.class, forJavaUtilList());
 

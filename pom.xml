@@ -6,7 +6,7 @@
 
     <groupId>com.ajjpj.a-sql-mapper</groupId>
     <artifactId>a-sql-mapper</artifactId>
-    <version>0.9-pre8</version>
+    <version>0.9-pre9</version>
 
     <name>${project.artifactId}-${project.version}</name>
     <description>a-sql-mapper is a lightweight library for reading from and writing to relational databases, embracing SQL code and SQL's abstractions</description>

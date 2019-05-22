@@ -60,7 +60,7 @@ public class JavaBeansMetaDataExtractor implements BeanMetaDataExtractor {
                     final String columnName = columnNameExtractor.columnNameFor(beanType, getter, propertyName);
 
                     if (!BeanExtractorUtils.hasIgnoreAnnotation(beanType, getter, field)) {
-                        result.add(new BeanProperty(propertyType, getter.getGenericReturnType(), propertyName, columnName, getter, optSetter, false,
+                        result.add(new BeanProperty(beanType, propertyType, getter.getGenericReturnType(), propertyName, columnName, getter, optSetter, false,
                                 field, optSetter.get(), false));
                     }
                 });
