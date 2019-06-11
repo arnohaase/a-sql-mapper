@@ -1,8 +1,12 @@
 package com.ajjpj.asqlmapper.core;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import com.ajjpj.acollections.AIterator;
 import com.ajjpj.acollections.AList;
@@ -94,11 +98,31 @@ public class SqlSnippet {
         return result.build();
     }
 
-    public static SqlSnippet in(Iterable<SqlSnippet> elements) {
+    public static SqlSnippet inSnippets(Iterable<SqlSnippet> elements) {
         return combine(elements, sql("IN ("), sql(","), sql(")"));
     }
-    public static SqlSnippet inValues(Iterable<?> elements) {
-        return in(AVector.of(params(elements)));
+    public static SqlSnippet in(Iterable<?> elements) {
+        return inSnippets(AVector.of(params(elements)));
+    }
+
+    public static AList<SqlSnippet> chunkedIn(Iterable<?> elements) {
+        return chunkedIn(elements, 1000);
+    }
+    public static AList<SqlSnippet> chunkedIn(Iterable<?> elements, int maxChunkSize) {
+        final AVector.Builder<SqlSnippet> result = AVector.builder();
+
+        List<?> elList = StreamSupport.stream(elements.spliterator(), false).collect(Collectors.toCollection(ArrayList::new));
+        while(elList.size() > maxChunkSize) {
+            final List<?> l = elList.subList(0, maxChunkSize);
+            result.add(in(l));
+            elList = elList.subList(maxChunkSize, elList.size());
+        }
+
+        if(elList.size() > 0) {
+            result.add(in(elList));
+        }
+
+        return result.build();
     }
 
     public static SqlSnippet and(Iterable<SqlSnippet> elements) {
