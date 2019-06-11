@@ -224,6 +224,13 @@ public class SqlEngine {
     public AQuery<String> stringQuery(String sql, Object... params) {
         return stringQuery(SqlSnippet.sql(sql, params));
     }
+    public AQuery<UUID> uuidQuery(SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(UUID.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.UUID_EXTRACTOR, listeners, defaultConnectionSupplier,
+                AVector.empty());
+    }
+    public AQuery<UUID> uuidQuery(String sql, Object... params) {
+        return uuidQuery(SqlSnippet.sql(sql, params));
+    }
     public AQuery<Double> doubleQuery(SqlSnippet sql, SqlSnippet... moreSql) {
         return new AQueryImpl<>(Double.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.DOUBLE_EXTRACTOR, listeners, defaultConnectionSupplier,
                 AVector.empty());
