@@ -63,8 +63,13 @@ public class LombokWithBuilderMetaDataExtractor implements BeanMetaDataExtractor
                     .javaBeanGetters(beanType)
                     .forEach(getter -> {
                         getter.setAccessible(true);
-
                         final String propertyName = BeanExtractorUtils.javaBeanPropertyNameFor(getter);
+                        final Optional<Field> field = BeanExtractorUtils.propField(beanType, propertyName);
+
+                        if (BeanExtractorUtils.hasIgnoreAnnotation(beanType, getter, field)) {
+                            return;
+                        }
+
                         final Class<?> propertyType = getter.getReturnType();
 
                         final Optional<Method> setter = BeanExtractorUtils
@@ -76,14 +81,11 @@ public class LombokWithBuilderMetaDataExtractor implements BeanMetaDataExtractor
                                 .wither(builderClass, Optional.empty(), propertyName, getter.getReturnType())
                                 .orElseThrow(() -> new IllegalArgumentException("no setter on builder " + builderClass + " for property " + getter.getName()));
 
-                        final Optional<Field> field = BeanExtractorUtils.propField(beanType, propertyName);
 
                         final String columnName = columnNameExtractor.columnNameFor(beanType, getter, propertyName);
 
-                        if (!BeanExtractorUtils.hasIgnoreAnnotation(beanType, getter, field)) {
-                            result.add(new BeanProperty(beanType, propertyType, builderSetter.getParameterTypes()[0], propertyName, columnName, getter, setter, true,
-                                    field, builderSetter, true));
-                        }
+                        result.add(new BeanProperty(beanType, propertyType, builderSetter.getParameterTypes()[0], propertyName, columnName, getter, setter, true,
+                                field, builderSetter, true));
                     });
 
             return result.build();

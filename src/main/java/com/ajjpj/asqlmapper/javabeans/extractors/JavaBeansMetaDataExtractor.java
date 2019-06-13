@@ -4,7 +4,6 @@ import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -47,6 +46,11 @@ public class JavaBeansMetaDataExtractor implements BeanMetaDataExtractor {
                 .javaBeanGetters(beanType)
                 .forEach(getter -> {
                     final String propertyName = BeanExtractorUtils.javaBeanPropertyNameFor(getter);
+                    final Optional<Field> field = BeanExtractorUtils.propField(beanType, propertyName);
+                    if (BeanExtractorUtils.hasIgnoreAnnotation(beanType, getter, field)) {
+                        return;
+                    }
+
                     final Class<?> propertyType = getter.getReturnType();
 
                     final Optional<Method> optSetter = BeanExtractorUtils
@@ -56,13 +60,10 @@ public class JavaBeansMetaDataExtractor implements BeanMetaDataExtractor {
                         return;
                     }
 
-                    final Optional<Field> field = BeanExtractorUtils.propField(beanType, propertyName);
                     final String columnName = columnNameExtractor.columnNameFor(beanType, getter, propertyName);
 
-                    if (!BeanExtractorUtils.hasIgnoreAnnotation(beanType, getter, field)) {
-                        result.add(new BeanProperty(beanType, propertyType, getter.getGenericReturnType(), propertyName, columnName, getter, optSetter, false,
-                                field, optSetter.get(), false));
-                    }
+                    result.add(new BeanProperty(beanType, propertyType, getter.getGenericReturnType(), propertyName, columnName, getter, optSetter, false,
+                            field, optSetter.get(), false));
                 });
 
         return result.build();
