@@ -65,7 +65,7 @@ public class LoggingListener implements SqlEngineEventListener {
 
     @Override public void onAfterInsert (Object result) {
         final long duration = start.get().until(Instant.now(), ChronoUnit.MILLIS);
-        log.debug("finished inserting, took {}ms", duration);
+        log.debug("finished inserting (auto-generated PKs: {}), took {}ms", result, duration);
         if (statisticsTracker != null) statisticsTracker.registerInsert(curSnippet.get().getSql(), duration);
         start.remove();
         curSnippet.remove();
@@ -79,7 +79,7 @@ public class LoggingListener implements SqlEngineEventListener {
 
     @Override public void onAfterUpdate (long result) {
         final long duration = start.get().until(Instant.now(), ChronoUnit.MILLIS);
-        log.debug("finished updating, took {}ms", duration);
+        log.debug("finished updating ({} rows), took {}ms", result, duration);
         if (statisticsTracker != null) statisticsTracker.registerUpdate(curSnippet.get().getSql(), duration);
         start.remove();
         curSnippet.remove();
