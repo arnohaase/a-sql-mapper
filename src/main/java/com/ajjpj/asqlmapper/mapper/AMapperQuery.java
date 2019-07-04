@@ -1,10 +1,12 @@
 package com.ajjpj.asqlmapper.mapper;
 
 import com.ajjpj.asqlmapper.core.AQuery;
-import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
-import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
-
+import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
 
 public interface AMapperQuery<T> extends AQuery<T> {
-    AMapperQuery<T> withPropertyValues (String propName, ProvidedValues providedValues);
+    @Override AMapperQuery<T> withInjectedProperty(InjectedProperty injectedProperty);
+
+    AMapperQuery<T> withManyToMany(String propertyName);
+    AMapperQuery<T> withOneToMany(String propertyName);
+    AMapperQuery<T> withToOne(String propertyName);
 }

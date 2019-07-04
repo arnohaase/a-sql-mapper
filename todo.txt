@@ -1,19 +1,34 @@
 todo
 ----
+* Setup / initialization: builder with "guessing" defaults
+* Java Bean support
+* unit tests
+* javadoc
+
+* comprehensive tests
+
+* mapper queries mit snippets --> how to do this best?
+  * filter
+  * pagination
+  * order by
+  * ...
+
 * base
   * tuples
     * special handling, 'implicit' row extractor based on ptm
     * queries
     * for insert?
 
-* javadoc
-* logging
-* events: pre-query, post-query, pre-insert, post-insert, pre-update, post-update
-  * statistics (optional)
+* optimized 'isStreaming=true' implementation for Java Beans extractor
+
+* 'getter' convention based column name strategy
+
+* unit tests
+* documentation
+
+* "derived" columns -> ?
 
 * SQL snippets
-  * concat
-  * arithmetic: and, or, in, ...
   * "query by example": fields -> optional -> and
 
 * optimistic locking
@@ -21,14 +36,20 @@ todo
 
 * statement check against live database ("yolo mode")
 
+* i18n as String from to-many: generator / snippet / convenience in mapper?
+
 * mapping layer
-  * CRUD from bean
-    * register "default" table name for bean, overridable per operation
-  * mapping from / to bean (generated) --> JSON annotations
-
+  * Java bean support
   * "semi-active" record --> generic 'model' class that keeps track of changes?
-
   * annotation processor for JOINs / type safe query building?
+
+deploy
+------
+* increment version number in pom.xml
+* > mvn clean deploy
+* commit / push
+* > git tag {version}
+* > git push origin {version}
 
 done
 ----
@@ -36,6 +57,12 @@ done
   * query results as java.util.Stream
 * primitive type mapping / coercion
 * SqlRow --> detached wrapper around a result row
-* ASqlEngine
+* SqlEngine
   * immutable, 'canHandle' (2x), mutable cache, 'live' registration of handlers (copy on write)
   * factory methods for queries, inserts, updates
+* SqlMapper:
+  * insert / update / patch / delete
+  * to-many for queries (works for immutable beans)
+* events, listener
+  * statement logging
+  * statistics

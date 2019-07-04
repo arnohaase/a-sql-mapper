@@ -4,7 +4,12 @@ package com.ajjpj.asqlmapper.mapper;
 public interface DatabaseDialect {
     DatabaseDialect H2 = new H2Dialect();
     DatabaseDialect POSTGRESQL = new PostgresqlDialect();
+    DatabaseDialect ORACLE = new OracleDialect();
+    DatabaseDialect SQL_SERVER = new SqlServerDialect();
 
+    default String normalizeCatalogName(String catalogName) {
+        return catalogName;
+    }
     default String normalizeSchemaName(String schemaName) {
         return schemaName;
     }
@@ -13,16 +18,18 @@ public interface DatabaseDialect {
     }
 
     class PostgresqlDialect implements DatabaseDialect {
-        @Override public String normalizeSchemaName (String schemaName) {
-            return schemaName.toLowerCase();
-        }
+    }
 
-        @Override public String normalizeTableName (String tableName) {
-            return tableName; //TODO???
-        }
+    class OracleDialect implements DatabaseDialect {
+    }
+
+    class SqlServerDialect implements DatabaseDialect {
     }
 
     class H2Dialect implements DatabaseDialect {
+        @Override public String normalizeCatalogName (String catalogName) {
+            return catalogName.toUpperCase();
+        }
         @Override public String normalizeSchemaName (String schemaName) {
             return schemaName.toUpperCase();
         }

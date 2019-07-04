@@ -1,33 +1,45 @@
 package com.ajjpj.asqlmapper.mapper;
 
+import java.sql.Connection;
+import java.util.function.Supplier;
+
 import com.ajjpj.acollections.immutable.AVector;
+import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
+import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.impl.AQueryImpl;
+import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
 import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
-import com.ajjpj.asqlmapper.mapper.provided.ProvidedProperties;
-import com.ajjpj.asqlmapper.mapper.provided.ProvidedValues;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+public class AMapperQueryImpl<T> extends AQueryImpl<T> implements AMapperQuery<T> {
+    private final SqlMapper mapper;
 
-
-class AMapperQueryImpl<T> extends AQueryImpl<T> implements AMapperQuery<T> {
-    private final BeanRegistryBasedRowExtractor beanExtractor;
-    private final ProvidedProperties providedValues;
-
-    AMapperQueryImpl (Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, BeanRegistryBasedRowExtractor beanExtractor,
-                      ProvidedProperties providedValues, AVector<SqlEngineEventListener> listeners) {
-        super(cls, sql, primTypes, beanExtractor, listeners);
-        this.beanExtractor = beanExtractor;
-        this.providedValues = providedValues;
+    public AMapperQueryImpl(SqlMapper mapper, Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes,
+                            RowExtractor rowExtractor,
+                            AVector<SqlEngineEventListener> listeners,
+                            AOption<Supplier<Connection>> defaultConnectionSupplier,
+                            AVector<InjectedProperty> injectedProperties) {
+        super(cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties);
+        this.mapper = mapper;
+    }
+    @Override public AMapperQuery<T> withManyToMany(String propertyName) {
+        return withInjectedProperty(mapper.manyToMany(propertyName));
+    }
+    @Override public AMapperQuery<T> withOneToMany(String propertyName) {
+        return withInjectedProperty(mapper.oneToMany(propertyName));
+    }
+    @Override public AMapperQuery<T> withToOne(String propertyName) {
+        return withInjectedProperty(mapper.toOne(propertyName));
     }
 
-    @Override protected T doExtract (ResultSet rs, Object memento) throws SQLException {
-        return beanExtractor.fromSql(rowClass, primTypes, rs, memento, providedValues);
+    @Override protected AQueryImpl<T> build(Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, RowExtractor rowExtractor,
+                                            AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier,
+                                            AVector<InjectedProperty> injectedProperties) {
+        return new AMapperQueryImpl<>(mapper, cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties);
     }
 
-    @Override public AMapperQuery<T> withPropertyValues(String propName, ProvidedValues providedValues) {
-        return new AMapperQueryImpl<>(rowClass, sql, primTypes, beanExtractor, this.providedValues.with(propName, providedValues), listeners);
+    @Override public AMapperQuery<T> withInjectedProperty(InjectedProperty injectedProperty) {
+        return (AMapperQuery<T>) super.withInjectedProperty(injectedProperty);
     }
 }

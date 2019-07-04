@@ -1,23 +1,25 @@
 package com.ajjpj.asqlmapper.mapper.schema;
 
+import com.ajjpj.acollections.util.AOption;
+
 import java.sql.JDBCType;
 import java.util.Objects;
 
 
 public class ColumnMetaData {
-    public final String colName;
-    public final Class<?> colClass;
-    public final JDBCType colType;
-    public final String colTypeName;
-    public final int size;
-    public final int precision;
-    public final int scale;
+    private final String colName;
+    private final AOption<Class<?>> colClass;
+    private final JDBCType colType;
+    private final String colTypeName;
+    private final int size;
+    private final int precision;
+    private final int scale;
 
-    public final boolean isPrimaryKey;
-    public final boolean isAutoIncrement;
-    public final boolean isNullable;
+    private final boolean isPrimaryKey;
+    private final boolean isAutoIncrement;
+    private final boolean isNullable;
 
-    public ColumnMetaData (String colName, Class<?> colClass, JDBCType colType, String colTypeName, int size, int precision, int scale, boolean isPrimaryKey, boolean isAutoIncrement, boolean isNullable) {
+    public ColumnMetaData (String colName, AOption<Class<?>> colClass, JDBCType colType, String colTypeName, int size, int precision, int scale, boolean isPrimaryKey, boolean isAutoIncrement, boolean isNullable) {
         this.colName = colName;
         this.colClass = colClass;
         this.colType = colType;
@@ -28,6 +30,37 @@ public class ColumnMetaData {
         this.isPrimaryKey = isPrimaryKey;
         this.isAutoIncrement = isAutoIncrement;
         this.isNullable = isNullable;
+    }
+
+    public String colName() {
+        return colName;
+    }
+    public AOption<Class<?>> colClass() {
+        return colClass;
+    }
+    public JDBCType colType() {
+        return colType;
+    }
+    public String colTypeName() {
+        return colTypeName;
+    }
+    public int size() {
+        return size;
+    }
+    public int precision () {
+        return precision;
+    }
+    public int scale () {
+        return scale;
+    }
+    public boolean isPrimaryKey () {
+        return isPrimaryKey;
+    }
+    public boolean isAutoIncrement () {
+        return isAutoIncrement;
+    }
+    public boolean isNullable () {
+        return isNullable;
     }
 
     @Override public String toString () {

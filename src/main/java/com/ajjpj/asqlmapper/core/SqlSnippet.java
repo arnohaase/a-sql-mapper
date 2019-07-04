@@ -1,13 +1,17 @@
 package com.ajjpj.asqlmapper.core;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import com.ajjpj.acollections.AIterator;
 import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.mutable.AMutableArrayWrapper;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * A SqlSnippet is some SQL code with its corresponding parameters.
@@ -38,29 +42,14 @@ public class SqlSnippet {
         return new SqlSnippet(sql, AVector.from(params));
     }
 
-    public static SqlSnippet concat(SqlSnippet... snippets) {
-        return concat(AMutableArrayWrapper.wrap(snippets));
+    public static SqlSnippet concat(SqlSnippet s0, SqlSnippet... snippets) {
+        return concat(AIterator.single(s0).concat(AMutableArrayWrapper.from(snippets).iterator()));
     }
     public static SqlSnippet concat(Iterable<SqlSnippet> snippets) {
         return concat(snippets.iterator());
     }
     public static SqlSnippet concat(Iterator<SqlSnippet> snippets) {
-        if (!snippets.hasNext()) return EMPTY;
-
-        final StringBuilder sql = new StringBuilder();
-        final AVector.Builder<Object> params = AVector.builder();
-
-        boolean first = true;
-        while (snippets.hasNext()) {
-            if(first) first = false;
-            else sql.append(" ");
-
-            final SqlSnippet s = snippets.next();
-            sql.append(s.getSql());
-            params.addAll(s.getParams());
-        }
-
-        return new SqlSnippet(sql.toString(), params.build());
+        return builder().appendAll(snippets).build();
     }
 
     public static SqlBuilder builder() {
@@ -78,23 +67,85 @@ public class SqlSnippet {
         return commaSeparated(coll.iterator());
     }
     public static SqlSnippet commaSeparated (Iterator<SqlSnippet> it) {
+        return combine(it, sql(","));
+    }
+
+    public static SqlSnippet combine(Iterable<SqlSnippet> elements, SqlSnippet separator) {
+        return combine(elements, EMPTY, separator, EMPTY);
+    }
+    public static SqlSnippet combine(Iterable<SqlSnippet> elements, SqlSnippet prefix, SqlSnippet separator, SqlSnippet suffix) {
+        return combine(elements.iterator(), prefix, separator, suffix);
+    }
+    public static SqlSnippet combine(Iterator<SqlSnippet> elements, SqlSnippet separator) {
+        return combine(elements, EMPTY, separator, EMPTY);
+    }
+    public static SqlSnippet combine(Iterator<SqlSnippet> elements, SqlSnippet prefix, SqlSnippet separator, SqlSnippet suffix) {
         final SqlBuilder result = builder();
+        result.append(prefix);
         boolean first = true;
-        while (it.hasNext()) {
-            final SqlSnippet s = it.next();
+        while (elements.hasNext()) {
+            final SqlSnippet s = elements.next();
             if (first) {
                 result.append(s);
                 first = false;
             }
             else {
-                result.append(",");
+                result.append(separator);
                 result.append(s);
             }
         }
+        result.append(suffix);
         return result.build();
     }
 
-    //TODO in, and, or
+    public static SqlSnippet inSnippets(Iterable<SqlSnippet> elements) {
+        return combine(elements, sql("IN ("), sql(","), sql(")"));
+    }
+    public static SqlSnippet in(Iterable<?> elements) {
+        return inSnippets(AVector.of(params(elements)));
+    }
+
+    public static AList<SqlSnippet> chunkedIn(Iterable<?> elements) {
+        return chunkedIn(elements, 1000);
+    }
+    public static AList<SqlSnippet> chunkedIn(Iterable<?> elements, int maxChunkSize) {
+        final AVector.Builder<SqlSnippet> result = AVector.builder();
+
+        List<?> elList = StreamSupport.stream(elements.spliterator(), false).collect(Collectors.toCollection(ArrayList::new));
+        while(elList.size() > maxChunkSize) {
+            final List<?> l = elList.subList(0, maxChunkSize);
+            result.add(in(l));
+            elList = elList.subList(maxChunkSize, elList.size());
+        }
+
+        if(elList.size() > 0) {
+            result.add(in(elList));
+        }
+
+        return result.build();
+    }
+
+    public static SqlSnippet and(Iterable<SqlSnippet> elements) {
+        return and(elements.iterator());
+    }
+    public static SqlSnippet and(Iterator<SqlSnippet> elements) {
+        return combine(elements, sql("AND"));
+    }
+
+    public static SqlSnippet or(Iterable<SqlSnippet> elements) {
+        return or(elements.iterator());
+    }
+    public static SqlSnippet or(Iterator<SqlSnippet> elements) {
+        return combine(elements, sql("OR"));
+    }
+
+    public static SqlSnippet whereClause(Iterable<SqlSnippet> conditions) {
+        return whereClause(conditions.iterator());
+    }
+    public static SqlSnippet whereClause(Iterator<SqlSnippet> conditions) {
+        if(! conditions.hasNext()) return EMPTY;
+        return combine(conditions, sql("WHERE"), sql("AND"), EMPTY);
+    }
 
     @Override public boolean equals (Object o) {
         if (this == o) return true;

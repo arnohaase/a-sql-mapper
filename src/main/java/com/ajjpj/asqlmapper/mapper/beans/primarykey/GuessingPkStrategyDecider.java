@@ -7,7 +7,7 @@ import java.sql.Connection;
 
 public class GuessingPkStrategyDecider implements PkStrategyDecider {
     @Override public PkStrategy pkStrategy (Connection conn, Class<?> beanType, TableMetaData tableMetaData) {
-        if (tableMetaData.pkColumns().size() == 1 && tableMetaData.pkColumns().head().isAutoIncrement)
+        if (tableMetaData.pkColumns().size() == 1 && tableMetaData.pkColumns().head().isAutoIncrement())
             return new AutoIncrementPkStrategy();
 
         //TODO
