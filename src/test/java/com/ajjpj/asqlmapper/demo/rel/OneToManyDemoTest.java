@@ -22,8 +22,9 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
 
     @BeforeEach
     void setUp() throws SQLException {
-        conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
-        conn.prepareStatement("create table address(id bigserial primary key, person_id bigint references person, street varchar(200), city varchar(200))").executeUpdate();
+        executeUpdate("create table person(id bigserial primary key, name varchar(200))");
+        executeUpdate(
+                "create table address(id bigserial primary key, person_id bigint references person, street varchar(200), city varchar(200))");
 
         mapper = new SqlMapperBuilder()
                 .withDefaultPkName("id")
@@ -34,8 +35,8 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
 
     @AfterEach
     void tearDown() throws SQLException {
-        conn.prepareStatement("drop table address").executeUpdate();
-        conn.prepareStatement("drop table person").executeUpdate();
+        executeUpdate("drop table address");
+        executeUpdate("drop table person");
     }
 
     @Test

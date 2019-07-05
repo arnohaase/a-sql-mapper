@@ -22,8 +22,9 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
 
     @BeforeEach
     void setUp() throws SQLException {
-        conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
-        conn.prepareStatement("create table person_permissions(person_id bigint references person, user_id bigint, primary key(person_id, user_id))").executeUpdate();
+        executeUpdate("create table person(id bigserial primary key, name varchar(200))");
+        executeUpdate(
+                "create table person_permissions(person_id bigint references person, user_id bigint, primary key(person_id, user_id))");
 
         mapper = new SqlMapperBuilder()
                 .withDefaultConnectionSupplier(() -> conn)
@@ -34,8 +35,8 @@ public class SnippetCompositionDemoTest extends AbstractDatabaseTest  {
 
     @AfterEach
     void tearDown() throws SQLException {
-        conn.prepareStatement("drop table person_permissions").executeUpdate();
-        conn.prepareStatement("drop table person").executeUpdate();
+        executeUpdate("drop table person_permissions");
+        executeUpdate("drop table person");
     }
 
     @Test void testSnippetBuildingBlocks() {

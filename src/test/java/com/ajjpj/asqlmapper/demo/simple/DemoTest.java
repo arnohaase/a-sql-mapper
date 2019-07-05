@@ -37,13 +37,13 @@ class DemoTest extends AbstractDatabaseTest {
 
     @BeforeEach
     void setUp() throws SQLException {
-        conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
+        executeUpdate("create table person(id bigserial primary key, name varchar(200))");
         engine = builder.build(DatabaseDialect.H2).engine();
     }
 
     @AfterEach
     void tearDown() throws SQLException {
-        conn.prepareStatement("drop table person").executeUpdate();
+        executeUpdate("drop table person");
         System.out.println(LoggingListener.getAllStatistics().mkString("\n"));
     }
 
