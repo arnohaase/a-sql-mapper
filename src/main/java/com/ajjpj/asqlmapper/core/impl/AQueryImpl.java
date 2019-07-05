@@ -181,7 +181,10 @@ public class AQueryImpl<T> implements AQuery<T> {
     }
 
     @Override public Stream<T> stream (Connection conn) {
-        return StreamSupport.stream(() -> new ResultSetSpliterator(conn), Spliterator.ORDERED, false);
+        CloseableSupplier<ResultSetSpliterator> supplier =
+                new CloseableSupplier<>(() -> new ResultSetSpliterator(conn));
+        return StreamSupport.stream(supplier, Spliterator.ORDERED, false)
+                .onClose(() -> SqlHelper.closeQuietly(supplier));
     }
 
     /**
@@ -192,13 +195,17 @@ public class AQueryImpl<T> implements AQuery<T> {
      *  information of objects is extracted from result columns that are not mapped to the resulting bean.
      */
     public SqlStream<T> streamWithRowAccess (Connection conn) {
-        final ResultSetSpliterator spliterator = new ResultSetSpliterator(conn);
-        final Stream<T> inner = StreamSupport.stream(() -> spliterator, Spliterator.ORDERED, false);
+        CloseableSupplier<ResultSetSpliterator> supplier =
+                new CloseableSupplier<>(() -> new ResultSetSpliterator(conn));
+        final Stream<T> inner = StreamSupport.stream(supplier, Spliterator.ORDERED, false)
+                .onClose(() -> SqlHelper.closeQuietly(supplier));
 
         //noinspection unchecked
         return (SqlStream<T>) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[]{SqlStream.class}, (proxy, method, args) -> {
-            if("currentRow".equals(method.getName()))
-                return spliterator.row;
+            if("currentRow".equals(method.getName())) {
+                ResultSetSpliterator spliterator = supplier.suppliedValue.orNull();
+                return spliterator != null ? spliterator.row : null;
+            }
             try {
                 return method.invoke(inner, args);
             }
@@ -208,7 +215,36 @@ public class AQueryImpl<T> implements AQuery<T> {
         });
     }
 
-    private class ResultSetSpliterator implements Spliterator<T> {
+    private static class CloseableSupplier<T extends AutoCloseable> implements Supplier<T>, AutoCloseable {
+
+        private final Supplier<T> inner;
+
+        private AOption<T> suppliedValue;
+
+        private CloseableSupplier(Supplier<T> inner) {
+            this.inner = inner;
+            suppliedValue=AOption.empty();
+        }
+
+        @Override
+        public T get() {
+            return suppliedValue.orElseGet(() -> {
+                T value = inner.get();
+                suppliedValue = AOption.some(value);
+                return value;
+            });
+        }
+
+        @Override
+        public void close() throws Exception {
+            if (suppliedValue.isPresent()) {
+                T val = suppliedValue.get();
+                val.close();
+            }
+        }
+    }
+
+    private class ResultSetSpliterator implements Spliterator<T>, AutoCloseable {
         private final Connection conn;
         private final PreparedStatement ps;
         private final ResultSet rs;
@@ -216,6 +252,7 @@ public class AQueryImpl<T> implements AQuery<T> {
         private final Object memento;
         private final Map<String,Object> injectedPropsMementos;
         private int numRows = 0;
+        private boolean closed = false;
 
         ResultSetSpliterator(Connection conn) {
             this.conn = conn;
@@ -237,18 +274,21 @@ public class AQueryImpl<T> implements AQuery<T> {
                 injectedPropsMementos = injectedPropertyMementos(conn);
             }
             catch (Throwable th) {
-                SqlHelper.closeQuietly(ps);
+                releaseResources();
                 listeners.reverseIterator().forEachRemaining(l -> l.onFailed(th));
                 AUnchecker.throwUnchecked(th);
                 throw new Error(); // for the compiler
             }
         }
 
+        public SqlRow getCurrentRow() {
+            return row;
+        }
+
         @Override public boolean tryAdvance (Consumer<? super T> action) {
             try {
                 if (!rs.next()) {
-                    SqlHelper.closeQuietly(ps);
-                    afterIteration(numRows);
+                    close();
                     return false;
                 }
                 numRows += 1;
@@ -257,10 +297,25 @@ public class AQueryImpl<T> implements AQuery<T> {
             }
             catch(Throwable th) {
                 listeners.reverseIterator().forEachRemaining(l -> l.onFailed(th));
-                SqlHelper.closeQuietly(ps);
+                releaseResources();
                 AUnchecker.throwUnchecked(th);
                 return false; // dead code - for the compiler
             }
+        }
+
+        @Override
+        public void close() {
+            releaseResources();
+            if (!closed) {
+                //only call this once
+                afterIteration(numRows);
+            }
+            closed=true;
+        }
+
+        private void releaseResources() {
+            SqlHelper.closeQuietly(ps);
+            SqlHelper.closeQuietly(rs);
         }
 
         @Override public Spliterator<T> trySplit () {
