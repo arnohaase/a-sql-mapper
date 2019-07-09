@@ -78,6 +78,7 @@ class DemoTest extends AbstractDatabaseTest {
         assertTrue(mapper.patch(Person.class, 1L, AMap.of("name", "whoever")));
         assertEquals("whoever", engine.query(Person.class, "select * from person where id=?", 1).single().getName());
         assertEquals("Arno", engine.query(Person.class, "select * from person where id=?", 2).single().getName());
+        assertTrue(mapper.patch(Person.class, 1L, AMap.of("no-mapped-prop", "pling")));
 
         assertTrue(mapper.delete(inserted1));
         assertEquals(0L, engine.longQuery("select count(*) from person where id=?", 1).single().longValue());
