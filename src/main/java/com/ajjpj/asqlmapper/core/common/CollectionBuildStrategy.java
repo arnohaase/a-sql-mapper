@@ -20,6 +20,8 @@ public interface CollectionBuildStrategy<T,B,C> {
     void addElement(B builder, T el);
     boolean requiresFinalization();
     C finalizeBuilder(B builder);
+    C empty();
+
 
     static <T,C> CollectionBuildStrategy<T,?,C> get(Class<C> collectionClass) {
         final CollectionBuildStrategy result = Registry.registry.get(collectionClass);
@@ -59,8 +61,10 @@ public interface CollectionBuildStrategy<T,B,C> {
         return (AHashSetStrategy<T>) AHashSetStrategy.INSTANCE;
     }
 
+
     class JavaHashSetStrategy<T> implements CollectionBuildStrategy<T,HashSet<T>,HashSet<T>> {
-        private static JavaHashSetStrategy<Object> INSTANCE = new JavaHashSetStrategy<>();
+        private static final JavaHashSetStrategy<Object> INSTANCE = new JavaHashSetStrategy<>();
+        private static final HashSet EMPTY = new HashSet();
 
         @Override public HashSet<T> createBuilder () {
             return new HashSet<>();
@@ -77,10 +81,16 @@ public interface CollectionBuildStrategy<T,B,C> {
         @Override public HashSet<T> finalizeBuilder (HashSet<T> builder) {
             return builder;
         }
+
+        @SuppressWarnings("unchecked")
+        @Override public HashSet<T> empty() {
+            return EMPTY;
+        }
     }
 
     class JavaArrayListStrategy<T> implements CollectionBuildStrategy<T,ArrayList<T>, ArrayList<T>> {
         private static final JavaArrayListStrategy<Object> INSTANCE = new JavaArrayListStrategy<>();
+        private static final ArrayList EMPTY = new ArrayList();
 
         @Override public ArrayList<T> createBuilder () {
             return new ArrayList<>();
@@ -96,6 +106,11 @@ public interface CollectionBuildStrategy<T,B,C> {
 
         @Override public ArrayList<T> finalizeBuilder (ArrayList<T> builder) {
             return builder;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override public ArrayList<T> empty() {
+            return EMPTY;
         }
     }
 
@@ -117,6 +132,10 @@ public interface CollectionBuildStrategy<T,B,C> {
         @Override public AVector<T> finalizeBuilder (AVector.Builder<T> builder) {
             return builder.build();
         }
+
+        @Override public AVector<T> empty() {
+            return AVector.empty();
+        }
     }
 
     class ALinkedListStrategy<T> implements CollectionBuildStrategy<T, ALinkedList.Builder<T>, ALinkedList<T>> {
@@ -137,6 +156,10 @@ public interface CollectionBuildStrategy<T,B,C> {
         @Override public ALinkedList<T> finalizeBuilder (ALinkedList.Builder<T> builder) {
             return builder.build();
         }
+
+        @Override public ALinkedList<T> empty() {
+            return ALinkedList.empty();
+        }
     }
 
     class AHashSetStrategy<T> implements CollectionBuildStrategy<T, AHashSet.Builder<T>, AHashSet<T>> {
@@ -156,6 +179,10 @@ public interface CollectionBuildStrategy<T,B,C> {
 
         @Override public AHashSet<T> finalizeBuilder (AHashSet.Builder<T> builder) {
             return builder.build();
+        }
+
+        @Override public AHashSet<T> empty() {
+            return AHashSet.empty();
         }
     }
 

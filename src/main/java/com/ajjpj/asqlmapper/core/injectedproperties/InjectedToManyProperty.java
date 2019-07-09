@@ -63,6 +63,6 @@ public class InjectedToManyProperty<T,C,B> implements InjectedProperty<Map<Objec
 
     @Override public AOption<Object> value (Connection conn, SqlRow currentRow, Map<Object,C> memento) {
         final Object curMasterKey = currentRow.get(keyType, masterKeyName);
-        return memento.containsKey(curMasterKey) ? AOption.some(memento.get(curMasterKey)) : AOption.none();
+        return memento.containsKey(curMasterKey) ? AOption.some(memento.get(curMasterKey)) : AOption.some(collectionBuildStrategy.empty());
     }
 }
