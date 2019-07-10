@@ -64,7 +64,6 @@ public interface CollectionBuildStrategy<T,B,C> {
 
     class JavaHashSetStrategy<T> implements CollectionBuildStrategy<T,HashSet<T>,HashSet<T>> {
         private static final JavaHashSetStrategy<Object> INSTANCE = new JavaHashSetStrategy<>();
-        private static final HashSet EMPTY = new HashSet();
 
         @Override public HashSet<T> createBuilder () {
             return new HashSet<>();
@@ -82,15 +81,13 @@ public interface CollectionBuildStrategy<T,B,C> {
             return builder;
         }
 
-        @SuppressWarnings("unchecked")
         @Override public HashSet<T> empty() {
-            return EMPTY;
+            return new HashSet<>();
         }
     }
 
     class JavaArrayListStrategy<T> implements CollectionBuildStrategy<T,ArrayList<T>, ArrayList<T>> {
         private static final JavaArrayListStrategy<Object> INSTANCE = new JavaArrayListStrategy<>();
-        private static final ArrayList EMPTY = new ArrayList();
 
         @Override public ArrayList<T> createBuilder () {
             return new ArrayList<>();
@@ -108,9 +105,8 @@ public interface CollectionBuildStrategy<T,B,C> {
             return builder;
         }
 
-        @SuppressWarnings("unchecked")
         @Override public ArrayList<T> empty() {
-            return EMPTY;
+            return new ArrayList<>();
         }
     }
 

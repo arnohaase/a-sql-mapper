@@ -13,6 +13,9 @@ todo
   * order by
   * ...
 
+* update / patch: optionale zusätzliche WHERE-Klausel
+  * patch: Convenience-Methoden im SqlSnippet verwenden
+
 * base
   * tuples
     * special handling, 'implicit' row extractor based on ptm
