@@ -318,7 +318,9 @@ public class SqlMapper {
             }
             builder.append(prop.columnName() + "=?", newValues.get(propName));
         }
-
+        if (first) {
+            return true;
+        }
         builder.append("WHERE " + pkProperty.columnName() + "=?", pk);
 
         return executeUnchecked(() ->
