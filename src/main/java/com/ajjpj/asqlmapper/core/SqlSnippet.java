@@ -56,6 +56,10 @@ public class SqlSnippet {
         return new SqlBuilder();
     }
 
+    public static SqlSnippet param(Object value) {
+        return sql("?", value);
+    }
+
     public static SqlSnippet params(Iterable<?> values) {
         return params(values.iterator());
     }
