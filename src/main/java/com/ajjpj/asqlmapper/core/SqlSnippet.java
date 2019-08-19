@@ -1,11 +1,7 @@
 package com.ajjpj.asqlmapper.core;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import com.ajjpj.acollections.AIterator;
@@ -132,12 +128,18 @@ public class SqlSnippet {
     public static SqlSnippet and(Iterable<SqlSnippet> elements) {
         return and(elements.iterator());
     }
+    public static SqlSnippet and(SqlSnippet... elements) {
+        return and(Arrays.asList(elements).iterator());
+    }
     public static SqlSnippet and(Iterator<SqlSnippet> elements) {
         return combine(elements, sql("AND"));
     }
 
     public static SqlSnippet or(Iterable<SqlSnippet> elements) {
         return or(elements.iterator());
+    }
+    public static SqlSnippet or(SqlSnippet... elements) {
+        return or(Arrays.asList(elements).iterator());
     }
     public static SqlSnippet or(Iterator<SqlSnippet> elements) {
         return combine(elements, sql("OR"));
