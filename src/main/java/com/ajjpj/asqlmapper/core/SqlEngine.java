@@ -245,8 +245,15 @@ public class SqlEngine {
     public AQuery<BigDecimal> bigDecimalQuery(String sql, Object... params) {
         return bigDecimalQuery(SqlSnippet.sql(sql, params));
     }
+    public AQuery<Boolean> booleanQuery(SqlSnippet sql, SqlSnippet... moreSql) {
+        return new AQueryImpl<>(Boolean.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.BOOLEAN_EXTRACTOR, listeners,
+                defaultConnectionSupplier, AVector.empty());
+    }
+    public AQuery<Boolean> booleanDecimalQuery(String sql, Object... params) {
+        return booleanQuery(SqlSnippet.sql(sql, params));
+    }
 
-    // TODO UUID query
+
 
     public AQuery<SqlRow> rawQuery(SqlSnippet sql, SqlSnippet... moreSql) {
         return new AQueryImpl<>(SqlRow.class, concat(sql, moreSql), primTypes, RawRowExtractor.INSTANCE, listeners, defaultConnectionSupplier, AVector.empty());
