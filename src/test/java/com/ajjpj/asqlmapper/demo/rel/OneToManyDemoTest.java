@@ -42,12 +42,13 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
     @Test
     void testOneToMany() {
         final AList<Long> personIds = mapper
-                .insertMany(AList.of(Person.of(0L, "Arno1"), Person.of(0L, "Arno2"), Person.of(0L, "Arno3")))
+                .insertMany(AList.of(Person.of(0L, "Arno1"), Person.of(0L, "Arno2"), Person.of(0L, "Arno3"), Person.of(0L, "Albrecht")))
                 .map(Person::id);
 
         final long personId1 = personIds.get(0);
         final long personId2 = personIds.get(1);
         final long personId3 = personIds.get(2);
+        final long personId4 = personIds.get(3);
 
         //TODO mapper.insertWithExplicitFields(conn, address, AMap.of("person_id", person.id()));
         //TODO mapper.insertMultiWithExplicitFields(conn, person.addresses(), AMap.of("person_id", person.id()));
@@ -79,6 +80,17 @@ public class OneToManyDemoTest extends AbstractDatabaseTest  {
                     PersonWithAddresses.of(personId1, "Arno1", AList.of(Address.of("street13", "city13"), Address.of("street12", "city12"), Address.of("street11", "city11"))),
                     PersonWithAddresses.of(personId2, "Arno2", AList.of(Address.of("street23", "city23"), Address.of("street22", "city22"), Address.of("street21", "city21")))
             ), persons);
+        }
+
+        {
+            final AList<PersonWithAddresses> persons = engine
+                    .query(PersonWithAddresses.class, "select * from person where id = ?", personId4)
+                    .withInjectedProperty(new InjectedToManyProperty<>("addresses", "id", Long.class, "person_id",
+                            engine.query(Address.class, "select * from address where person_id = ?", personId4),
+                            CollectionBuildStrategy.forAVector()))
+                    .list();
+
+            assertEquals(AList.of(PersonWithAddresses.of(personId4, "Albrecht", AList.empty())), persons);
         }
 
         {
