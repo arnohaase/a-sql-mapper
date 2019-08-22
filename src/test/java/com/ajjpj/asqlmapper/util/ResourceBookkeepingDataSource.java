@@ -46,14 +46,12 @@ public class ResourceBookkeepingDataSource implements DataSource {
 
     @Override
     public Connection getConnection() throws SQLException {
-        Connection connection = delegate.getConnection();
-        return registerConnection(connection);
+        return registerConnection(delegate.getConnection());
     }
 
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
-        Connection connection = delegate.getConnection(username, password);
-        return registerConnection(connection);
+        return registerConnection(delegate.getConnection(username, password));
     }
 
     @Override

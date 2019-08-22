@@ -1,11 +1,14 @@
 package com.ajjpj.asqlmapper.core;
 
 import java.sql.Connection;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.core.common.SqlStream;
+import com.ajjpj.asqlmapper.core.common.SqlRow;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
 
 /**
@@ -28,6 +31,16 @@ public interface AQuery<T> {
     AOption<T> optional();
     AList<T> list(Connection conn);
     AList<T> list();
+
+    <R,A> R collect(Connection conn, Collector<T,A,R> collector);
+    <R,A> R collect(Collector<T,A,R> collector);
+
+    //TODO documentation
     Stream<T> stream(Connection conn);
     Stream<T> stream();
+
+    void forEach(Connection conn, Consumer<T> consumer);
+    void forEach(Consumer<T> consumer);
+    void forEachWithRowAccess(Connection conn, BiConsumer<T, SqlRow> consumer);
+    void forEachWithRowAccess(BiConsumer<T, SqlRow> consumer);
 }

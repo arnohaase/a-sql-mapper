@@ -2,16 +2,16 @@ package com.ajjpj.asqlmapper.core.impl;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -25,7 +25,6 @@ import com.ajjpj.asqlmapper.core.RowExtractor;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.common.LiveSqlRow;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
-import com.ajjpj.asqlmapper.core.common.SqlStream;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
 import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
 
@@ -65,9 +64,13 @@ public class AQueryImpl<T> implements AQuery<T> {
     }
 
     @Override public T single() {
-        return single(defaultConnectionSupplier
+        return single(defaultConnection());
+    }
+
+    private Connection defaultConnection() {
+        return defaultConnectionSupplier
                 .orElseThrow(() -> new IllegalStateException("no default connection supplier was configured"))
-                .get());
+                .get();
     }
 
     @Override public T single(Connection conn) {
@@ -123,9 +126,7 @@ public class AQueryImpl<T> implements AQuery<T> {
     }
 
     @Override public AOption<T> optional() {
-        return optional(defaultConnectionSupplier
-                .orElseThrow(() -> new IllegalStateException("no default connection supplier was configured"))
-                .get());
+        return optional(defaultConnection());
     }
 
     @Override public AOption<T> optional(Connection conn) {
@@ -144,25 +145,32 @@ public class AQueryImpl<T> implements AQuery<T> {
         }));
     }
 
-    @Override public AList<T> list() {
-        return list(defaultConnectionSupplier
-                .orElseThrow(() -> new IllegalStateException("no default connection supplier was configured"))
-                .get());
+    @Override public <R,A> R collect(Collector<T, A, R> collector) {
+        return collect(defaultConnection(), collector);
     }
-
-    @Override public AList<T> list(Connection conn) {
+    @Override public <R,A> R collect(Connection conn, Collector<T, A, R> collector) {
         return doQuery(conn, rs -> executeUnchecked(() -> {
-            final AVector.Builder<T> builder = AVector.builder();
+            final A acc = collector.supplier().get();
+            int count = 0;
+
             final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs, false);
             final Map<String, Object> injectedPropsMementos = injectedPropertyMementos(conn);
             final LiveSqlRow row = new LiveSqlRow(primTypes, rs);
             while (rs.next()) {
-                builder.add(doExtract(conn, row, memento, false, injectedPropsMementos));
+                final T el = doExtract(conn, row, memento, false, injectedPropsMementos);
+                collector.accumulator().accept(acc, el);
+                count += 1;
             }
-            final AList<T> result = builder.build();
-            afterIteration(result.size());
-            return result;
+            afterIteration(count);
+            return collector.finisher().apply(acc);
         }));
+    }
+    @Override public AList<T> list() {
+        return list(defaultConnection());
+    }
+
+    @Override public AList<T> list(Connection conn) {
+        return collect(AVector.streamCollector());
     }
 
     private Map<String, Object> injectedPropsValuesForRow(Connection conn, SqlRow currentRow, Map<String, Object> injectedPropsMementos) {
@@ -184,43 +192,47 @@ public class AQueryImpl<T> implements AQuery<T> {
         return rowExtractor.fromSql(rowClass, primTypes, row, memento, isStreaming, injectedPropsValues);
     }
 
+    /**
+     * This method returns a {@link Stream} of mapped rows. This method is for advanced use and
+     * special cases. <p>
+     *
+     * TODO forEach / list / collect
+     *
+     * The underlying database resources are closed on a best effort basis, but there
+     * are <b>no guarantees</b> that they will be released automatically. Code using this method
+     * <b>must</b> close the returned stream.
+     */
     @Override public Stream<T> stream() {
-        return stream(defaultConnectionSupplier
-                .orElseThrow(() -> new IllegalStateException("no default connection supplier was configured"))
-                .get());
+        return stream(defaultConnection());
     }
 
     @Override public Stream<T> stream(Connection conn) {
         final ResultSetSpliterator rss = new ResultSetSpliterator(conn);
-        return StreamSupport.stream(() -> rss, Spliterator.ORDERED, false)
+        return StreamSupport.stream(rss, false)
                 .onClose(rss::close);
     }
 
-    /**
-     * This method returns a {@link SqlStream}, i.e. a {@link Stream} that provides access to the current row
-     * during processing.<p>
-     *
-     * This goes against the concept of {@link Stream}, but it allows handling special cases where structural
-     * information of objects is extracted from result columns that are not mapped to the resulting bean.
-     */
-    public SqlStream<T> streamWithRowAccess(Connection conn) {
+    @Override public void forEach(Connection conn, Consumer<T> consumer) {
+        try (Stream<T> s = stream(conn)) {
+            s.forEach(consumer);
+        }
+    }
+    @Override public void forEach(Consumer<T> consumer) {
+        forEach(defaultConnection(), consumer);
+    }
+
+    @Override public void forEachWithRowAccess(BiConsumer<T, SqlRow> consumer) {
+        forEachWithRowAccess(defaultConnection(), consumer);
+    }
+    @Override public void forEachWithRowAccess(Connection conn, BiConsumer<T, SqlRow> consumer) {
         final ResultSetSpliterator rss = new ResultSetSpliterator(conn);
-        final Stream<T> inner = StreamSupport.stream(() -> rss, Spliterator.ORDERED, false)
-                .onClose(rss::close);
-
-        //noinspection unchecked
-        return (SqlStream<T>) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] { SqlStream.class }, (proxy, method, args) -> {
-            if ("currentRow".equals(method.getName())) {
-                return rss.getCurrentRow();
-            }
-            try {
-                return method.invoke(inner, args);
-            }
-            catch (InvocationTargetException e) {
-                throw e.getCause();
-            }
-        });
+        try (Stream<T> s = StreamSupport.stream(rss, false).onClose(rss::close)) {
+            s.forEach(el -> consumer.accept(el, rss.getCurrentRow()));
+        }
     }
+
+    //TODO fail if injected properties are present
+    //TODO special handling - 'raw' --> ohne zusätzliches Mapping, nur Wrapper --> rowExtractor == RawRowExtractor.INSTANCE
 
     private class ResultSetSpliterator implements Spliterator<T> {
         private final Connection conn;

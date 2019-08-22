@@ -16,6 +16,8 @@ import com.ajjpj.acollections.immutable.AVector;
  *  cover the range from mutable java.util collection to immutable builder-based collections
  */
 public interface CollectionBuildStrategy<T,B,C> {
+    //TODO replace with java.util.stream.Collector?
+
     B createBuilder();
     void addElement(B builder, T el);
     boolean requiresFinalization();
