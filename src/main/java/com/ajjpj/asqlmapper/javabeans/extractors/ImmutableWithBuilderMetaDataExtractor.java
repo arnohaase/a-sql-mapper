@@ -1,7 +1,5 @@
 package com.ajjpj.asqlmapper.javabeans.extractors;
 
-import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
-
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Function;
@@ -9,15 +7,9 @@ import java.util.function.Supplier;
 
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
-import com.ajjpj.asqlmapper.javabeans.annotations.Ignore;
 import com.ajjpj.asqlmapper.javabeans.columnnames.ColumnNameExtractor;
-import com.ajjpj.asqlmapper.mapper.util.BeanReflectionHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtractor {
-    private static final Logger log = LoggerFactory.getLogger(ImmutableWithBuilderMetaDataExtractor.class);
-
     private final ColumnNameExtractor columnNameExtractor;
 
     private final String builderFactoryName;
@@ -34,12 +26,6 @@ public class ImmutableWithBuilderMetaDataExtractor implements BeanMetaDataExtrac
         this.builderFactoryName = builderFactoryName;
         this.builderFinalizeMethodName = builderFinalizeMethodName;
         this.setterPrefix = setterPrefix;
-    }
-
-    private boolean hasIgnoreAnnotation(Class<?> beanType, Method mtd) {
-        return BeanReflectionHelper.allSuperMethods(beanType, mtd).exists(g ->
-                g.getAnnotation(Ignore.class) != null && g.getAnnotation(Ignore.class).value()
-        );
     }
 
     @Override

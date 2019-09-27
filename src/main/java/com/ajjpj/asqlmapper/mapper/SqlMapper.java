@@ -10,15 +10,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.ajjpj.acollections.AList;
-import com.ajjpj.acollections.AMap;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.mutable.AMutableListWrapper;
 import com.ajjpj.acollections.util.AOption;
-import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlBuilder;
 import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
-import com.ajjpj.asqlmapper.core.impl.AQueryImpl;
 import com.ajjpj.asqlmapper.core.injectedproperties.InjectedProperty;
 import com.ajjpj.asqlmapper.javabeans.BeanProperty;
 import com.ajjpj.asqlmapper.mapper.beans.BeanMapping;
@@ -30,7 +27,6 @@ import com.ajjpj.asqlmapper.mapper.beans.tablename.TableNameExtractor;
 import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedManyToMany;
 import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedOneToMany;
 import com.ajjpj.asqlmapper.mapper.injectedproperties.MappedToOne;
-import com.ajjpj.asqlmapper.mapper.schema.ColumnMetaData;
 import com.ajjpj.asqlmapper.mapper.schema.SchemaRegistry;
 
 public class SqlMapper {
