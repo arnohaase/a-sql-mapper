@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.util;
+package com.ajjpj.asqlmapper.testutil;
 
 import static com.ajjpj.acollections.util.AUnchecker.executeUnchecked;
 import static org.junit.jupiter.api.Assertions.fail;

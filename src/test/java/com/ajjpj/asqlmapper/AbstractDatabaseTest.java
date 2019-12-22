@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 
-import com.ajjpj.asqlmapper.util.ResourceBookkeepingDataSource;
+import com.ajjpj.asqlmapper.testutil.ResourceBookkeepingDataSource;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
