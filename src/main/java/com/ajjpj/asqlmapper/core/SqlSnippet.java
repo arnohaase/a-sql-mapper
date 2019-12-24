@@ -401,12 +401,31 @@ public class SqlSnippet {
         }
     }
 
+    /**
+     * returns a WHERE clause for a given set of conditions, i.e. 'WHERE' followed by an AND'ed list of conditions.
+     *
+     * TODO example
+     */
     public static SqlSnippet whereClause(SqlSnippet cond0, SqlSnippet... conditions) {
         return whereClause(AIterator.concat(AIterator.single(cond0), Arrays.asList(conditions).iterator()));
     }
+
+    /**
+     * returns a WHERE clause for a given set of conditions, i.e. 'WHERE' followed by an AND'ed list of conditions.
+     *  If the list of conditions is empty, an empty snippet is returned (i.e. there is no WHERE keyword)
+     *
+     * TODO example
+     */
     public static SqlSnippet whereClause(Iterable<SqlSnippet> conditions) {
         return whereClause(conditions.iterator());
     }
+
+    /**
+     * returns a WHERE clause for a given set of conditions, i.e. 'WHERE' followed by an AND'ed list of conditions.
+     *  If the list of conditions is empty, an empty snippet is returned (i.e. there is no WHERE keyword)
+     *
+     * TODO example
+     */
     public static SqlSnippet whereClause(Iterator<SqlSnippet> conditions) {
         if(! conditions.hasNext()) return EMPTY;
         return combine(conditions, WHERE, AND, EMPTY);
