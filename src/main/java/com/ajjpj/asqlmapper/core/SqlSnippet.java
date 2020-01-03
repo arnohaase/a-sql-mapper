@@ -152,15 +152,44 @@ public class SqlSnippet {
         return combineNoBlank(it, EMPTY, COMMA, EMPTY);
     }
 
+    /**
+     * combines a list of snippets into a single new snippet, with a separator snippet inserted in between. Whitespace
+     *  is added between snippets automatically to prevent accidental "fusing" of subsequent tokens.
+     *
+     * TODO example
+     */
     public static SqlSnippet combine(Iterable<SqlSnippet> elements, SqlSnippet separator) {
         return combine(elements, EMPTY, separator, EMPTY);
     }
+
+    /**
+     * combines a list of snippets into a single new snippet, with a separator snippet inserted in between and prefix
+     *  and suffix snippets prepended and appended, respectively. Whitespace is added between snippets automatically
+     *  to prevent accidental "fusing" of subsequent tokens.
+     *
+     * TODO example
+     */
     public static SqlSnippet combine(Iterable<SqlSnippet> elements, SqlSnippet prefix, SqlSnippet separator, SqlSnippet suffix) {
         return combine(elements.iterator(), prefix, separator, suffix);
     }
+
+    /**
+     * combines a sequence of snippets into a single new snippet, with a separator snippet inserted in between. Whitespace
+     *  is added between snippets automatically to prevent accidental "fusing" of subsequent tokens.
+     *
+     * TODO example
+     */
     public static SqlSnippet combine(Iterator<SqlSnippet> elements, SqlSnippet separator) {
         return combine(elements, EMPTY, separator, EMPTY);
     }
+
+    /**
+     * combines a sequence of snippets into a single new snippet, with a separator snippet inserted in between and prefix
+     *  and suffix snippets prepended and appended, respectively. Whitespace is added between snippets automatically
+     *  to prevent accidental "fusing" of subsequent tokens.
+     *
+     * TODO example
+     */
     public static SqlSnippet combine(Iterator<SqlSnippet> elements, SqlSnippet prefix, SqlSnippet separator, SqlSnippet suffix) {
         final SqlBuilder result = builder();
         result.append(prefix);
@@ -191,7 +220,27 @@ public class SqlSnippet {
         return result.build();
     }
 
-    private static SqlSnippet combineNoBlank(Iterator<SqlSnippet> elements, SqlSnippet prefix, SqlSnippet separator, SqlSnippet suffix) {
+    /**
+     * combines a list of snippets into a single new snippet, with a separator snippet inserted in between and prefix
+     *  and suffix snippets prepended and appended, respectively. *No* whitespace is added between snippets.<p>
+     *
+     * This is for special cases only where complete control over whitespace is considered more important than
+     *  robustness. If in doubt, use {@link #combine(Iterable, SqlSnippet, SqlSnippet, SqlSnippet)} instead.
+     *
+     */
+    public static SqlSnippet combineNoBlank(Iterable<SqlSnippet> elements, SqlSnippet prefix, SqlSnippet separator, SqlSnippet suffix) {
+        return combineNoBlank(elements.iterator(), prefix, separator, suffix);
+    }
+
+    /**
+     * combines a sequence of snippets into a single new snippet, with a separator snippet inserted in between and prefix
+     *  and suffix snippets prepended and appended, respectively. *No* whitespace is added between snippets.<p>
+     *
+     * This is for special cases only where complete control over whitespace is considered more important than
+     *  robustness. If in doubt, use {@link #combine(Iterator, SqlSnippet, SqlSnippet, SqlSnippet)} instead.
+     *
+     */
+    public static SqlSnippet combineNoBlank(Iterator<SqlSnippet> elements, SqlSnippet prefix, SqlSnippet separator, SqlSnippet suffix) {
         final SqlBuilder result = builder();
         result.appendNoBlank(prefix);
 

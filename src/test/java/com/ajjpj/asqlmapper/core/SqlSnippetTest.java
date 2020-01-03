@@ -105,11 +105,50 @@ public class SqlSnippetTest {
     }
 
     @Test void testCombine() {
-        fail("todo");
+        assertEquals(sql("a * b", 1, 0, 2), combine(listOf(sql("a", 1), sql("b", 2)), sql("*", 0)));
+        assertEquals(sql("a * b * c", 1, 0, 0, 2, 3), combine(listOf(sql("a", 1), sql("b"), sql("c", 2, 3)), sql("*", 0)));
+
+        assertEquals(sql("a", 1), combine(listOf(sql("a", 1)), sql("*", 0)));
+        assertEquals(EMPTY, combine(listOf(), sql("*", 0)));
+    }
+    @Test void testCombinePrefixSuffix() {
+        assertEquals(sql("< a * b >", 1, 0, 2), combine(listOf(sql("a", 1), sql("b", 2)), sql("<"), sql("*", 0), sql(">")));
+        assertEquals(sql("< a * b * c >", 1, 0, 0, 2, 3), combine(listOf(sql("a", 1), sql("b"), sql("c", 2, 3)), sql("<"), sql("*", 0), sql(">")));
+
+        assertEquals(sql("< a >", 1), combine(listOf(sql("a", 1)), sql("<"), sql("*", 0), sql(">")));
+        assertEquals(sql("< >"), combine(listOf(), sql("<"), sql("*", 0), sql(">")));
+    }
+
+    @Test void testCombineIterator() {
+        assertEquals(sql("a * b", 1, 0, 2), combine(listOf(sql("a", 1), sql("b", 2)).iterator(), sql("*", 0)));
+        assertEquals(sql("a * b * c", 1, 0, 0, 2, 3), combine(listOf(sql("a", 1), sql("b"), sql("c", 2, 3)).iterator(), sql("*", 0)));
+
+        assertEquals(sql("a", 1), combine(listOf(sql("a", 1)).iterator(), sql("*", 0)));
+        assertEquals(EMPTY, combine(emptyIterator(), sql("*", 0)));
+    }
+
+    @Test void testCombineIteratorPrefixSuffix() {
+        assertEquals(sql("< a * b >", 1, 0, 2), combine(listOf(sql("a", 1), sql("b", 2)).iterator(), sql("<"), sql("*", 0), sql(">")));
+        assertEquals(sql("< a * b * c >", 1, 0, 0, 2, 3), combine(listOf(sql("a", 1), sql("b"), sql("c", 2, 3)).iterator(), sql("<"), sql("*", 0), sql(">")));
+
+        assertEquals(sql("< a >", 1), combine(listOf(sql("a", 1)).iterator(), sql("<"), sql("*", 0), sql(">")));
+        assertEquals(sql("< >"), combine(emptyIterator(), sql("<"), sql("*", 0), sql(">")));
     }
 
     @Test void testCombineNoBlank() {
-        fail("todo");
+        assertEquals(sql("<a*b>", 1, 0, 2), combineNoBlank(listOf(sql("a", 1), sql("b", 2)), sql("<"), sql("*", 0), sql(">")));
+        assertEquals(sql("<a*b*c>", 1, 0, 0, 2, 3), combineNoBlank(listOf(sql("a", 1), sql("b"), sql("c", 2, 3)), sql("<"), sql("*", 0), sql(">")));
+
+        assertEquals(sql("<a>", 1), combineNoBlank(listOf(sql("a", 1)), sql("<"), sql("*", 0), sql(">")));
+        assertEquals(sql("<>"), combineNoBlank(listOf(), sql("<"), sql("*", 0), sql(">")));
+    }
+
+    @Test void testCombineNoBlankIterator() {
+        assertEquals(sql("<a*b>", 1, 0, 2), combineNoBlank(listOf(sql("a", 1), sql("b", 2)).iterator(), sql("<"), sql("*", 0), sql(">")));
+        assertEquals(sql("<a*b*c>", 1, 0, 0, 2, 3), combineNoBlank(listOf(sql("a", 1), sql("b"), sql("c", 2, 3)).iterator(), sql("<"), sql("*", 0), sql(">")));
+
+        assertEquals(sql("<a>", 1), combineNoBlank(listOf(sql("a", 1)).iterator(), sql("<"), sql("*", 0), sql(">")));
+        assertEquals(sql("<>"), combineNoBlank(emptyIterator(), sql("<"), sql("*", 0), sql(">")));
     }
 
     @Test void testInSnippets() {
