@@ -33,6 +33,11 @@ public class SqlSnippet {
      */
     public static final SqlSnippet TRUE = sql("1<>2");
 
+    /**
+     * A database independent representation of 'false'
+     */
+    public static final SqlSnippet FALSE = sql("1<>1");
+
     private static final SqlSnippet AND = sql("AND");
     private static final SqlSnippet CLOSE = sql(")");
     private static final SqlSnippet COMMA = sql(",");
@@ -318,44 +323,70 @@ public class SqlSnippet {
     }
 
     /**
-     * creates an IN clause containing given values.
+     * creates an IN clause containing given values. NB: This method does *not* check the number of items against
+     *  the (RDBMS specific) maximum number of items in an IN clause. To be on the safe side, use
+     *  {@link #chunkedIn(SqlSnippet, Iterable, int)} instead.
      *
      * TODO example
      */
-    public static SqlSnippet in(Iterable<?> elements) {
-        return in(elements.iterator());
+    public static SqlSnippet in(Iterable<?> items) {
+        return in(items.iterator());
     }
 
     /**
-     * creates an IN clause containing given values.
+     * creates an IN clause containing given values. NB: This method does *not* check the number of items against
+     *  the (RDBMS specific) maximum number of items in an IN clause. To be on the safe side, use
+     *  {@link #chunkedIn(SqlSnippet, Iterable, int)} instead.
      *
      * TODO example
      */
-    public static SqlSnippet in(Iterator<?> elements) {
-        if (!elements.hasNext()) {
+    public static SqlSnippet in(Iterator<?> items) {
+        if (!items.hasNext()) {
             throw new IllegalArgumentException("empty IN clause");
         }
-        return inSnippets(AVector.of(params(elements)));
+        return inSnippets(AVector.of(params(items)));
     }
 
-    public static AList<SqlSnippet> chunkedIn(Iterable<?> elements) {
-        return chunkedIn(elements, 1000);
+    /**
+     * creates an IN expression with a default maximum chunk size of 1000, see
+     *  {@link #chunkedIn(SqlSnippet, Iterable, int)} for details.
+     */
+    public static SqlSnippet chunkedIn(SqlSnippet value, Iterable<?> items) {
+        return chunkedIn(value, items, 1000);
     }
-    public static AList<SqlSnippet> chunkedIn(Iterable<?> elements, int maxChunkSize) {
+
+    /**
+     * creates an IN expression checking a value against a list of items. If the number of items exceeds a threshold,
+     *  a new IN clause is started and joined to the first one with OR.<p>
+     *
+     * This method creates a snippet that includes the column to be compared, e.g. {@code "person.id IN (?,?)"}.
+     *
+     * TODO example
+     *
+     * @param value the value to check (e.g. a column name)
+     * @param items the list of values to check against, i.e. the values listed inside the brackets of IN(...)
+     * @param maxChunkSize the maximum number of items to put in a single list. When this number is reached, a new
+     *                     IN clause is started
+     */
+    public static SqlSnippet chunkedIn(SqlSnippet value, Iterable<?> items, int maxChunkSize) {
         final AVector.Builder<SqlSnippet> result = AVector.builder();
 
-        List<?> elList = StreamSupport.stream(elements.spliterator(), false).collect(Collectors.toCollection(ArrayList::new));
+        List<?> elList = StreamSupport.stream(items.spliterator(), false).collect(Collectors.toCollection(ArrayList::new));
         while(elList.size() > maxChunkSize) {
             final List<?> l = elList.subList(0, maxChunkSize);
-            result.add(in(l));
+            result.add(concat(value, in(l)));
             elList = elList.subList(maxChunkSize, elList.size());
         }
 
         if(elList.size() > 0) {
-            result.add(in(elList));
+            result.add(concat(value, in(elList)));
         }
 
-        return result.build();
+        final AVector<SqlSnippet> clauses = result.build();
+        if(clauses.isEmpty()) {
+            return FALSE;
+        }
+        return or(clauses);
     }
 
     /**

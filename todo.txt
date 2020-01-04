@@ -7,6 +7,9 @@ todo
 
 * comprehensive tests
 
+* demo test
+  * snippets
+
 * mapper queries mit snippets --> how to do this best?
   * filter
   * pagination

@@ -10,6 +10,7 @@ import static com.ajjpj.asqlmapper.core.SqlSnippet.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class SqlSnippetTest {
     @Test void testEmpty() {
@@ -73,7 +74,23 @@ public class SqlSnippetTest {
     }
 
     @Test void testBuilder() {
-        fail("todo");
+        assertEquals(sql("a b", 1, 2, 3), builder().append("a", 1, 2).append(sql("b", 3)).build());
+        assertEquals(sql("ab", 1, 2, 3), builder().appendNoBlank("a", 1, 2).appendNoBlank(sql("b", 3)).build());
+        assertEquals(sql("ab c", 1, 2, 3), builder().appendNoBlank("a", 1, 2).appendNoBlank(sql("b", 3)).append("c").build());
+
+        SqlBuilder b = builder();
+        assertEquals(EMPTY, b.build());
+        assertEquals(sql("a"), b.append("a").build());
+    }
+
+    @Test void testBuilderAppendAll() {
+        assertEquals(EMPTY, builder().appendAll(listOf()).build());
+        assertEquals(sql("a", 1), builder().appendAll(listOf(sql("a", 1))).build());
+        assertEquals(sql("a b c", 1, 2, 3), builder().appendAll(listOf(sql("a", 1), sql("b"), sql("c", 2, 3))).build());
+
+        assertEquals(EMPTY, builder().appendAll(emptyIterator()).build());
+        assertEquals(sql("a", 1), builder().appendAll(listOf(sql("a", 1)).iterator()).build());
+        assertEquals(sql("a b c", 1, 2, 3), builder().appendAll(listOf(sql("a", 1), sql("b"), sql("c", 2, 3)).iterator()).build());
     }
 
     @Test void testParam() {
@@ -182,7 +199,37 @@ public class SqlSnippetTest {
     }
 
     @Test void testChunkedIn() {
-        fail("todo");
+        assertEquals(sql("( x IN (?,?,?) OR x IN (?,?,?) OR x IN (?) )", 1, 2, 3, 4, 5, 6, 7), chunkedIn(sql("x"), listOf(1, 2, 3, 4, 5, 6, 7), 3));
+        assertEquals(sql("( x IN (?,?) OR x IN (?,?) OR x IN (?,?) OR x IN (?) )", 1, 2, 3, 4, 5, 6, 7), chunkedIn(sql("x"), listOf(1, 2, 3, 4, 5, 6, 7), 2));
+
+        assertEquals(sql("( y IN (?,?,?) OR y IN (?,?,?) )", 1, 2, 3, 4, 5, 6), chunkedIn(sql("y"), listOf(1, 2, 3, 4, 5, 6), 3));
+        assertEquals(sql("( y IN (?,?) OR y IN (?,?) OR y IN (?,?) )", 1, 2, 3, 4, 5, 6), chunkedIn(sql("y"), listOf(1, 2, 3, 4, 5, 6), 2));
+
+        assertEquals(sql("x IN (?,?,?)", 1, 2, 3), chunkedIn(sql("x"), listOf(1, 2, 3), 3));
+        assertEquals(sql("x IN (?,?)", 1, 2), chunkedIn(sql("x"), listOf(1, 2), 3));
+        assertEquals(sql("x IN (?,?)", 1, 2), chunkedIn(sql("x"), listOf(1, 2), 2));
+
+        assertEquals(sql("x IN (?)", 1), chunkedIn(sql("x"), listOf(1), 2));
+
+        assertEquals(FALSE, chunkedIn(sql("x"), listOf(), 2));
+    }
+
+    @Test void testChunkedInDefaultSize() {
+        assertEquals(sql("x IN (?)", 1), chunkedIn(sql("x"), listOf(1)));
+        assertEquals(FALSE, chunkedIn(sql("x"), listOf()));
+
+        List<Integer> l = new ArrayList<>();
+        for(int i=0; i<1000; i++) {
+            l.add(i);
+        }
+
+        assertEquals(concat(sql("y"), in(l)), chunkedIn(sql("y"), l));
+
+        final List<Integer> l2 = new ArrayList<>(l);
+        l2.add(9999);
+        assertEquals(
+                concat(sql("( y"), in(l), sql("OR y IN (?) )", 9999)),
+                chunkedIn(sql("y"), l2));
     }
 
     @Test void testAnd() {
@@ -194,13 +241,13 @@ public class SqlSnippetTest {
         assertEquals(sql("( a AND b )", 1, 2), and(listOf(sql("a", 1), sql("b", 2))));
         assertEquals(sql("( a AND b AND c )", 1, 2, 3), and(listOf(sql("a", 1), sql("b"), sql("c", 2, 3))));
         assertEquals(sql("a", 1), and(listOf(sql("a", 1))));
-        assertEquals(sql("1<>2"), and(emptyList()));
+        assertEquals(TRUE, and(emptyList()));
     }
     @Test void testAndIterator() {
         assertEquals(sql("( a AND b )", 1, 2), and(listOf(sql("a", 1), sql("b", 2)).iterator()));
         assertEquals(sql("( a AND b AND c )", 1, 2, 3), and(listOf(sql("a", 1), sql("b"), sql("c", 2, 3)).iterator()));
         assertEquals(sql("a", 1), and(listOf(sql("a", 1)).iterator()));
-        assertEquals(sql("1<>2"), and(emptyIterator()));
+        assertEquals(TRUE, and(emptyIterator()));
     }
 
     @Test void testOr() {
@@ -212,13 +259,13 @@ public class SqlSnippetTest {
         assertEquals(sql("( a OR b )", 1, 2), or(listOf(sql("a", 1), sql("b", 2))));
         assertEquals(sql("( a OR b OR c )", 1, 2, 3), or(listOf(sql("a", 1), sql("b"), sql("c", 2, 3))));
         assertEquals(sql("a", 1), or(listOf(sql("a", 1))));
-        assertEquals(sql("1<>2"), or(emptyList()));
+        assertEquals(TRUE, or(emptyList()));
     }
     @Test void testOrIterator() {
         assertEquals(sql("( a OR b )", 1, 2), or(listOf(sql("a", 1), sql("b", 2)).iterator()));
         assertEquals(sql("( a OR b OR c )", 1, 2, 3), or(listOf(sql("a", 1), sql("b"), sql("c", 2, 3)).iterator()));
         assertEquals(sql("a", 1), or(listOf(sql("a", 1)).iterator()));
-        assertEquals(sql("1<>2"), or(emptyIterator()));
+        assertEquals(TRUE, or(emptyIterator()));
     }
 
     @Test void testWhereClause() {
