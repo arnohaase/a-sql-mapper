@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.common.RawRowExtractor;
@@ -100,7 +101,7 @@ public class SqlEngine {
         return update(sql, params).executeLarge(conn);
     }
 
-    //TODO expected 1 row
+    //TODO expected '1 row affected'?
 
     //--------------------------- batch updates
 
@@ -138,59 +139,84 @@ public class SqlEngine {
                 .orElseThrow(() -> new IllegalStateException("no default PK name was defined - call 'ASqlEngine.withDefaultPkName()' to set it"));
     }
 
-    public AInsert<UUID> insertUuidPk(String sql, Object... params) {
+    public UUID insertUuidPk(String sql, Object... params) {
         return insertUuidPk(SqlSnippet.sql(sql, params));
     }
-    public AInsert<String> insertStringPk(String sql, Object... params) {
+    public String insertStringPk(String sql, Object... params) {
         return insertStringPk(SqlSnippet.sql(sql, params));
     }
-    public AInsert<Integer> insertIntegerPk(String sql, Object... params) {
+    public int insertIntegerPk(String sql, Object... params) {
         return insertIntegerPk(SqlSnippet.sql(sql, params));
     }
-    public AInsert<Long> insertLongPk(String sql, Object... params) {
+    public long insertLongPk(String sql, Object... params) {
         return insertLongPk(SqlSnippet.sql(sql, params));
     }
-    public <T> AInsert<T> insertSingleColPk(Class<T> pkType, String sql, Object... params) {
+    public <T> T insertSingleColPk(Class<T> pkType, String sql, Object... params) {
         return insertSingleColPk(pkType, SqlSnippet.sql(sql, params));
     }
 
-    public AInsert<UUID> insertUuidPk(SqlSnippet sql, SqlSnippet... moreSql) {
+    public UUID insertUuidPk(SqlSnippet sql, SqlSnippet... moreSql) {
         return insertUuidPkInCol(defaultPkName(), sql, moreSql);
     }
-    public AInsert<String> insertStringPk(SqlSnippet sql, SqlSnippet... moreSql) {
+    public String insertStringPk(SqlSnippet sql, SqlSnippet... moreSql) {
         return insertStringPkInCol(defaultPkName(), sql, moreSql);
     }
-    public AInsert<Integer> insertIntegerPk(SqlSnippet sql, SqlSnippet... moreSql) {
+    public int insertIntegerPk(SqlSnippet sql, SqlSnippet... moreSql) {
         return insertIntegerPkInCol(defaultPkName(), sql, moreSql);
     }
-    public AInsert<Long> insertLongPk(SqlSnippet sql, SqlSnippet... moreSql) {
+    public long insertLongPk(SqlSnippet sql, SqlSnippet... moreSql) {
         return insertLongPkInCol(defaultPkName(), sql, moreSql);
     }
-    public <T> AInsert<T> insertSingleColPk(Class<T> pkType, SqlSnippet sql, SqlSnippet... moreSql) {
+    public <T> T insertSingleColPk(Class<T> pkType, SqlSnippet sql, SqlSnippet... moreSql) {
         return insertSingleColPkInCol(defaultPkName(), pkType, sql, moreSql);
     }
 
-    public AInsert<UUID> insertUuidPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
+    public UUID insertUuidPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
         return insert(UUID.class, ScalarRowExtractor.UUID_EXTRACTOR, concat(sql, moreSql), AVector.of(colName));
     }
-    public AInsert<String> insertStringPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
+    public String insertStringPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
         return insert(String.class, ScalarRowExtractor.STRING_EXTRACTOR, concat(sql, moreSql), AVector.of(colName));
     }
-    public AInsert<Integer> insertIntegerPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
+    public int insertIntegerPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
         return insert(Integer.class, ScalarRowExtractor.INT_EXTRACTOR, concat(sql, moreSql), AVector.of(colName));
     }
-    public AInsert<Long> insertLongPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
+    public long insertLongPkInCol(String colName, SqlSnippet sql, SqlSnippet... moreSql) {
         return insert(Long.class, ScalarRowExtractor.LONG_EXTRACTOR, concat(sql, moreSql), AVector.of(colName));
     }
-    public <T> AInsert<T> insertSingleColPkInCol(String colName, Class<T> pkType, SqlSnippet sql, SqlSnippet... moreSql) {
+
+    public <T> T insertSingleColPkInCol(String colName, Class<T> pkType, SqlSnippet sql, SqlSnippet... moreSql) {
         return insert(pkType, new ScalarRowExtractor(pkType), concat(sql, moreSql), colName);
     }
+    public <T> T insertSingleColPkInCol(Connection conn, String colName, Class<T> pkType, SqlSnippet sql, SqlSnippet... moreSql) {
+        return insert(conn, pkType, new ScalarRowExtractor(pkType), concat(sql, moreSql), colName);
+    }
 
-    public <T> AInsert<T> insert(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, String colName1, String... colNames) {
+    public <T> T insert(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, String colName1, String... colNames) {
         return insert(pkType, rowExtractor, sql, AVector.<String>builder().add(colName1).addAll(colNames).build());
     }
-    public <T> AInsert<T> insert(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, AVector<String> colNames) {
-        return new AInsertImpl<>(pkType, sql, primTypes, rowExtractor, colNames, listeners, defaultConnectionSupplier);
+    public <T> T insert(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, List<String> colNames) {
+        return new AInsertImpl<>(pkType, sql, primTypes, rowExtractor, colNames, listeners, defaultConnectionSupplier).executeSingle();
+    }
+
+    public <T> T insert(Connection conn, Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, String colName1, String... colNames) {
+        return insert(conn, pkType, rowExtractor, sql, AVector.<String>builder().add(colName1).addAll(colNames).build());
+    }
+    public <T> T insert(Connection conn, Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, List<String> colNames) {
+        return new AInsertImpl<>(pkType, sql, primTypes, rowExtractor, colNames, listeners, defaultConnectionSupplier).executeSingle(conn);
+    }
+
+    public <T> AList<T> insertMulti(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, String colName1, String... colNames) {
+        return insertMulti(pkType, rowExtractor, sql, AVector.<String>builder().add(colName1).addAll(colNames).build());
+    }
+    public <T> AList<T> insertMulti(Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, List<String> colNames) {
+        return new AInsertImpl<>(pkType, sql, primTypes, rowExtractor, colNames, listeners, defaultConnectionSupplier).executeMulti();
+    }
+
+    public <T> AList<T> insertMulti(Connection conn, Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, String colName1, String... colNames) {
+        return insertMulti(conn, pkType, rowExtractor, sql, AVector.<String>builder().add(colName1).addAll(colNames).build());
+    }
+    public <T> AList<T> insertMulti(Connection conn, Class<T> pkType, RowExtractor rowExtractor, SqlSnippet sql, List<String> colNames) {
+        return new AInsertImpl<>(pkType, sql, primTypes, rowExtractor, colNames, listeners, defaultConnectionSupplier).executeMulti(conn);
     }
 
     // -------------------------- select statements
@@ -249,7 +275,7 @@ public class SqlEngine {
         return new AQueryImpl<>(Boolean.class, concat(sql, moreSql), primTypes, ScalarRowExtractor.BOOLEAN_EXTRACTOR, listeners,
                 defaultConnectionSupplier, AVector.empty());
     }
-    public AQuery<Boolean> booleanDecimalQuery(String sql, Object... params) {
+    public AQuery<Boolean> booleanQuery(String sql, Object... params) {
         return booleanQuery(SqlSnippet.sql(sql, params));
     }
 

@@ -1,16 +1,16 @@
 package com.ajjpj.asqlmapper.core.listener;
 
-import com.ajjpj.acollections.ASet;
-import com.ajjpj.acollections.immutable.AVector;
-import com.ajjpj.asqlmapper.core.SqlSnippet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
+
+import com.ajjpj.acollections.ASet;
+import com.ajjpj.acollections.immutable.AVector;
+import com.ajjpj.asqlmapper.core.SqlSnippet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**

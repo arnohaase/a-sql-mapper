@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.AMap;
-import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AUnchecker;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 
@@ -55,5 +54,13 @@ public class DetachedSqlRow implements SqlRow {
 
         result.append("}");
         return result.toString();
+    }
+
+    @Override public boolean equals(Object obj) {
+        if(! (obj instanceof SqlRow)) {
+            return false;
+        }
+
+        return byLowerCaseColumn.equals(((SqlRow)obj).detach().byLowerCaseColumn);
     }
 }

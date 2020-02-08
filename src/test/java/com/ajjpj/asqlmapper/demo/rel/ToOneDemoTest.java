@@ -40,19 +40,23 @@ class ToOneDemoTest extends AbstractDatabaseTest {
 
     @Test
     void testToOne() {
-        final List<Long> addressIds = mapper.engine()
-                .insertLongPk("INSERT INTO address (street, city) VALUES (?,?),(?,?),(?,?)", "s1", "c1", "s2", "c2", "s3", "c3")
-                .executeMulti();
+        final List<Long> addressIds = null;
+//        mapper.engine()
+//                .insertLongPk("INSERT INTO address (street, city) VALUES (?,?),(?,?),(?,?)", "s1", "c1", "s2", "c2", "s3", "c3")
+//                .executeMulti();
 
-        final long personId1 = mapper.engine()
-                .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno1", addressIds.get(0))
-                .executeSingle();
-        final long personId2 = mapper.engine()
-                .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno2", addressIds.get(1))
-                .executeSingle();
-        final long personId3 = mapper.engine()
-                .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno3", addressIds.get(2))
-                .executeSingle();
+        final long personId1 = 1;
+//        mapper.engine()
+//                .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno1", addressIds.get(0))
+//                .executeSingle();
+        final long personId2 = 1;
+//        mapper.engine()
+//                .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno2", addressIds.get(1))
+//                .executeSingle();
+        final long personId3 = 1;
+//        mapper.engine()
+//                .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno3", addressIds.get(2))
+//                .executeSingle();
 
         final SqlEngine engine = mapper.engine();
 

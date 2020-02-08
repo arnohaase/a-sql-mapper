@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class AInsertImpl<T> implements AInsert<T> {
@@ -28,12 +29,12 @@ public class AInsertImpl<T> implements AInsert<T> {
     private final AOption<Supplier<Connection>> defaultConnectionSupplier;
 
     public AInsertImpl (Class<T> pkCls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, RowExtractor rowExtractor,
-                        AVector<String> columnNames, AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier) {
+                        List<String> columnNames, AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier) {
         this.pkCls = pkCls;
         this.sql = sql;
         this.primTypes = primTypes;
         this.rowExtractor = rowExtractor;
-        this.columnNames = columnNames;
+        this.columnNames = AVector.from(columnNames);
         this.listeners = listeners;
         this.defaultConnectionSupplier = defaultConnectionSupplier;
     }

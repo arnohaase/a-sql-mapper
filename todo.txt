@@ -7,8 +7,14 @@ todo
 
 * comprehensive tests
 
+* unit tests against PostGres, Oracle, DB2, SQL Server, ...
+
 * demo test
   * snippets
+
+* user types - explicit primitive conversion based on schema / annotation?
+
+* Blob, Clob, NCLOB -> PrimitiveTypeMappings
 
 * mapper queries mit snippets --> how to do this best?
   * filter
@@ -33,9 +39,6 @@ todo
 * optimized 'isStreaming=true' implementation for Java Beans extractor
 
 * 'getter' convention based column name strategy
-
-* unit tests
-* documentation
 
 * "derived" columns -> ?
 

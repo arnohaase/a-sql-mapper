@@ -6,7 +6,6 @@ import java.sql.SQLException;
 
 import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.ASet;
-import com.ajjpj.acollections.util.AUnchecker;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlMapperBuilder;
 import com.ajjpj.asqlmapper.core.SqlEngine;
@@ -44,19 +43,19 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest {
 
     @Test
     public void testManyToMany() throws NoSuchMethodException {
-        final long personId1 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno1").executeSingle();
-        final long personId2 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno2").executeSingle();
-        final long personId3 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno3").executeSingle();
+        final long personId1 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno1");
+        final long personId2 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno2");
+        final long personId3 = mapper.engine().insertLongPk("insert into person(name) values (?)", "Arno3");
 
-        final long addrId11 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street11", "city11").executeSingle();
-        final long addrId12 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street12", "city12").executeSingle();
-        final long addrId13 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street13", "city13").executeSingle();
-        final long addrId21 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street21", "city21").executeSingle();
-        final long addrId22 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street22", "city22").executeSingle();
-        final long addrId23 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street23", "city23").executeSingle();
-        final long addrId31 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street31", "city31").executeSingle();
-        final long addrId32 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street32", "city32").executeSingle();
-        final long addrId33 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street33", "city33").executeSingle();
+        final long addrId11 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street11", "city11");
+        final long addrId12 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street12", "city12");
+        final long addrId13 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street13", "city13");
+        final long addrId21 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street21", "city21");
+        final long addrId22 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street22", "city22");
+        final long addrId23 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street23", "city23");
+        final long addrId31 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street31", "city31");
+        final long addrId32 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street32", "city32");
+        final long addrId33 = mapper.engine().insertLongPk("insert into address(street, city) values (?,?)", "street33", "city33");
 
         mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId1, addrId11);
         mapper.engine().executeUpdate("insert into person_address (person_id, address_id) values(?,?)", personId1, addrId12);
