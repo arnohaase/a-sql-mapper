@@ -7,10 +7,7 @@ import java.util.Map;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
-import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
-import com.ajjpj.asqlmapper.core.common.SqlStream;
-import com.ajjpj.asqlmapper.core.impl.AQueryImpl;
 
 public class InjectedToOneProperty<T> implements InjectedProperty<Map<Object,T>> {
     private final String propertyName;
@@ -34,10 +31,8 @@ public class InjectedToOneProperty<T> implements InjectedProperty<Map<Object,T>>
     @Override public Map<Object,T> mementoPerQuery (Connection conn, Class<?> owningClass, SqlSnippet owningQuery) {
         final Map<Object,T> result = new HashMap<>();
 
-        final SqlStream<T> stream = ((AQueryImpl<T>)detailQuery).streamWithRowAccess(conn);
-        //TODO UndeclaredThrowableException?!
-        stream.forEach(el -> {
-            final Object key = stream.currentRow().get(keyType, detailKeyName);
+        detailQuery.forEachWithRowAccess(conn, (el, row) -> {
+            final Object key = row.get(keyType, detailKeyName);
             result.put(key, el);
             //TODO warn about duplicates?
         });

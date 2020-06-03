@@ -37,13 +37,13 @@ class DemoTest extends AbstractDatabaseTest {
 
     @BeforeEach
     void setUp() throws SQLException {
-        conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
+        executeUpdate("create table person(id bigserial primary key, name varchar(200))");
         engine = builder.build(DatabaseDialect.H2).engine();
     }
 
     @AfterEach
     void tearDown() throws SQLException {
-        conn.prepareStatement("drop table person").executeUpdate();
+        executeUpdate("drop table person");
         System.out.println(LoggingListener.getAllStatistics().mkString("\n"));
     }
 
@@ -78,6 +78,7 @@ class DemoTest extends AbstractDatabaseTest {
         assertTrue(mapper.patch(Person.class, 1L, AMap.of("name", "whoever")));
         assertEquals("whoever", engine.query(Person.class, "select * from person where id=?", 1).single().getName());
         assertEquals("Arno", engine.query(Person.class, "select * from person where id=?", 2).single().getName());
+        assertTrue(mapper.patch(Person.class, 1L, AMap.of("no-mapped-prop", "pling")));
 
         assertTrue(mapper.delete(inserted1));
         assertEquals(0L, engine.longQuery("select count(*) from person where id=?", 1).single().longValue());

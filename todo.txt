@@ -13,6 +13,14 @@ todo
   * order by
   * ...
 
+* @ManyToMany: masterPk
+* @ManyToOne: on a struct without mapped primary key
+
+* ASqlMapper exception handling https://git.hypeinnovation.com/hype.io/hypeio-app/issues/117#note_2661
+
+* update / patch: optionale zusätzliche WHERE-Klausel
+  * patch: Convenience-Methoden im SqlSnippet verwenden
+
 * base
   * tuples
     * special handling, 'implicit' row extractor based on ptm

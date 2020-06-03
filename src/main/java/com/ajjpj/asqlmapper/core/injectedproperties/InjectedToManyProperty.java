@@ -9,8 +9,6 @@ import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.common.CollectionBuildStrategy;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
-import com.ajjpj.asqlmapper.core.common.SqlStream;
-import com.ajjpj.asqlmapper.core.impl.AQueryImpl;
 
 
 public class InjectedToManyProperty<T,C,B> implements InjectedProperty<Map<Object,C>> {
@@ -39,9 +37,8 @@ public class InjectedToManyProperty<T,C,B> implements InjectedProperty<Map<Objec
     @Override public Map<Object,C> mementoPerQuery (Connection conn, Class<?> owningClass, SqlSnippet owningQuery) {
         final Map<Object,B> resultRaw = new HashMap<>();
 
-        final SqlStream<T> stream = ((AQueryImpl<T>)detailQuery).streamWithRowAccess(conn);
-        stream.forEach(el -> {
-            final Object key = stream.currentRow().get(keyType, detailKeyName);
+        detailQuery.forEachWithRowAccess(conn, (el, row) -> {
+            final Object key = row.get(keyType, detailKeyName);
             final B coll = resultRaw.computeIfAbsent(key, k -> collectionBuildStrategy.createBuilder());
             collectionBuildStrategy.addElement(coll, el);
         });
@@ -63,6 +60,6 @@ public class InjectedToManyProperty<T,C,B> implements InjectedProperty<Map<Objec
 
     @Override public AOption<Object> value (Connection conn, SqlRow currentRow, Map<Object,C> memento) {
         final Object curMasterKey = currentRow.get(keyType, masterKeyName);
-        return memento.containsKey(curMasterKey) ? AOption.some(memento.get(curMasterKey)) : AOption.none();
+        return memento.containsKey(curMasterKey) ? AOption.some(memento.get(curMasterKey)) : AOption.some(collectionBuildStrategy.empty());
     }
 }

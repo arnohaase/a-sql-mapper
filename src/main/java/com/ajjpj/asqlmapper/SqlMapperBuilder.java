@@ -69,8 +69,8 @@ public class SqlMapperBuilder {
         return this;
     }
 
-    public SqlMapperBuilder disableLogging() {
-        withLogging = false;
+    public SqlMapperBuilder withLogging(boolean withLogging) {
+        this.withLogging = withLogging;
         return this;
     }
 

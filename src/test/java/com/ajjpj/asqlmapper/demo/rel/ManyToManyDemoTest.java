@@ -6,6 +6,7 @@ import java.sql.SQLException;
 
 import com.ajjpj.acollections.AList;
 import com.ajjpj.acollections.ASet;
+import com.ajjpj.acollections.util.AUnchecker;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlMapperBuilder;
 import com.ajjpj.asqlmapper.core.SqlEngine;
@@ -22,9 +23,10 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest {
 
     @BeforeEach
     void setUp() throws SQLException {
-        conn.prepareStatement("create table person(id bigserial primary key, name varchar(200))").executeUpdate();
-        conn.prepareStatement("create table address(id bigserial primary key, street varchar(200), city varchar(200))").executeUpdate();
-        conn.prepareStatement("create table person_address(person_id bigint references person, address_id bigint references address, primary key(person_id, address_id))").executeUpdate();
+        executeUpdate("create table person(id bigserial primary key, name varchar(200))");
+        executeUpdate("create table address(id bigserial primary key, street varchar(200), city varchar(200))");
+        executeUpdate(
+                "create table person_address(person_id bigint references person, address_id bigint references address, primary key(person_id, address_id))");
 
         mapper = new SqlMapperBuilder()
                 .withDefaultPkName("id")
@@ -35,9 +37,9 @@ public class ManyToManyDemoTest extends AbstractDatabaseTest {
 
     @AfterEach
     void tearDown() throws SQLException {
-        conn.prepareStatement("drop table person_address").executeUpdate();
-        conn.prepareStatement("drop table person").executeUpdate();
-        conn.prepareStatement("drop table address").executeUpdate();
+        executeUpdate("drop table person_address");
+        executeUpdate("drop table person");
+        executeUpdate("drop table address");
     }
 
     @Test

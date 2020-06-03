@@ -21,8 +21,9 @@ class ToOneDemoTest extends AbstractDatabaseTest {
 
     @BeforeEach
     void setUp() throws SQLException {
-        conn.prepareStatement("create table address(id bigserial primary key, street varchar(200), city varchar(200))").executeUpdate();
-        conn.prepareStatement("create table person(id bigserial primary key, name varchar(200), address_id bigint references address)").executeUpdate();
+        executeUpdate("create table address(id bigserial primary key, street varchar(200), city varchar(200))");
+        executeUpdate(
+                "create table person(id bigserial primary key, name varchar(200), address_id bigint references address)");
 
         mapper = new SqlMapperBuilder()
                 .withDefaultPkName("id")
@@ -33,8 +34,8 @@ class ToOneDemoTest extends AbstractDatabaseTest {
 
     @AfterEach
     void tearDown() throws SQLException {
-        conn.prepareStatement("drop table person").executeUpdate();
-        conn.prepareStatement("drop table address").executeUpdate();
+        executeUpdate("drop table person");
+        executeUpdate("drop table address");
     }
 
     @Test
