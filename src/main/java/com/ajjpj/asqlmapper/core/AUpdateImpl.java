@@ -1,4 +1,4 @@
-package com.ajjpj.asqlmapper.core.impl;
+package com.ajjpj.asqlmapper.core;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,12 +8,10 @@ import java.util.function.Supplier;
 import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.acollections.util.AUnchecker;
-import com.ajjpj.asqlmapper.core.AUpdate;
-import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
-import com.ajjpj.asqlmapper.core.SqlSnippet;
+import com.ajjpj.asqlmapper.core.impl.SqlHelper;
 import com.ajjpj.asqlmapper.core.listener.SqlEngineEventListener;
 
-public class AUpdateImpl implements AUpdate {
+class AUpdateImpl implements AUpdate {
     private final SqlSnippet sql;
     private final PrimitiveTypeRegistry primTypes;
     private final AVector<SqlEngineEventListener> listeners;

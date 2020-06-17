@@ -4,12 +4,13 @@ import static com.ajjpj.asqlmapper.core.SqlSnippet.sql;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.ajjpj.acollections.AList;
+import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
+import com.ajjpj.asqlmapper.core.common.CommonPrimitiveHandlers;
 import com.ajjpj.asqlmapper.core.common.RawRowExtractor;
 import com.ajjpj.asqlmapper.core.common.ScalarRowExtractor;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
@@ -253,68 +254,316 @@ public class SqlEngineTest extends AbstractDatabaseTest {
     }
 
     @Test void testTodo() {
-        fail("make AInsert package visible");
-        fail("remove AInsert - it is obsolete");
-        fail("insert methods with explicit Connection");
         fail("SqlEngine javadoc");
+        fail("javadoc AQuery");
         fail("SqlMapper#120");
         fail("DemoTest#55");
         fail("ToOneDemoTest#44");
     }
 
-    @Test void testInsertUuidPk() {
-        fail("todo");
-    }
-
-    @Test void testInsertStringPk() {
-        fail("todo");
-    }
-
     @Test void testInsertIntegerPk() {
-        fail("todo");
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine eConn = e.withDefaultConnectionSupplier(() -> conn);
+        final SqlEngine eId = e.withDefaultPkName("id");
+        final SqlEngine eConnId = eConn.withDefaultPkName("id");
+
+        final List<Integer> pks = new ArrayList<>();
+
+        pks.add(e.insertIntegerPkInCol(conn, "id", "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(e.insertIntegerPkInCol(conn, "id", sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertThrows(IllegalStateException.class, () -> e.insertIntegerPkInCol("id", "INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> e.insertIntegerPkInCol("id", sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        pks.add(eConn.insertIntegerPkInCol("id", "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(eConn.insertIntegerPkInCol("id", sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertThrows(IllegalStateException.class, () -> e.insertIntegerPk(conn, "INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> e.insertIntegerPk(conn, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        pks.add(eId.insertIntegerPk(conn, "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(eId.insertIntegerPk(conn, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertThrows(IllegalStateException.class, () -> eId.insertIntegerPk("INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> eId.insertIntegerPk(sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        assertThrows(IllegalStateException.class, () -> eConn.insertIntegerPk("INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> eConn.insertIntegerPk(sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        pks.add(eConnId.insertIntegerPk("INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(eConnId.insertIntegerPk(sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertEquals(pks, eConn.intQuery("SELECT id FROM person ORDER BY id").list());
     }
 
     @Test void testInsertLongPk() {
-        fail("todo");
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine eConn = e.withDefaultConnectionSupplier(() -> conn);
+        final SqlEngine eId = e.withDefaultPkName("id");
+        final SqlEngine eConnId = eConn.withDefaultPkName("id");
+
+        final List<Long> pks = new ArrayList<>();
+
+        pks.add(e.insertLongPkInCol(conn, "id", "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(e.insertLongPkInCol(conn, "id", sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertThrows(IllegalStateException.class, () -> e.insertLongPkInCol("id", "INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> e.insertLongPkInCol("id", sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        pks.add(eConn.insertLongPkInCol("id", "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(eConn.insertLongPkInCol("id", sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertThrows(IllegalStateException.class, () -> e.insertLongPk(conn, "INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> e.insertLongPk(conn, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        pks.add(eId.insertLongPk(conn, "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(eId.insertLongPk(conn, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertThrows(IllegalStateException.class, () -> eId.insertLongPk("INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> eId.insertLongPk(sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        assertThrows(IllegalStateException.class, () -> eConn.insertLongPk("INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> eConn.insertLongPk(sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        pks.add(eConnId.insertLongPk("INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(eConnId.insertLongPk(sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertEquals(pks, eConn.longQuery("SELECT id FROM person ORDER BY id").list());
     }
 
     @Test void testInsertSingleColPk() {
-        fail("todo");
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine eConn = e.withDefaultConnectionSupplier(() -> conn);
+        final SqlEngine eId = e.withDefaultPkName("id");
+        final SqlEngine eConnId = eConn.withDefaultPkName("id");
+
+        final List<Long> pks = new ArrayList<>();
+
+        pks.add(e.insertSingleColPkInCol(conn, "id", Long.class, "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(e.insertSingleColPkInCol(conn, "id", Long.class, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertThrows(IllegalStateException.class, () -> e.insertSingleColPkInCol("id", Long.class, "INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> e.insertSingleColPkInCol("id", Long.class, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        pks.add(eConn.insertSingleColPkInCol("id", Long.class, "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(eConn.insertSingleColPkInCol("id", Long.class, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertThrows(IllegalStateException.class, () -> e.insertSingleColPk(conn, Long.class, "INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> e.insertSingleColPk(conn, Long.class, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        pks.add(eId.insertSingleColPk(conn, Long.class, "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(eId.insertSingleColPk(conn, Long.class, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertThrows(IllegalStateException.class, () -> eId.insertSingleColPk(Long.class, "INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> eId.insertSingleColPk(Long.class, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        assertThrows(IllegalStateException.class, () -> eConn.insertSingleColPk(Long.class, "INSERT INTO person (name) VALUES (?)", "arno"));
+        assertThrows(IllegalStateException.class, () -> eConn.insertSingleColPk(Long.class, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+        pks.add(eConnId.insertSingleColPk(Long.class, "INSERT INTO person (name) VALUES (?)", "arno"));
+        pks.add(eConnId.insertSingleColPk(Long.class, sql("INSERT INTO person (name)"), sql("VALUES (?)", "arno")));
+
+        assertEquals(pks, eConn.longQuery("SELECT id FROM person ORDER BY id").list());
     }
 
     @Test void testScalarQuery() {
-        fail("todo");
+        final SqlEngine engine = SqlEngine.create();
+
+        assertEquals(0, engine.scalarQuery(Integer.class, "SELECT COUNT(*) FROM person WHERE name LIKE ?", "%").single(conn).intValue());
+        assertEquals(0, engine.scalarQuery(Integer.class, sql("SELECT COUNT(*) FROM person WHERE name"), sql("LIKE ?", "%")).single(conn).intValue());
     }
 
-    @Test void testQuery() {
+    @Test void testAQuerySingle() {
+        createPerson(1, "Arno");
+        createPerson(2, "B");
+        createPerson(3, "B");
+
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine e2 = e.withDefaultConnectionSupplier(() -> conn);
+
+        assertEquals("Arno", e.stringQuery("SELECT name FROM person WHERE id=?", 1).single(conn));
+        assertThrows(IllegalStateException.class, () -> e.stringQuery("SELECT name FROM person WHERE id=?", 1).single());
+        assertEquals("Arno", e2.stringQuery("SELECT name FROM person WHERE id=?", 1).single());
+
+        assertThrows(IllegalStateException.class, () -> e.stringQuery("SELECT name FROM person").single(conn));
+        assertThrows(NoSuchElementException.class, () -> e.stringQuery("SELECT name FROM person WHERE id=?", 99).single(conn));
+    }
+
+    @Test void testAQueryOptional() {
+        createPerson(1, "Arno");
+        createPerson(2, "B");
+        createPerson(3, "B");
+
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine e2 = e.withDefaultConnectionSupplier(() -> conn);
+
+        assertEquals(AOption.of("Arno"), e.stringQuery("SELECT name FROM person WHERE id=?", 1).optional(conn));
+        assertThrows(IllegalStateException.class, () -> e.stringQuery("SELECT name FROM person WHERE id=?", 1).optional());
+        assertEquals(AOption.of("Arno"), e2.stringQuery("SELECT name FROM person WHERE id=?", 1).optional());
+
+        assertThrows(IllegalStateException.class, () -> e.stringQuery("SELECT name FROM person").optional(conn));
+        assertEquals(AOption.empty(), e.stringQuery("SELECT name FROM person WHERE id=?", 99).optional(conn));
+    }
+
+    @Test void testAQueryFirst() {
+        createPerson(1, "Arno");
+        createPerson(2, "B");
+        createPerson(3, "B");
+
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine e2 = e.withDefaultConnectionSupplier(() -> conn);
+
+        assertEquals(AOption.of("Arno"), e.stringQuery("SELECT name FROM person WHERE id=?", 1).first(conn));
+        assertThrows(IllegalStateException.class, () -> e.stringQuery("SELECT name FROM person WHERE id=?", 1).first());
+        assertEquals(AOption.of("Arno"), e2.stringQuery("SELECT name FROM person WHERE id=?", 1).first());
+
+        assertEquals(AOption.of("B"), e.stringQuery("SELECT name FROM person WHERE id>1").first(conn));
+        assertEquals(AOption.empty(), e.stringQuery("SELECT name FROM person WHERE id=?", 99).first(conn));
+    }
+
+    @Test void testAQueryList() {
+        createPerson(1, "Arno");
+        createPerson(2, "Arno");
+        createPerson(3, "Bert");
+
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine e2 = e.withDefaultConnectionSupplier(() -> conn);
+
+        assertEquals(AList.of(1, 2), e.intQuery("SELECT id FROM person WHERE name=?", "Arno").list(conn));
+        assertThrows(IllegalStateException.class, () -> e.intQuery("SELECT id FROM person WHERE name=?", "Arno").list());
+        assertEquals(AList.of(1, 2), e2.intQuery("SELECT id FROM person WHERE name=?", "Arno").list());
+    }
+
+    @Test void testAQueryForEach() {
+        createPerson(1, "Arno");
+        createPerson(2, "Arno");
+        createPerson(3, "Bert");
+
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine e2 = e.withDefaultConnectionSupplier(() -> conn);
+
+        final List<Integer> result = new ArrayList<>();
+
+        e.intQuery("SELECT id FROM person WHERE name=?", "Arno").forEach(conn, result::add);
+        assertThrows(IllegalStateException.class, () -> e.intQuery("SELECT id FROM person WHERE name=?", "Arno").forEach(result::add));
+        e2.intQuery("SELECT id FROM person WHERE name=?", "Arno").forEach(result::add);
+
+        assertEquals(AList.of(1, 2, 1, 2), result);
+    }
+
+    @Test void testAQueryForEachWithRowAccess() {
+        createPerson(1, "Arno");
+        createPerson(2, "Arno");
+        createPerson(3, "Bert");
+
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine e2 = e.withDefaultConnectionSupplier(() -> conn);
+
+        final List<Integer> result = new ArrayList<>();
+
+        e.intQuery("SELECT id FROM person WHERE name=?", "Arno").forEachWithRowAccess(conn, (i, row) -> {
+            assertEquals(i, row.getInt(0));
+            assertEquals(i, row.getInt("id"));
+            result.add(i);
+        });
+        assertThrows(IllegalStateException.class, () -> e.intQuery("SELECT id FROM person WHERE name=?", "Arno").forEachWithRowAccess((i, row) -> {
+            assertEquals(i, row.getInt(0));
+            assertEquals(i, row.getInt("id"));
+            result.add(i);
+        }));
+        e2.intQuery("SELECT id FROM person WHERE name=?", "Arno").forEachWithRowAccess((i, row) -> {
+            assertEquals(i, row.getInt(0));
+            assertEquals(i, row.getInt("id"));
+            result.add(i);
+        });
+
+        assertEquals(AList.of(1, 2, 1, 2), result);
+    }
+
+    @Test void testAQueryCollect() {
+        createPerson(1, "Arno");
+        createPerson(2, "Arno");
+        createPerson(3, "Bert");
+
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine e2 = e.withDefaultConnectionSupplier(() -> conn);
+
+        assertEquals(AList.of(1, 2), e.intQuery("SELECT id FROM person WHERE name=?", "Arno").collect(conn, Collectors.toList()));
+        assertThrows(IllegalStateException.class, () -> e.intQuery("SELECT id FROM person WHERE name=?", "Arno").collect(Collectors.toList()));
+        assertEquals(AList.of(1, 2), e2.intQuery("SELECT id FROM person WHERE name=?", "Arno").collect(Collectors.toList()));
+    }
+
+    @Test void testAQueryStream() {
+        createPerson(1, "Arno");
+        createPerson(2, "Arno");
+        createPerson(3, "Bert");
+
+        final SqlEngine e = SqlEngine.create();
+        final SqlEngine e2 = e.withDefaultConnectionSupplier(() -> conn);
+
+        assertEquals(AList.of(1, 2), e.intQuery("SELECT id FROM person WHERE name=?", "Arno").stream(conn).collect(Collectors.toList()));
+        //noinspection ResultOfMethodCallIgnored
+        assertThrows(IllegalStateException.class, () -> e.intQuery("SELECT id FROM person WHERE name=?", "Arno").stream().collect(Collectors.toList()));
+        assertEquals(AList.of(1, 2), e2.intQuery("SELECT id FROM person WHERE name=?", "Arno").stream().collect(Collectors.toList()));
+    }
+
+    @Test void testInjectedProperty() {
         fail("todo");
     }
 
     @Test void testRawQuery() {
-        fail("todo");
+        createPerson(1, "Arno");
+        createPerson(2, "Bert");
+        createPerson(3, "Curt");
+
+        final SqlEngine engine = SqlEngine.create();
+
+        assertEquals(AList.of("Arno", "Bert", "Curt"), engine.rawQuery("SELECT name FROM person ORDER BY id").list(conn).map(row -> row.getString(0)));
+        assertEquals(AList.of("Arno", "Bert", "Curt"), engine.rawQuery(sql("SELECT name FROM person"), sql("ORDER BY id")).list(conn).map(row -> row.getString(0)));
     }
 
     @Test void testLongQuery() {
-        fail("todo");
+        final SqlEngine engine = SqlEngine.create();
+
+        assertEquals(0, engine.longQuery("SELECT COUNT(*) FROM person WHERE name LIKE ?", "%").single(conn).longValue());
+        assertEquals(0, engine.longQuery(sql("SELECT COUNT(*) FROM person WHERE name"), sql("LIKE ?", "%")).single(conn).longValue());
     }
 
     @Test void testIntQuery() {
-        fail("todo");
+        final SqlEngine engine = SqlEngine.create();
+
+        assertEquals(0, engine.intQuery("SELECT COUNT(*) FROM person WHERE name LIKE ?", "%").single(conn).intValue());
+        assertEquals(0, engine.intQuery(sql("SELECT COUNT(*) FROM person WHERE name"), sql("LIKE ?", "%")).single(conn).intValue());
     }
 
     @Test void testStringQuery() {
-        fail("todo");
+        createPerson(1, "Arno");
+
+        final SqlEngine engine = SqlEngine.create();
+
+        assertEquals("Arno", engine.stringQuery("SELECT name FROM person WHERE name LIKE ?", "%").single(conn));
+        assertEquals("Arno", engine.stringQuery(sql("SELECT name FROM person WHERE name"), sql("LIKE ?", "%")).single(conn));
     }
 
     @Test void testUuidQuery() {
-        fail("todo");
+        final UUID uuid = UUID.randomUUID();
+        createPerson(1, uuid.toString());
+
+        final SqlEngine engine = SqlEngine
+                .create()
+                .withPrimitiveHandler(CommonPrimitiveHandlers.UUID_AS_STRING_HANDLER);
+
+        assertEquals(uuid, engine.uuidQuery("SELECT name FROM person").single(conn));
+        assertEquals(uuid, engine.uuidQuery(sql("SELECT name"), sql("FROM person")).single(conn));
     }
 
     @Test void testBooleanQuery() {
-        fail("todo");
+        createPerson(1, "Arno");
+
+        final SqlEngine engine = SqlEngine.create();
+
+        assertTrue(engine.booleanQuery("SELECT 1<2 FROM person").single(conn));
+        assertTrue(engine.booleanQuery(sql("SELECT 1<2"), sql("FROM person")).single(conn));
     }
 
     @Test void testDoubleQuery() {
+        createPerson(1, "Arno");
+
+        final SqlEngine engine = SqlEngine.create();
+
+        assertEquals(1.0, engine.doubleQuery("SELECT id FROM person").single(conn), .000001);
+        assertEquals(1.0, engine.doubleQuery(sql("SELECT id"), sql("FROM person")).single(conn), .000001);
+    }
+
+    @Test void testRawTypeMapping() {
         fail("todo");
     }
 

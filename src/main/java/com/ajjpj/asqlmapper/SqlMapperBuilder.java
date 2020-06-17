@@ -8,6 +8,7 @@ import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.acollections.util.AOption;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeHandler;
 import com.ajjpj.asqlmapper.core.SqlEngine;
+import com.ajjpj.asqlmapper.core.impl.Constants;
 import com.ajjpj.asqlmapper.core.listener.LoggingListener;
 import com.ajjpj.asqlmapper.javabeans.BeanMetaDataRegistry;
 import com.ajjpj.asqlmapper.javabeans.BeanMetaDataRegistryImpl;
@@ -63,6 +64,8 @@ public class SqlMapperBuilder {
 
     private TableNameExtractor tableNameExtractor = new DefaultTableNameExtractor();
     private PkStrategyDecider pkStrategyDecider = new GuessingPkStrategyDecider();
+
+    private int defaultFetchSize = Constants.DEFAULT_FETCH_SIZE;
 
     public SqlMapperBuilder withDefaultPkName(String defaultPkName) {
         this.defaultPkName = AOption.of(defaultPkName);
@@ -132,6 +135,11 @@ public class SqlMapperBuilder {
         return this;
     }
 
+    public SqlMapperBuilder withDefaultFetchSize(int defaultFetchSize) {
+        this.defaultFetchSize = defaultFetchSize;
+        return this;
+    }
+
     private SqlEngine buildEngine() {
         SqlEngine result = SqlEngine.create();
 
@@ -144,6 +152,8 @@ public class SqlMapperBuilder {
 
         for(PrimitiveTypeHandler h: primitiveTypeHandlers)
             result = result.withPrimitiveHandler(h);
+
+        result = result.withDefaultFetchSize(defaultFetchSize);
 
         return result;
     }

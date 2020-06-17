@@ -59,11 +59,11 @@ public class SqlMapper {
 
     public <T> AMapperQuery<T> query(Class<T> beanType, SqlSnippet sql, SqlSnippet... moreSql) {
         return new AMapperQueryImpl<>(this, beanType, concat(sql, moreSql), engine().primitiveTypeRegistry(), engine().rowExtractorFor(beanType),
-                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty());
+                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty(), engine().defaultFetchSize());
     }
     public <T> AMapperQuery<T> query(Class<T> beanType, String sql, Object... params) {
         return new AMapperQueryImpl<>(this, beanType, sql(sql, params), engine().primitiveTypeRegistry(), engine().rowExtractorFor(beanType),
-                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty());
+                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty(), engine().defaultFetchSize());
     }
 
     public MappedOneToMany oneToMany(String propertyName) {
