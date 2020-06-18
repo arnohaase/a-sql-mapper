@@ -52,10 +52,9 @@ class DemoTest extends AbstractDatabaseTest {
         final AQuery<Long> q1 = engine.longQuery(SqlSnippet.sql("select count(*) from person"));
         assertEquals(Long.valueOf(0), q1.single());
 
-//        final AInsert<Long> i1 = engine.insertLongPk("insert into person (name) values (?)", "Arno");
-//        assertEquals(Long.valueOf(1), i1.executeSingle());
-//        assertEquals(Long.valueOf(2), i1.executeSingle());
-//        assertEquals(Long.valueOf(3), i1.executeSingle());
+        assertEquals(1, engine.insertLongPk("insert into person (name) values (?)", "Arno"));
+        assertEquals(2, engine.insertLongPk("insert into person (name) values (?)", "Arno"));
+        assertEquals(3, engine.insertLongPk("insert into person (name) values (?)", "Arno"));
 
         assertEquals(Long.valueOf(3), q1.single());
 

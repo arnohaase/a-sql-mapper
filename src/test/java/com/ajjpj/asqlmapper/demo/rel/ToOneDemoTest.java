@@ -3,6 +3,7 @@ package com.ajjpj.asqlmapper.demo.rel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.ajjpj.acollections.AList;
@@ -40,25 +41,18 @@ class ToOneDemoTest extends AbstractDatabaseTest {
 
     @Test
     void testToOne() {
-        final List<Long> addressIds = null;
-//        mapper.engine()
-//                .insertLongPk("INSERT INTO address (street, city) VALUES (?,?),(?,?),(?,?)", "s1", "c1", "s2", "c2", "s3", "c3")
-//                .executeMulti();
-
-        final long personId1 = 1;
-//        mapper.engine()
-//                .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno1", addressIds.get(0))
-//                .executeSingle();
-        final long personId2 = 1;
-//        mapper.engine()
-//                .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno2", addressIds.get(1))
-//                .executeSingle();
-        final long personId3 = 1;
-//        mapper.engine()
-//                .insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno3", addressIds.get(2))
-//                .executeSingle();
-
         final SqlEngine engine = mapper.engine();
+
+        final List<Long> addressIds = new ArrayList<>();
+        addressIds.add(engine.insertLongPk("INSERT INTO address (street, city) VALUES (?,?)", "s1", "c1"));
+        addressIds.add(engine.insertLongPk("INSERT INTO address (street, city) VALUES (?,?)", "s2", "c2"));
+        addressIds.add(engine.insertLongPk("INSERT INTO address (street, city) VALUES (?,?)", "s3", "c3"));
+
+        final long personId1 = engine.insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno1", addressIds.get(0));
+        final long personId2 = engine.insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno2", addressIds.get(1));
+
+        engine.insertLongPk("INSERT INTO person (name, address_id) VALUES (?,?)", "Arno3", addressIds.get(2));
+
 
         {
             final AList<PersonWithAddress> persons = engine

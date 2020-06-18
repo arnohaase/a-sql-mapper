@@ -117,7 +117,9 @@ public class SqlMapper {
             }
 
             if (pkProperty != null) {
-                final List<?> pkValues = null; //TODO sqlEngine.insertSingleColPkInCol(pkProperty.columnName(), pkProperty.propClass(), builder.build()).executeMulti(conn);
+                final List<?> pkValues = sqlEngine.insertMulti(conn, pkProperty.propClass(),
+                        engine().rowExtractorFor(pkProperty.propClass()),
+                        builder.build(), pkProperty.columnName());
                 if (pkValues.size() != os.size()) {
                     throw new IllegalStateException("inserting " + os.size() + " rows returned " + pkValues.size() + " - mismatch");
                 }

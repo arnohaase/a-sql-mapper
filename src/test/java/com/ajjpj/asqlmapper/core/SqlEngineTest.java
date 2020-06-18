@@ -16,6 +16,7 @@ import com.ajjpj.asqlmapper.core.common.ScalarRowExtractor;
 import com.ajjpj.asqlmapper.core.common.SqlRow;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
@@ -253,7 +254,9 @@ public class SqlEngineTest extends AbstractDatabaseTest {
         }
     }
 
-    @Test void testTodo() {
+    @Test
+    @Disabled
+    void testTodo() {
         fail("SqlEngine javadoc");
         fail("javadoc AQuery");
         fail("SqlMapper#120");
@@ -495,7 +498,9 @@ public class SqlEngineTest extends AbstractDatabaseTest {
         assertEquals(AList.of(1, 2), e2.intQuery("SELECT id FROM person WHERE name=?", "Arno").stream().collect(Collectors.toList()));
     }
 
-    @Test void testInjectedProperty() {
+    @Test
+    @Disabled
+    void testInjectedProperty() {
         fail("todo");
     }
 
@@ -563,15 +568,21 @@ public class SqlEngineTest extends AbstractDatabaseTest {
         assertEquals(1.0, engine.doubleQuery(sql("SELECT id"), sql("FROM person")).single(conn), .000001);
     }
 
-    @Test void testRawTypeMapping() {
+    @Test
+    @Disabled
+    void testRawTypeMapping() {
         fail("todo");
     }
 
-    @Test void testConfig() {
+    @Test
+    @Disabled
+    void testConfig() {
         fail("todo");
     }
 
-    @Test void testRowExtractorFor() {
+    @Test
+    @Disabled
+    void testRowExtractorFor() {
         fail("todo");
     }
 }
