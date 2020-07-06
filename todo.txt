@@ -5,6 +5,10 @@ todo
 * unit tests
 * javadoc
 
+* Kotlin support (?)
+* RDBC support (?)
+* SQL array support (?)
+
 * comprehensive tests
 
 * unit tests against PostGres, Oracle, DB2, SQL Server, ...
@@ -16,7 +20,7 @@ todo
 
 * Blob, Clob, NCLOB -> PrimitiveTypeMappings
 
-* mapper queries mit snippets --> how to do this best?
+* mapper queries with snippets --> how to do this best?
   * filter
   * pagination
   * order by
