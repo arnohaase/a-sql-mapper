@@ -280,7 +280,7 @@ public class SqlSnippet {
     /**
      * creates an IN clause containing given snippets. This method is for the general case that the IN clause
      *  contains arbitrary SQL expressions. For the common case of using a list of known values for the IN clause
-     *  use {@link #in(Object, Object...).
+     *  use {@link #in(Object, Object...)}.
      *
      * TODO example
      */
@@ -300,7 +300,7 @@ public class SqlSnippet {
     /**
      * creates an IN clause containing given snippets. This method is for the general case that the IN clause
      *  contains arbitrary SQL expressions. For the common case of using a list of known values for the IN clause
-     *  use {@link #in(Iterator).
+     *  use {@link #in(Iterator)}.
      *
      * TODO example
      */
