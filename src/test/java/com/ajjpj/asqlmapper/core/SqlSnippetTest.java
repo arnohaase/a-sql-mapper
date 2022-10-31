@@ -8,12 +8,20 @@ import com.ajjpj.acollections.AIterator;
 import org.junit.jupiter.api.Test;
 import static com.ajjpj.asqlmapper.core.SqlSnippet.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class SqlSnippetTest {
     @Test void testEmpty() {
+        final LocalDateTime ld = LocalDateTime.of(2020, 1, 1, 0, 0, 0);
+//        final LocalDateTime ld = LocalDateTime.of(2020, 1, 1, 0, 0, 0);
+        System.out.println(ld);
+        System.out.println(ld.toInstant(ZoneOffset.UTC).getEpochSecond());
+
+
         assertEquals("", SqlSnippet.EMPTY.getSql());
         assertTrue(SqlSnippet.EMPTY.getParams().isEmpty());
     }

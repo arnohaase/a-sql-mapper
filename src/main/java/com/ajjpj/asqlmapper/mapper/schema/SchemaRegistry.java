@@ -56,7 +56,7 @@ public class SchemaRegistry {
     public AOption<TableMetaData> getTableMetaData(Connection conn, String tableName) {
         return tableCache.computeIfAbsent(tableName.toLowerCase(), n -> executeUnchecked (() -> {
             try {
-                final PreparedStatement ps = conn.prepareStatement("SELECT * FROM " + tableName);
+                final PreparedStatement ps = conn.prepareStatement(dialect.selectOneRow(tableName));
                 try {
                     final AVector.Builder<ColumnMetaData> columns = AVector.builder();
                     final ResultSetMetaData rsMeta = ps.executeQuery().getMetaData();
