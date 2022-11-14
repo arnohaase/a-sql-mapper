@@ -217,7 +217,7 @@ public class CommonPrimitiveHandlers {
         }
 
         @Override public Object toSql (Object o) {
-            return o;
+            return java.sql.Timestamp.from((Instant) o);
         }
     }
 
