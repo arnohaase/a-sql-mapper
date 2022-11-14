@@ -6,10 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.lang.annotation.RetentionPolicy;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.NClob;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.*;
 import java.util.Date;
 import java.util.UUID;
@@ -151,7 +148,7 @@ public class CommonPrimitiveHandlersTest extends AbstractDatabaseTest {
         assertEquals(Instant.ofEpochMilli(1234567), INSTANT_HANDLER.fromSql(Instant.class, Instant.ofEpochMilli(1234567)));
         assertEquals(Instant.ofEpochMilli(1234567), INSTANT_HANDLER.fromSql(Instant.class, new java.sql.Timestamp(1234567)));
 
-        assertEquals(Instant.ofEpochMilli(12345678), INSTANT_HANDLER.toSql(Instant.ofEpochMilli(12345678)));
+        assertEquals(Timestamp.from(Instant.ofEpochMilli(12345678)), INSTANT_HANDLER.toSql(Instant.ofEpochMilli(12345678)));
     }
 
     @Test
