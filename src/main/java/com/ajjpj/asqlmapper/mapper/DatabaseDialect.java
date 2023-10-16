@@ -17,13 +17,28 @@ public interface DatabaseDialect {
         return tableName;
     }
 
+    /**
+     * This returns a SELECT statement that returns a single row from a given table, it is used to limit the
+     *  amount of prefetched data when retrieving table metadata.
+     */
+    String selectOneRow(String tableName);
+
     class PostgresqlDialect implements DatabaseDialect {
+        @Override public String selectOneRow(String tableName) {
+            return "SELECT * FROM " + tableName + " LIMIT 1";
+        }
     }
 
     class OracleDialect implements DatabaseDialect {
+        @Override public String selectOneRow(String tableName) {
+            return "SELECT * FROM " + tableName + " FETCH FIRST 1 ROWS ONLY";
+        }
     }
 
     class SqlServerDialect implements DatabaseDialect {
+        @Override public String selectOneRow(String tableName) {
+            return "SELECT TOP 1 * FROM " + tableName;
+        }
     }
 
     class H2Dialect implements DatabaseDialect {
@@ -35,6 +50,10 @@ public interface DatabaseDialect {
         }
         @Override public String normalizeTableName (String schemaName) {
             return schemaName.toUpperCase();
+        }
+
+        @Override public String selectOneRow(String tableName) {
+            return "SELECT * FROM " + tableName + " LIMIT 1";
         }
     }
 }

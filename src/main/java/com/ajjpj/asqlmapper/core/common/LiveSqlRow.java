@@ -6,11 +6,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.ajjpj.acollections.AList;
-import com.ajjpj.acollections.immutable.AVector;
 import com.ajjpj.asqlmapper.core.PrimitiveTypeRegistry;
 
 /**
@@ -72,5 +70,12 @@ public class LiveSqlRow implements SqlRow {
         @Override public int size () {
             return executeUnchecked(rsMeta::getColumnCount);
         }
+    }
+
+    @Override public boolean equals(Object obj) {
+        if(! (obj instanceof SqlRow)) {
+            return false;
+        }
+        return detach().equals(obj);
     }
 }

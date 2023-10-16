@@ -4,22 +4,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.sql.SQLException;
 
-import lombok.Builder;
-import lombok.Value;
-import lombok.experimental.Wither;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import com.ajjpj.acollections.AMap;
 import com.ajjpj.asqlmapper.AbstractDatabaseTest;
 import com.ajjpj.asqlmapper.SqlMapperBuilder;
-import com.ajjpj.asqlmapper.core.AInsert;
 import com.ajjpj.asqlmapper.core.AQuery;
 import com.ajjpj.asqlmapper.core.SqlEngine;
 import com.ajjpj.asqlmapper.core.SqlSnippet;
 import com.ajjpj.asqlmapper.core.listener.LoggingListener;
 import com.ajjpj.asqlmapper.mapper.DatabaseDialect;
 import com.ajjpj.asqlmapper.mapper.SqlMapper;
+import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.Wither;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 class DemoTest extends AbstractDatabaseTest {
     @SuppressWarnings("WeakerAccess")
@@ -52,10 +52,9 @@ class DemoTest extends AbstractDatabaseTest {
         final AQuery<Long> q1 = engine.longQuery(SqlSnippet.sql("select count(*) from person"));
         assertEquals(Long.valueOf(0), q1.single());
 
-        final AInsert<Long> i1 = engine.insertLongPk("insert into person (name) values (?)", "Arno");
-        assertEquals(Long.valueOf(1), i1.executeSingle());
-        assertEquals(Long.valueOf(2), i1.executeSingle());
-        assertEquals(Long.valueOf(3), i1.executeSingle());
+        assertEquals(1, engine.insertLongPk("insert into person (name) values (?)", "Arno"));
+        assertEquals(2, engine.insertLongPk("insert into person (name) values (?)", "Arno"));
+        assertEquals(3, engine.insertLongPk("insert into person (name) values (?)", "Arno"));
 
         assertEquals(Long.valueOf(3), q1.single());
 

@@ -19,8 +19,9 @@ public class AMapperQueryImpl<T> extends AQueryImpl<T> implements AMapperQuery<T
                             RowExtractor rowExtractor,
                             AVector<SqlEngineEventListener> listeners,
                             AOption<Supplier<Connection>> defaultConnectionSupplier,
-                            AVector<InjectedProperty> injectedProperties) {
-        super(cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties);
+                            AVector<InjectedProperty> injectedProperties,
+                            int defaultFetchSize) {
+        super(cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties, defaultFetchSize);
         this.mapper = mapper;
     }
     @Override public AMapperQuery<T> withManyToMany(String propertyName) {
@@ -35,8 +36,8 @@ public class AMapperQueryImpl<T> extends AQueryImpl<T> implements AMapperQuery<T
 
     @Override protected AQueryImpl<T> build(Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, RowExtractor rowExtractor,
                                             AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier,
-                                            AVector<InjectedProperty> injectedProperties) {
-        return new AMapperQueryImpl<>(mapper, cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties);
+                                            AVector<InjectedProperty> injectedProperties, int defaultFetchSize) {
+        return new AMapperQueryImpl<>(mapper, cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties, defaultFetchSize);
     }
 
     @Override public AMapperQuery<T> withInjectedProperty(InjectedProperty injectedProperty) {

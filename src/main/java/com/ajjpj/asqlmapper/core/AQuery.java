@@ -29,6 +29,8 @@ public interface AQuery<T> {
     T single();
     AOption<T> optional(Connection conn);
     AOption<T> optional();
+    AOption<T> first(Connection conn);
+    AOption<T> first();
     AList<T> list(Connection conn);
     AList<T> list();
 
@@ -38,9 +40,16 @@ public interface AQuery<T> {
     //TODO documentation
     Stream<T> stream(Connection conn);
     Stream<T> stream();
+    Stream<T> stream(int fetchSize);
+    Stream<T> stream(Connection conn, int fetchSize);
 
     void forEach(Connection conn, Consumer<T> consumer);
     void forEach(Consumer<T> consumer);
+    void forEach(int fetchSize, Consumer<T> consumer);
+    void forEach(Connection conn, int fetchSize, Consumer<T> consumer);
+
     void forEachWithRowAccess(Connection conn, BiConsumer<T, SqlRow> consumer);
     void forEachWithRowAccess(BiConsumer<T, SqlRow> consumer);
+    void forEachWithRowAccess(int fetchSize, BiConsumer<T, SqlRow> consumer);
+    void forEachWithRowAccess(Connection conn, int fetchSize, BiConsumer<T, SqlRow> consumer);
 }

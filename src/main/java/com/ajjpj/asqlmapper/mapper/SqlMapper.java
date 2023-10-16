@@ -59,11 +59,11 @@ public class SqlMapper {
 
     public <T> AMapperQuery<T> query(Class<T> beanType, SqlSnippet sql, SqlSnippet... moreSql) {
         return new AMapperQueryImpl<>(this, beanType, concat(sql, moreSql), engine().primitiveTypeRegistry(), engine().rowExtractorFor(beanType),
-                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty());
+                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty(), engine().defaultFetchSize());
     }
     public <T> AMapperQuery<T> query(Class<T> beanType, String sql, Object... params) {
         return new AMapperQueryImpl<>(this, beanType, sql(sql, params), engine().primitiveTypeRegistry(), engine().rowExtractorFor(beanType),
-                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty());
+                engine().listeners(), engine().defaultConnectionSupplier(), AVector.empty(), engine().defaultFetchSize());
     }
 
     public MappedOneToMany oneToMany(String propertyName) {
@@ -117,7 +117,9 @@ public class SqlMapper {
             }
 
             if (pkProperty != null) {
-                final List<?> pkValues = sqlEngine.insertSingleColPkInCol(pkProperty.columnName(), pkProperty.propClass(), builder.build()).executeMulti(conn);
+                final List<?> pkValues = sqlEngine.insertMulti(conn, pkProperty.propClass(),
+                        engine().rowExtractorFor(pkProperty.propClass()),
+                        builder.build(), pkProperty.columnName());
                 if (pkValues.size() != os.size()) {
                     throw new IllegalStateException("inserting " + os.size() + " rows returned " + pkValues.size() + " - mismatch");
                 }
@@ -186,7 +188,7 @@ public class SqlMapper {
             final SqlSnippet insertStmt = insertStatement(beanMapping, o, false);
 
             final BeanProperty pkProperty = beanMapping.pkProperty();
-            final Object pkValue = sqlEngine.insertSingleColPkInCol(pkProperty.columnName(), pkProperty.propClass(), insertStmt).executeSingle(conn);
+            final Object pkValue = sqlEngine.insertSingleColPkInCol(conn, pkProperty.columnName(), pkProperty.propClass(), insertStmt);
             //noinspection unchecked
             return (T) pkProperty.set(o, pkValue);
         });

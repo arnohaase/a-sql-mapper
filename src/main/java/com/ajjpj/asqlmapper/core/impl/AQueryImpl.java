@@ -36,10 +36,11 @@ public class AQueryImpl<T> implements AQuery<T> {
     private final AVector<SqlEngineEventListener> listeners;
     private final AOption<Supplier<Connection>> defaultConnectionSupplier;
     private final AVector<InjectedProperty> injectedProperties;
+    private final int defaultFetchSize;
 
     public AQueryImpl(Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, RowExtractor rowExtractor,
                       AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier,
-                      AVector<InjectedProperty> injectedProperties) {
+                      AVector<InjectedProperty> injectedProperties, int defaultFetchSize) {
         this.rowClass = cls;
         this.sql = sql;
         this.primTypes = primTypes;
@@ -47,12 +48,13 @@ public class AQueryImpl<T> implements AQuery<T> {
         this.listeners = listeners;
         this.defaultConnectionSupplier = defaultConnectionSupplier;
         this.injectedProperties = injectedProperties;
+        this.defaultFetchSize = defaultFetchSize;
     }
 
     protected AQueryImpl<T> build(Class<T> cls, SqlSnippet sql, PrimitiveTypeRegistry primTypes, RowExtractor rowExtractor,
                                   AVector<SqlEngineEventListener> listeners, AOption<Supplier<Connection>> defaultConnectionSupplier,
-                                  AVector<InjectedProperty> injectedProperties) {
-        return new AQueryImpl<>(cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties);
+                                  AVector<InjectedProperty> injectedProperties, int defaultFetchSize) {
+        return new AQueryImpl<>(cls, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties, defaultFetchSize);
     }
 
     @Override public AQuery<T> withInjectedProperty(InjectedProperty injectedProperty) {
@@ -60,7 +62,7 @@ public class AQueryImpl<T> implements AQuery<T> {
             throw new IllegalArgumentException("attempted to add a second injected property with name " + injectedProperty.propertyName());
         }
 
-        return build(rowClass, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties.append(injectedProperty));
+        return build(rowClass, sql, primTypes, rowExtractor, listeners, defaultConnectionSupplier, injectedProperties.append(injectedProperty), defaultFetchSize);
     }
 
     @Override public T single() {
@@ -145,6 +147,23 @@ public class AQueryImpl<T> implements AQuery<T> {
         }));
     }
 
+    @Override public AOption<T> first() {
+        return first(defaultConnection());
+    }
+
+    @Override public AOption<T> first(Connection conn) {
+        return doQuery(conn, rs -> executeUnchecked(() -> {
+            if (!rs.next()) {
+                afterIteration(0);
+                return AOption.empty();
+            }
+            final Object memento = rowExtractor.mementoPerQuery(rowClass, primTypes, rs, false);
+            final T result = doExtract(conn, new LiveSqlRow(primTypes, rs), memento, false, injectedPropertyMementos(conn));
+            afterIteration(1);
+            return AOption.some(result);
+        }));
+    }
+
     @Override public <R,A> R collect(Collector<T, A, R> collector) {
         return collect(defaultConnection(), collector);
     }
@@ -170,7 +189,7 @@ public class AQueryImpl<T> implements AQuery<T> {
     }
 
     @Override public AList<T> list(Connection conn) {
-        return collect(AVector.streamCollector());
+        return collect(conn, AVector.streamCollector());
     }
 
     private Map<String, Object> injectedPropsValuesForRow(Connection conn, SqlRow currentRow, Map<String, Object> injectedPropsMementos) {
@@ -205,27 +224,45 @@ public class AQueryImpl<T> implements AQuery<T> {
     @Override public Stream<T> stream() {
         return stream(defaultConnection());
     }
-
     @Override public Stream<T> stream(Connection conn) {
-        final ResultSetSpliterator rss = new ResultSetSpliterator(conn);
+        return stream(conn, defaultFetchSize);
+    }
+    @Override public Stream<T> stream(int fetchSize) {
+        return stream(defaultConnection(), fetchSize);
+    }
+    @Override public Stream<T> stream(Connection conn, int fetchSize) {
+        final ResultSetSpliterator rss = new ResultSetSpliterator(conn, fetchSize);
         return StreamSupport.stream(rss, false)
                 .onClose(rss::close);
     }
 
-    @Override public void forEach(Connection conn, Consumer<T> consumer) {
-        try (Stream<T> s = stream(conn)) {
-            s.forEach(consumer);
-        }
-    }
     @Override public void forEach(Consumer<T> consumer) {
         forEach(defaultConnection(), consumer);
+    }
+    @Override public void forEach(Connection conn, Consumer<T> consumer) {
+        forEach(conn, defaultFetchSize, consumer);
+    }
+    @Override public void forEach(int fetchSize, Consumer<T> consumer) {
+        forEach(defaultConnection(), fetchSize, consumer);
+    }
+    @Override public void forEach(Connection conn, int fetchSize, Consumer<T> consumer) {
+        try (Stream<T> s = stream(conn, fetchSize)) {
+            s.forEach(consumer);
+        }
+
     }
 
     @Override public void forEachWithRowAccess(BiConsumer<T, SqlRow> consumer) {
         forEachWithRowAccess(defaultConnection(), consumer);
     }
     @Override public void forEachWithRowAccess(Connection conn, BiConsumer<T, SqlRow> consumer) {
-        final ResultSetSpliterator rss = new ResultSetSpliterator(conn);
+        forEachWithRowAccess(conn, defaultFetchSize, consumer);
+    }
+    @Override public void forEachWithRowAccess(int fetchSize, BiConsumer<T, SqlRow> consumer) {
+        forEachWithRowAccess(defaultConnection(), fetchSize, consumer);
+    }
+    @Override public void forEachWithRowAccess(Connection conn, int fetchSize, BiConsumer<T, SqlRow> consumer) {
+        final ResultSetSpliterator rss = new ResultSetSpliterator(conn, fetchSize);
         try (Stream<T> s = StreamSupport.stream(rss, false).onClose(rss::close)) {
             s.forEach(el -> consumer.accept(el, rss.getCurrentRow()));
         }
@@ -236,6 +273,7 @@ public class AQueryImpl<T> implements AQuery<T> {
 
     private class ResultSetSpliterator implements Spliterator<T> {
         private final Connection conn;
+        private final int fetchSize;
         private PreparedStatement ps;
         private ResultSet rs;
         private LiveSqlRow row;
@@ -246,8 +284,9 @@ public class AQueryImpl<T> implements AQuery<T> {
         private boolean started = false;
         private boolean closed = false;
 
-        ResultSetSpliterator(Connection conn) {
+        ResultSetSpliterator(Connection conn, int fetchSize) {
             this.conn = conn;
+            this.fetchSize = fetchSize;
         }
 
         SqlRow getCurrentRow() {
@@ -269,6 +308,7 @@ public class AQueryImpl<T> implements AQuery<T> {
             try {
                 listeners.forEach(l -> l.onBeforeQuery(sql, rowClass));
                 ps = conn.prepareStatement(sql.getSql());
+                ps.setFetchSize(fetchSize);
             }
             catch (Throwable th) {
                 listeners.reverseIterator().forEachRemaining(l -> l.onFailed(th));
