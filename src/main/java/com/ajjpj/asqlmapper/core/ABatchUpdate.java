@@ -3,7 +3,6 @@ package com.ajjpj.asqlmapper.core;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -38,7 +37,7 @@ class ABatchUpdate {
 
     private static String sql(List<SqlSnippet> items) {
         if (items.isEmpty()) {
-            throw new IllegalArgumentException("no batch items");
+            return "";
         }
 
         for (int i = 1; i < items.size(); i++) {
